@@ -1,9 +1,11 @@
-    * { margin: 0; padding: 0; box-sizing: border-box;}
+
+
+* { margin: 0; padding: 0; box-sizing: border-box;}
     
     a { text-decoration: none; color: black; }  
 
     body {
-        background-image: url('/img/background/funeral_background1.jpg'); /* 이미지 경로 */
+        background-image: url('/zootopia-app/src/assets/img/background/funeral_background1.jpg'); /* 이미지 경로 */
         background-size: cover;  /* 화면에 꽉 차게 */
         background-position: center;
         background-repeat: no-repeat; /* 반복 안 함 */

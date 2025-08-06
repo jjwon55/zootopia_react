@@ -1,5 +1,5 @@
 import React from 'react'
-import './funeral/css/procedure.css'
+// import './css/procedure.css'
 
 const ProcedureComponent = () => {
   return (

@@ -9,7 +9,7 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [require("daisyui")],
+  plugins: [daisyui],
   daisyui: {
     prefix: 'tw-',
     themes: ["light", "dark"]
