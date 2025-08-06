@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.aloha.zootopia.mapper.LostAnimalMapper">
+
+  <!-- resultMap -->
+  <resultMap id="LostAnimalMap" type="com.aloha.zootopia.domain.LostAnimalPost">
+    <id property="postId" column="post_id" />
+    <result property="title" column="title" />
+    <result property="content" column="content" />
+    <result property="lostLocation" column="lost_location" />
+    <result property="lostTime" column="lost_time" />
+    <result property="contactPhone" column="contact_phone" />
+    <result property="viewCount" column="view_count" />
+    <result property="likeCount" column="like_count" />
+    <result property="commentCount" column="comment_count" />
+    <result property="createdAt" column="created_at" />
+    <result property="updatedAt" column="updated_at" />
+    <result property="thumbnailUrl" column="thumbnail_url" />
+    <result property="userId" column="user_id" />
+
+    <association property="user" javaType="com.aloha.zootopia.domain.Users">
+      <id property="userId" column="user_id" />
+      <result property="nickname" column="nickname" />
+      <result property="profileImg" column="profile_img" />
+    </association>
+  </resultMap>
+
+<!-- 목록 조회 -->
+  <select id="findAll" resultMap="LostAnimalMap">
+    SELECT l.*, u.nickname, u.profile_img
+    FROM lost_animals l
+    LEFT JOIN users u ON l.user_id = u.user_id
+    ORDER BY l.post_id DESC
+    LIMIT #{offset}, #{size}
+  </select>
+
+  <!-- 전체 개수 -->
+  <select id="countAll" resultType="long">
+    SELECT COUNT(*) FROM lost_animals
+  </select>
+
+  <!-- 단건 조회 -->
+  <select id="findById" resultMap="LostAnimalMap">
+    SELECT l.*, u.nickname, u.profile_img
+    FROM lost_animals l
+    LEFT JOIN users u ON l.user_id = u.user_id
+    WHERE l.post_id = #{postId}
+  </select>
+
+  <!-- 등록 -->
+  <insert id="insert" parameterType="com.aloha.zootopia.domain.LostAnimalPost" useGeneratedKeys="true" keyProperty="postId">
+    INSERT INTO lost_animals (
+      title, content, lost_location, lost_time, contact_phone, user_id, created_at, updated_at
+    ) VALUES (
+      #{title}, #{content}, #{lostLocation}, #{lostTime}, #{contactPhone}, #{userId}, NOW(), NOW()
+    )
+  </insert>
+
+  <!-- 수정 -->
+  <update id="update" parameterType="com.aloha.zootopia.domain.LostAnimalPost">
+    UPDATE lost_animals
+    SET
+      title = #{title},
+      content = #{content},
+      lost_location = #{lostLocation},
+      lost_time = #{lostTime},
+      contact_phone = #{contactPhone},
+      updated_at = NOW()
+    WHERE post_id = #{postId}
+  </update>
+
+  <!-- 삭제 -->
+  <delete id="delete" parameterType="int">
+    DELETE FROM lost_animals WHERE post_id = #{postId}
+  </delete>
+
+  <!-- 썸네일 업데이트 -->
+  <update id="updateThumbnail" parameterType="com.aloha.zootopia.domain.LostAnimalPost">
+    UPDATE lost_animals SET thumbnail_url = #{thumbnailUrl}
+    WHERE post_id = #{postId}
+  </update>
+
+  <!-- 조회수 증가 -->
+  <update id="increaseViewCount" parameterType="int">
+    UPDATE lost_animals SET view_count = view_count + 1
+    WHERE post_id = #{postId}
+  </update>
+
+  <!-- 🔻 태그 전용 처리: lost_animal_tags 테이블 기준 -->
+
+  <!-- 태그 ID 조회 -->
+  <select id="findTagIdByName" parameterType="string" resultType="int">
+    SELECT tag_id FROM tags WHERE name = #{name}
+  </select>
+
+  <!-- 태그 삽입 -->
+  <insert id="insertTag" parameterType="com.aloha.zootopia.domain.Tag" useGeneratedKeys="true" keyProperty="tagId">
+    INSERT INTO tags (name) VALUES (#{name})
+  </insert>
+
+  <!-- 연결 테이블 삽입 -->
+  <insert id="insertPostTag" parameterType="map">
+    INSERT INTO lost_animal_tags (post_id, tag_id) VALUES (#{postId}, #{tagId})
+  </insert>
+
+  <!-- 연결 삭제 -->
+  <delete id="deletePostTagsByPostId" parameterType="int">
+    DELETE FROM lost_animal_tags WHERE post_id = #{postId}
+  </delete>
+
+  <!-- 🔥 게시글 목록용 태그 매핑 -->
+  <select id="selectTagsByPostIds" parameterType="list" resultType="com.aloha.zootopia.domain.Tag">
+    SELECT lpt.post_id, t.tag_id, t.name
+    FROM lost_animal_tags lpt
+    JOIN tags t ON lpt.tag_id = t.tag_id
+    WHERE lpt.post_id IN 
+    <foreach collection="list" item="id" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+  </select>
+
+    <!-- 댓글 수 증가-->
+  <update id="updateCommentCount" parameterType="int">
+    UPDATE lost_animals
+    SET comment_count = comment_count + 1
+    WHERE post_id = #{postId}
+  </update>
+  <!-- 댓글 수 감소 -->
+  <update id="minusCommentCount" parameterType="int">
+    UPDATE lost_animals
+    SET comment_count = comment_count - 1
+    WHERE post_id = #{postId}
+  </update>
+
+  
+  <!-- 게시글 검색 + 페이징 -->
+  <select id="pageBySearch" resultMap="LostAnimalMap">
+    SELECT 
+      l.*,
+      u.nickname,
+      u.profile_img
+    FROM lost_animals l
+    LEFT JOIN users u ON l.user_id = u.user_id
+    <where>
+      <if test="type == 'title'">
+        l.title LIKE CONCAT('%', #{keyword}, '%')
+      </if>
+      <if test="type == 'titleContent'">
+        (l.title LIKE CONCAT('%', #{keyword}, '%') OR l.content LIKE CONCAT('%', #{keyword}, '%'))
+      </if>
+      <if test="type == 'tag'">
+        l.post_id IN (
+          SELECT lat.post_id
+          FROM lost_animal_tags lat
+          JOIN tags t ON lat.tag_id = t.tag_id
+          WHERE t.name LIKE CONCAT('%', #{keyword}, '%')
+        )
+      </if>
+    </where>
+    ORDER BY l.post_id DESC
+    LIMIT #{pagination.offset}, #{pagination.limit}
+  </select>
+
+
+  <select id="countBySearch" resultType="long">
+    SELECT COUNT(*) 
+    FROM lost_animals
+    <where>
+      <if test="type == 'title'">
+        title LIKE CONCAT('%', #{keyword}, '%')
+      </if>
+      <if test="type == 'titleContent'">
+        (title LIKE CONCAT('%', #{keyword}, '%') OR content LIKE CONCAT('%', #{keyword}, '%'))
+      </if>
+      <if test="type == 'tag'">
+        post_id IN (
+          SELECT lat.post_id
+          FROM lost_animal_tags lat
+          JOIN tags t ON lat.tag_id = t.tag_id
+          WHERE t.name LIKE CONCAT('%', #{keyword}, '%')
+        )
+      </if>
+    </where>
+  </select>
+
+  <select id="findByUserId" resultType="LostAnimalPost">
+    SELECT * FROM lost_animals WHERE user_id = #{userId} ORDER BY created_at DESC
+  </select>
+
+
+
+
+</mapper>

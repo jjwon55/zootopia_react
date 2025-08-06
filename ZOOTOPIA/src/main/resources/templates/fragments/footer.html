@@ -1,0 +1,69 @@
+<!-- templates/fragments/footer.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head>
+</head>
+<footer th:fragment="footer" class="footer">
+    <link rel="stylesheet" th:href="@{/assets/dist/css/footer.css}">
+    <div class="footer-container">
+        <div class="row footer-content gx-4">
+            <!-- 소개 -->
+            <div class="col-md-3 footer-section">
+                <h6 class="footer-title">Zootopia</h6>
+                <p class="footer-description">
+                    반려동물과 함께하는 행복한 일상을 만듭니다.
+                </p>
+                <div class="d-flex gap-2 social-icons">
+                    <a href="#" class="footer-icon">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="footer-icon">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="footer-icon">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 서비스 -->
+            <div class="col-md-2 footer-section">
+                <h6 class="footer-title">서비스</h6>
+                <div class="footer-links">
+                    <a href="#">서비스 가이드</a>
+                    <a href="#">스토어</a>
+                    <a href="#">내 주변 찾기</a>
+                    <a href="#">커뮤니티</a>
+                </div>
+            </div>
+
+            <!-- 정보 -->
+            <div class="col-md-2 footer-section">
+                <h6 class="footer-title">INFORMATION</h6>
+                <div class="footer-links">
+                    <a href="#">자주 묻는 질문</a>
+                    <a href="#">고객센터</a>
+                    <a href="#">배송 정보</a>
+                </div>
+            </div>
+
+            <!-- 뉴스레터 -->
+            <div class="col-md-4 footer-section">
+                <h6 class="footer-title">뉴스레터</h6>
+                <p class="footer-description">
+                    반려동물 케어 정보와 특가 소식을 받아보세요.
+                </p>
+                <div class="newsletter-form d-flex">
+                    <input type="email" placeholder="이메일 주소" class="form-control footer-input">
+                    <button class="btn footer-btn">구독</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        &copy; 2025 Zootopia. All rights reserved.
+    </div>
+</footer>
+</html>

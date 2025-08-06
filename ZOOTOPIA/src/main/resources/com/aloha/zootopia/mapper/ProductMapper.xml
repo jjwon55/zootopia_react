@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.aloha.zootopia.mapper.ProductMapper">
+
+    <!-- 결과 매핑 -->
+    <resultMap id="productMap" type="com.aloha.zootopia.domain.Product">
+        <id property="no" column="no" />
+        <result property="name" column="name" />
+        <result property="category" column="category" />
+        <result property="description" column="description" />
+        <result property="price" column="price" />
+        <result property="imageUrl" column="image_url" />
+        <result property="status" column="status" />
+        <result property="regDate" column="reg_date" />
+        <result property="updDate" column="upd_date" />
+        <result property="views" column="views" />
+        <result property="likes" column="likes" />
+        <result property="stock" column="stock" />
+    </resultMap>
+
+    <!-- 상품 목록 조회 (페이징) -->
+    <select id="selectByPage" resultMap="productMap">
+        SELECT no, name, category, description, price, image_url, status, 
+               reg_date, upd_date, views, likes, stock
+        FROM products 
+        WHERE status = '판매중'
+        ORDER BY reg_date DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 카테고리별 상품 목록 조회 (페이징) -->
+    <select id="selectByCategoryAndPage" resultMap="productMap">
+        SELECT no, name, category, description, price, image_url, status, 
+               reg_date, upd_date, views, likes, stock
+        FROM products 
+        WHERE status = '판매중' AND category = #{category}
+        ORDER BY reg_date DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 전체 상품 개수 -->
+    <select id="selectTotal" resultType="int">
+        SELECT COUNT(*) FROM products WHERE status = '판매중'
+    </select>
+
+    <!-- 카테고리별 상품 개수 -->
+    <select id="selectTotalByCategory" resultType="int">
+        SELECT COUNT(*) FROM products 
+        WHERE status = '판매중' AND category = #{category}
+    </select>
+
+    <!-- 상품 상세 조회 -->
+    <select id="selectByNo" resultMap="productMap">
+        SELECT no, name, category, description, price, image_url, status, 
+               reg_date, upd_date, views, likes, stock
+        FROM products 
+        WHERE no = #{no}
+    </select>
+
+    <!-- 상품 등록 -->
+    <insert id="insert" parameterType="com.aloha.zootopia.domain.Product" 
+            useGeneratedKeys="true" keyProperty="no">
+        INSERT INTO products (name, category, description, price, image_url, status, reg_date, upd_date, views, likes, stock)
+        VALUES (#{name}, #{category}, #{description}, #{price}, #{imageUrl}, #{status}, NOW(), NOW(), 0, 0, #{stock})
+    </insert>
+
+    <!-- 상품 수정 -->
+    <update id="update" parameterType="com.aloha.zootopia.domain.Product">
+        UPDATE products 
+        SET name = #{name}, 
+            category = #{category}, 
+            description = #{description}, 
+            price = #{price}, 
+            image_url = #{imageUrl}, 
+            status = #{status}, 
+            stock = #{stock},
+            upd_date = NOW()
+        WHERE no = #{no}
+    </update>
+
+    <!-- 상품 삭제 -->
+    <delete id="delete">
+        DELETE FROM products WHERE no = #{no}
+    </delete>
+
+    <!-- 조회수 증가 -->
+    <update id="updateViews">
+        UPDATE products SET views = views + 1 WHERE no = #{no}
+    </update>
+
+    <!-- 좋아요 수 증가 -->
+    <update id="updateLikes">
+        UPDATE products SET likes = likes + 1 WHERE no = #{no}
+    </update>
+
+    <!-- 싫어요 수 증가 -->
+    <update id="updateDislikes">
+        UPDATE products SET dislikes = dislikes + 1 WHERE no = #{no}
+    </update>
+
+    <!-- 검색 (상품명) -->
+    <select id="selectByNameAndPage" resultMap="productMap">
+        SELECT no, name, category, description, price, image_url, status, 
+               reg_date, upd_date, views, likes, stock
+        FROM products 
+        WHERE status = '판매중' AND name LIKE CONCAT('%', #{name}, '%')
+        ORDER BY reg_date DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 검색 결과 개수 -->
+    <select id="selectTotalByName" resultType="int">
+        SELECT COUNT(*) FROM products 
+        WHERE status = '판매중' AND name LIKE CONCAT('%', #{name}, '%')
+    </select>
+
+</mapper>

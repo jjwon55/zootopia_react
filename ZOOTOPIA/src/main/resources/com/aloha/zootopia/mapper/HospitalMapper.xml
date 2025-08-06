@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.aloha.zootopia.mapper.HospitalMapper">
+
+  <!-- 1. 병원 '목록' 조회를 위한 간단한 ResultMap -->
+  <resultMap id="HospitalListResultMap" type="Hospital">
+    <id property="hospitalId" column="hospital_id"/>
+    <result property="name" column="name"/>
+    <result property="address" column="address"/>
+    <result property="homepage" column="homepage"/>
+    <result property="phone" column="phone"/>
+    <result property="email" column="email"/>
+    <result property="thumbnailImageUrl" column="thumbnail_image_url"/>
+    <result property="hospIntroduce" column="hosp_introduce"/>
+    <result property="avgRating" column="avg_rating"/>
+    <collection property="animals" ofType="com.aloha.zootopia.domain.Animal" column="hospital_id" select="getAnimalsByHospitalId" />
+  </resultMap>
+
+  <!-- 2. 병원 '상세' 조회를 위한 복잡한 ResultMap (분리된 쿼리 사용) -->
+  <resultMap id="HospitalDetailResultMap" type="Hospital" extends="HospitalListResultMap">
+    <collection property="animals" ofType="com.aloha.zootopia.domain.Animal" column="hospital_id" select="getAnimalsByHospitalId" />
+    <collection property="specialties" ofType="com.aloha.zootopia.domain.Specialty" column="hospital_id" select="getSpecialtiesByHospitalId" />
+  </resultMap>
+
+  <select id="findAll" resultMap="HospitalListResultMap">
+    SELECT h.*, (SELECT AVG(rating) FROM hospital_review r WHERE r.hospital_id = h.hospital_id) AS avg_rating
+    FROM hospital_info h
+  </select>
+
+  <select id="findByAnimalIds" parameterType="list" resultMap="HospitalListResultMap">
+    SELECT DISTINCT h.*, (SELECT AVG(rating)
+                            FROM hospital_review r
+                            WHERE r.hospital_id = h.hospital_id) AS avg_rating
+    FROM hospital_info h
+    JOIN hospital_animal ha ON h.hospital_id = ha.hospital_id
+    WHERE ha.animal_id IN
+    <foreach collection="animalIds" item="id" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+    GROUP BY h.hospital_id
+    HAVING COUNT(DISTINCT ha.animal_id) = #{_parameter.size}
+  </select>
+
+  <!-- [수정] 병원 상세 조회를 위한 메인 쿼리 (기본 정보만 조회) -->
+  <select id="findById" parameterType="int" resultMap="HospitalDetailResultMap">
+    SELECT
+        h.*,
+        (SELECT AVG(rating) FROM hospital_review r_avg WHERE r_avg.hospital_id = h.hospital_id) AS avg_rating
+    FROM
+        hospital_info h
+    WHERE
+        h.hospital_id = #{hospitalId}
+  </select>
+
+  <!-- [추가] 병원 ID로 동물 목록을 조회하는 쿼리 -->
+  <select id="getAnimalsByHospitalId" resultType="com.aloha.zootopia.domain.Animal">
+    SELECT pa.animal_id, pa.species
+    FROM possible_animal pa
+    JOIN hospital_animal ha ON pa.animal_id = ha.animal_id
+    WHERE ha.hospital_id = #{hospitalId}
+  </select>
+
+  <!-- [추가] 병원 ID로 진료과목 목록을 조회하는 쿼리 -->
+  <select id="getSpecialtiesByHospitalId" resultType="com.aloha.zootopia.domain.Specialty">
+    SELECT s.specialty_id, s.category
+    FROM specialty s
+    JOIN hospital_specialty hs ON s.specialty_id = hs.specialty_id
+    WHERE hs.hospital_id = #{hospitalId}
+  </select>
+
+  <!-- [추가] 병원 ID로 리뷰 목록을 조회하는 쿼리 -->
+  <select id="getReviewsByHospitalId" resultType="com.aloha.zootopia.domain.HospReview">
+    SELECT r.*, u.nickname
+    FROM hospital_review r
+    JOIN users u ON r.user_id = u.user_id
+    WHERE r.hospital_id = #{hospitalId}
+    ORDER BY r.created_at DESC
+  </select>
+
+  <insert id="insertHospital" parameterType="Hospital" useGeneratedKeys="true" keyProperty="hospitalId">
+    INSERT INTO hospital_info (name, address, homepage, phone, email, thumbnail_image_url, hosp_introduce)
+    VALUES (#{name}, #{address}, #{homepage}, #{phone}, #{email}, #{thumbnailImageUrl}, #{hospIntroduce})
+  </insert>
+
+  <insert id="insertHospitalAnimal">
+    INSERT INTO hospital_animal (hospital_id, animal_id)
+    VALUES (#{hospitalId}, #{animalId})
+  </insert>
+
+  <insert id="insertHospitalSpecialty">
+    INSERT INTO hospital_specialty (hospital_id, specialty_id)
+    VALUES (#{hospitalId}, #{specialtyId})
+  </insert>
+
+  <update id="updateHospital" parameterType="Hospital">
+    UPDATE hospital_info
+    SET
+      name = #{name},
+      address = #{address},
+      homepage = #{homepage},
+      phone = #{phone},
+      email = #{email},
+      thumbnail_image_url = #{thumbnailImageUrl},
+      hosp_introduce = #{hospIntroduce}
+    WHERE hospital_id = #{hospitalId}
+  </update>
+
+  <delete id="deleteHospitalAnimals" parameterType="int">
+    DELETE FROM hospital_animal
+    WHERE hospital_id = #{hospitalId}
+  </delete>
+
+  <delete id="deleteHospitalSpecialties" parameterType="int">
+    DELETE FROM hospital_specialty
+    WHERE hospital_id = #{hospitalId}
+  </delete>
+
+  <select id="selectHospitals" resultMap="HospitalListResultMap">
+    SELECT h.*, (SELECT AVG(rating) FROM hospital_review r WHERE r.hospital_id = h.hospital_id) AS avg_rating
+    FROM hospital_info h
+    <if test="animalIds != null and animalIds.size() > 0">
+      JOIN hospital_animal ha ON h.hospital_id = ha.hospital_id
+      WHERE ha.animal_id IN
+      <foreach collection="animalIds" item="id" open="(" separator="," close=")">
+        #{id}
+      </foreach>
+    </if>
+    <if test="animalIds == null or animalIds.size() == 0">
+
+    </if>
+    ORDER BY h.hospital_id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="countHospitals" resultType="int">
+    SELECT COUNT(DISTINCT h.hospital_id)
+    FROM hospital_info h
+    <if test="animalIds != null and animalIds.size() > 0">
+      JOIN hospital_animal ha ON h.hospital_id = ha.hospital_id
+      WHERE ha.animal_id IN
+      <foreach collection="animalIds" item="id" open="(" separator="," close=")">
+        #{id}
+      </foreach>
+    </if>
+    <if test="animalIds == null or animalIds.size() == 0">
+
+    </if>
+  </select>
+
+  <!-- 병원 삭제 -->
+  <delete id="deleteHospital" parameterType="int">
+    DELETE FROM hospital_info
+    WHERE hospital_id = #{hospitalId}
+  </delete>
+
+</mapper>

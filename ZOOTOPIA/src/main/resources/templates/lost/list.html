@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <title>유실동물 게시판</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/assets/dist/css/header.css}">
+  <link rel="stylesheet" th:href="@{/css/lostlist.css}">
+</head>
+
+<body>
+  <!-- header -->
+  <div th:replace="fragments/header :: header"></div>
+
+  <section class="community-list">
+    <div class="community-header">
+      <div class="title-with-icon">
+        <img th:src="@{/img/lostmain.png}" style="width: 750px;">
+      </div>
+    </div>
+      <div class="community-controls justify-content-end mb-2">
+        <a href="/lost/create" class="btn-write" sec:authorize="isAuthenticated()" >
+          <img th:src="@{/img/write.png}" class="icon"> 글쓰기
+        </a>
+      </div>
+
+    <!-- 게시글 리스트 (유실동물) -->
+    <div class="post-card" th:each="post : ${list}">
+      <div class="post-thumbnail">
+        <img th:src="${post.thumbnailUrl} ?: '/img/default-thumbnail.png'" onerror="this.onerror=null; this.src='/img/default-thumbnail.png';" alt="썸네일">
+      </div>
+      <div class="post-info">
+        <div class="title-category d-flex align-items-center">
+          <a th:href="@{/lost/read/{id}(id=${post.postId})}" class="post-title" th:text="${post.title != null ? post.title : '제목없음'}">제목</a>
+        </div>
+
+        <!-- 작성자 정보 -->
+        <div class="post-meta">
+          <div class="author">
+            <a th:href="@{'/mypage/' + ${post.user.userId}}">
+              <img th:src="${post.user.profileImg != null} ? ${post.user.profileImg} : '/img/default-profile.png'" class="profile-img">
+            </a>
+            <span th:text="${post.user.nickname != null ? post.user.nickname : '알 수 없음'}">작성자</span>
+          </div>
+        </div>
+
+        <!-- 태그 -->
+        <div class="d-flex justify-content-between">
+          <div class="tag-list">
+            <span th:each="tag : ${post.tagList}" class="badge bg-secondary me-1">
+              <span th:text="'#' + ${tag.name}">#태그명</span>
+            </span>
+          </div>
+          <div class="post-stats text-center d-flex align-items-center" style="font-size: 12px;">
+            <div class="d-flex align-items-center gap-1">
+              <i class="bi bi-eye"></i> <span th:text="${post.viewCount}">0</span>
+            </div>
+            <span>&middot;</span>
+            <div class="d-flex align-items-center gap-1">
+              <i class="bi bi-chat-dots"></i> <span th:text="${post.commentCount}">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 검색창 -->
+    <div class="search-bar mt-5 mb-4">
+      <form th:action="@{/lost/list}" method="get" class="d-flex gap-2 align-items-center">
+
+        <!-- 검색 조건 -->
+        <select name="type" class="form-select w-auto">
+          <option value="title" th:selected="${type} == 'title'">제목</option>
+          <option value="titleContent" th:selected="${type} == 'titleContent'">제목+내용</option>
+          <option value="tag" th:selected="${type} == 'tag'">태그</option>
+        </select>
+
+        <!-- 검색어 입력창 -->
+        <input type="text" name="keyword" class="form-control search" placeholder="검색어 입력" th:value="${keyword}" />
+
+        <!-- 검색 버튼 -->
+        <button type="submit" class="btn btn-search">검색</button>
+      </form>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="pagination">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" th:if="${pageInfo.start > 1}">
+          <a class="page-link" th:href="@{/lost/list(page=${pageInfo.start - 1})}">이전</a>
+        </li>
+        <li class="page-item" th:each="pageNum : ${#numbers.sequence(pageInfo.start, pageInfo.end)}"
+            th:classappend="${pageInfo.page == pageNum} ? 'active'">
+          <a class="page-link" th:href="@{/lost/list(page=${pageNum}, sort=${sort})}" th:text="${pageNum}">1</a>
+        </li>
+        <li class="page-item" th:if="${pageInfo.end < pageInfo.last}">
+          <a class="page-link" th:href="@{/lost/list(page=${pageInfo.end + 1})}">다음</a>
+        </li>
+      </ul>
+    </div>
+
+  </section>
+
+  <!-- footer -->
+  <div th:replace="fragments/footer :: footer"></div>
+  <script th:src="@{/assets/dist/js/header.js}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

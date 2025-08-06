@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메인 화면</title>
+        <style>
+      .main-section {
+        background-color: #FFEFEF;  /* 연핑크 배경 */
+        padding: 50px 0;       /* 위아래 여백 */
+        text-align: center;
+        min-height: 100vh;
+      }
+      .main-logo {
+        width: 400px;
+        height: auto;
+        margin-bottom: 20px;
+      }
+      .main-title {
+        font-weight: bold;
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+      }
+    </style>
+
+    <!-- bootstrap css --> 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/assets/dist/css/header.css}">
+</head>
+<body>
+    <th:block th:replace="fragments/header :: header"></th:block>
+
+    <section class="main-section d-flex align-items-center justify-content-center gap-4">
+        <!-- 로고 -->
+        <img th:src="@{/image/homelogo.png}" alt="로고" class="main-logo">
+        <!-- 소개 문구 -->
+        <div>
+            <p class="main-title">✏️ 주토피아 Zootopia</p>
+            <p class="main-title">반려와 공존, 그리고 사랑의 시작</p>
+            <p class="main-title">“세상의 모든 생명에게, 따뜻한 지식이 머무는 곳”</p>
+            <p class="main-title">“강아지부터 도마뱀까지, 지구 위 모든 친구들의 공간”</p>
+        </div>
+    </section>
+
+    <th:block th:replace="fragments/footer :: footer"></th:block>
+    <!-- bootstrap js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/assets/dist/js/header.js}"></script>
+</body>
+</html>

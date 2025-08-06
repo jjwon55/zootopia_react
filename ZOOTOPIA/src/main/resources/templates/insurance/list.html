@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>펫 보험</title>
+        <!-- bootstrap css -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Login CSS only -->
+    <link rel="stylesheet" th:href="@{/assets/dist/css/header.css}">
+    <link rel="stylesheet" href="/assets/dist/css/login.css">
+  <style>
+    .btn1 {
+    border: 1px solid #F27A7A;
+    background-color: #F27A7A;
+    color: white;
+    border-radius: 6px;
+    min-width: 60px;
+    }
+
+    .custom-page {
+    color: #F27A7A !important;
+    border-color: #F27A7A !important;
+    }
+
+    .page-item.active .custom-page {
+    background-color: #F27A7A !important;
+    color: white !important;
+    border-color: #F27A7A !important;
+    }
+  </style>
+</head>
+<body>
+  <th:block th:replace="fragments/header :: header"></th:block>
+
+  <div class="container my-5 p-4 border rounded" style="max-width: 1000px; min-height: 1000px;">
+    <!-- 제목 -->
+    <div class="text-center mb-5 mt-3">
+      <h2>펫 보험</h2>
+        <!-- ✅ 메시지 출력 영역 -->
+      <div th:if="${successMessage}" class="alert alert-success text-center mt-4" role="alert">
+        <span th:text="${successMessage}"></span>
+      </div>
+      <div th:if="${errorMessage}" class="alert alert-danger text-center mt-4" role="alert">
+        <span th:text="${errorMessage}"></span>
+      </div>
+    </div>
+
+    <!-- 상단 이미지 + 카드 -->
+    <div class="d-flex justify-content-center align-items-center mt-5" style="gap: 50px;">
+      <!-- 왼쪽 이미지 -->
+      <div class="text-align:center;">
+          <img th:src="@{/image/insurancelogo.png}" alt="보험 이미지" style="width:340px; height: auto; border-radius: 10px;">
+      </div>
+      <div>
+        
+  <form id="filterForm" th:action="@{/insurance/list}" method="get">
+    <div class="bg-light p-4 rounded shadow-sm mb-2 mt-2" style="width: 340px; height: 340px; border-radius: 10px;">
+      <!-- 제목 -->
+      <p class="text-center fw-bold mb-4">🐶 원하는 보험 찾기 🐱</p>
+
+      <!-- 동물 버튼 -->
+      <div class="d-flex justify-content-center gap-2 mb-5">
+        <input type="hidden" name="species" id="speciesInput" />
+        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="submitSpecies('dog')">강아지</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="submitSpecies('cat')">고양이</button>
+      </div>
+
+      <!-- 보험사 선택 -->
+      <div class="mb-4">
+        <select name="company" class="form-select form-select-sm" onchange="document.getElementById('filterForm').submit()">
+          <option value="">전체</option>
+          <option value="삼성화재" th:selected="${param.company == '삼성화재'}">삼성화재</option>
+          <option value="KB" th:selected="${param.company == 'KB'}">KB</option>
+          <option value="메리츠" th:selected="${param.company == '메리츠'}">메리츠</option>
+        </select>
+      </div>
+
+      <!-- 로고 -->
+      <div class="text-center mb-3">
+        <img src="/img/zootopialogo.png" alt="주토피아 로고" style="width: 90px;" height="70px" class="mb-1">
+        <p class="small text-muted text-center mt-2 fw-bold">🏡 펫과 함께, 더 나은 내일을</p>
+      </div>
+    </div>
+  </form>
+
+  </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <p>😉 Tip</p>
+        <p>✅ 슬개골 탈구, 피부병은 가입 전에 보장 여부 꼭 확인</p>
+        <p>✅ 보험료는 연령, 품종, 선택 보장 범위에 따라 달라짐</p>
+    </div>
+
+<div class="row g-4 justify-content-center mt-4">
+  <div class="col-md-5 mb-3"
+       th:each="product : ${products}">
+    <div class="card shadow-sm border-1 p-3"
+         style="border-radius: 15px; min-height: 250px;">
+      <div class="card-body mb-2">
+        <h6 class="card-title fw-bold mb-2 mt-2">
+          🐾 <span th:text="${product.name}">상품명</span>
+        </h6>
+        <p class="text-muted mb-4 mt-4 small">
+          <i class="bi bi-pencil"></i> 
+          <span th:text="${product.slogan}">슬로건 문구</span>
+        </p>
+        <ul class="list-unstyled mt-1 mb-5">
+          <li>💰 <strong>월 보험료:</strong>
+            <span th:text="${product.monthlyFeeRange}"></span>원
+          </li>
+          <li>💰 <strong>월 최대 보장 한도:</strong> 
+            <span th:text="${product.maxCoverage}"></span>만원
+          </li>
+          <li>✅ <strong>보장 비율:</strong> 
+            <span th:text="${product.coveragePercent}"></span>%
+          </li>
+        </ul>
+        <div class="text-end">
+          <a th:href="@{/insurance/read/{productId}(productId=${product.productId})}"
+             class="btn1 btn-sm" style="display: inline-block; text-decoration: none; padding: 6px 14px;">자세히 보기</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <div class="d-flex justify-content-center mt-5">
+    <ul class="pagination pagination-sm">
+      <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+        <a class="page-link custom-page" th:href="@{/insurance/list(page=${currentPage - 1})}">이전</a>
+      </li>
+
+      <li class="page-item" th:each="i : ${#numbers.sequence(1, totalPages)}"
+          th:classappend="${i == currentPage} ? 'active'">
+        <a class="page-link custom-page" th:href="@{/insurance/list(page=${i})}" th:text="${i}"></a>
+      </li>
+
+      <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+        <a class="page-link custom-page" th:href="@{/insurance/list(page=${currentPage + 1})}">다음</a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 상품 등록 버튼 -->
+  <div class="text-end mt-5" sec:authorize="hasRole('ADMIN')">
+  <a href="/insurance/create" class="btn1 btn-sm" style="text-decoration: none; padding: 6px 12px;">상품등록</a>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div class="my-5 p-3 rounded" style="background-color: #ffecec;">
+  <h5 class="fw-bold mb-3">📌 펫보험 자주 묻는 질문 (FAQ)</h5>
+  <div class="accordion" id="faqAccordion">
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q1">
+          펫보험이 무엇인가요?
+        </button>
+      </h2>
+      <div id="q1" class="accordion-collapse collapse">
+        <div class="accordion-body">
+          반려동물의 치료비를 보장해 주는 보험입니다.
+        </div>
+      </div>
+    </div>
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q2">
+          어떤 동물이 가입할 수 있나요?
+        </button>
+      </h2>
+      <div id="q2" class="accordion-collapse collapse">
+        <div class="accordion-body">
+          주로 강아지, 고양이가 해당되며 기타 동물은 별도 확인이 필요합니다.
+        </div>
+      </div>
+    </div>
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q3">
+          보험금 청구는 어떻게 하나요?
+        </button>
+      </h2>
+      <div id="q3" class="accordion-collapse collapse">
+        <div class="accordion-body">
+          병원 진료 후 영수증 등 증빙서류를 제출하여 온라인 또는 모바일 앱으로 간편하게 청구할 수 있습니다.
+        </div>
+      </div>
+    </div>
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q4">
+          기존 병력도 보장되나요?
+        </button>
+      </h2>
+      <div id="q4" class="accordion-collapse collapse">
+        <div class="accordion-body">
+          보장 제외되는 기존 병력이 있을 수 있으므로 가입 전에 반드시 약관을 확인해야 합니다.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="text-center my-5">
+      <img th:src="@{/img/zootopialogo.png}" alt="주토피아" style="width: 100px;">
+      <p class="fw-bold mt-2">주토피아 - 반려동물 플랫폼</p>
+      <p class="small">“세상의 모든 반려동물에게 더 나은 보장을!”</p>
+    </div>
+
+  </div>
+  <th:block th:replace="fragments/footer :: footer"></th:block>
+    <script th:src="@{/assets/dist/js/header.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    function submitSpecies(species) {
+      document.getElementById('speciesInput').value = species;
+      document.getElementById('filterForm').submit();
+    }
+  </script>
+</body>
+</html>

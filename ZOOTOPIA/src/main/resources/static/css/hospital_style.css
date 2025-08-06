@@ -1,0 +1,820 @@
+/* 전체 레이아웃 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f2f4fc;
+    color: #333;
+    line-height: 1.6;
+}
+
+.hospital-main-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 로고 컨테이너 */
+.logo-container {
+    text-align: center;
+    margin-bottom: 30px;
+    width: 100%;
+}
+
+.logo {
+    width: 100%;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    /* background-color: #fff; */
+    background-color: #4caf4f4f;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.logo-icon {
+    width: 250px;
+    height: 170px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+}
+
+/* 동물 배너 */
+.animal-banner {
+    background: linear-gradient(135deg, #74b9ff, #0984e3);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.animal-icons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.animal-icon {
+    font-size: 32px;
+    display: inline-block;
+    animation: bounce 2s infinite;
+}
+
+.animal-icons .text {
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    animation: none;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+/* 메인 컨텐츠 */
+.main-content {
+    background-color: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 필터 섹션 */
+.filter-section {
+    margin-bottom: 30px;
+}
+
+.filter-tags {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.filter-tag {
+    padding: 10px 20px;
+    background-color: #e8f4f8;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #2d3436;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-tag:hover,
+.filter-tag.active {
+    background-color: #74b9ff;
+    color: white;
+    transform: translateY(-2px);
+}
+
+
+/* 체크박스 검색 컨테이너 */
+.search-con {
+    display: flex;
+    /* justify-content: center; */ /* 이 부분을 주석 처리하거나 flex-start로 변경 */
+    align-items: center;
+}
+
+
+/* 1. 체크박스 숨기기 */
+.pill-checkbox {
+  display: none;
+}
+
+/* 2. 기본 pill 스타일 레이블 */
+.pill-label {
+  display: inline-block;
+  margin: 0.4em 0.5em 0 0;
+  padding: 0.5em 1.2em;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: #555;
+  background-color: #f2f2f2;
+  border: 1px solid #ccc;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/* 3. 호버 시 강조 효과 */
+.pill-label:hover {
+  background-color: #e6e6e6;
+  border-color: #bbb;
+}
+
+/* 4. 선택된 상태 스타일 */
+.pill-checkbox:checked + .pill-label {
+  color: #fff;
+  background-color: #1da1f2;  /* 주 색상으로 변경 가능 */
+  border-color: #1da1f2;
+}
+
+/* 5. 선택된 상태 체크 아이콘 */
+.pill-checkbox:checked + .pill-label::after {
+  content: "✔";
+  display: inline-block;
+  margin-left: 0.6em;
+  font-size: 0.9em;
+  vertical-align: middle;
+}
+
+
+
+
+/* 병원 그리드 */
+.hospital-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.hospital-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.hospital-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.hospital-image {
+    width: 100%;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.hospital-card:hover .card-image {
+    transform: scale(1.05);
+}
+
+.hospital-info {
+    padding: 20px;
+}
+
+.hospital-name {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #2d3436;
+}
+
+.hospital-location {
+    color: #636e72;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.hospital-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.hospital-tag {
+    background-color: #e8f4f8;
+    color: #74b9ff;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* 병원 리스트 페이징 */
+.pagination-container {
+    display: flex;
+    justify-content: center; /* 자식 요소를 가로 방향으로 가운데 정렬 */
+    width: 100%; /* 부모 컨테이너가 전체 너비를 차지하도록 보장 */
+}
+.pagination {
+    margin-top: 30px;
+    text-align: center;
+}
+.page-link {
+    display: inline-block;
+    margin: 0 4px;
+    padding: 6px 12px;
+    background-color: #f0f0f0;
+    color: #333;
+    border-radius: 4px;
+    text-decoration: none;
+}
+.page-link:hover {
+    background-color: #ddd;
+}
+.page-link.active {
+    background-color: #2a9d8f;
+    color: white;
+    font-weight: bold;
+}
+
+
+
+
+
+/* 폼 컨테이너 */
+.form-container {
+    /* display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 40px;
+    align-items: start; */
+    display: flex;
+
+}
+
+.image-upload-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.image-upload-box {
+    width: 250px;
+    height: 200px;
+    border: 2px dashed #ddd;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.image-upload-box:hover {
+    border-color: #74b9ff;
+    background-color: #e8f4f8;
+}
+
+.checkered-pattern {
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+        linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+        linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    border-radius: 8px;
+}
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2d3436;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="tel"],
+.form-group input[type="url"],
+.form-group input[type="number"],
+.form-group textarea[type="text"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #74b9ff;
+    box-shadow: 0 0 0 3px rgba(116, 185, 255, 0.1);
+}
+
+.checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.checkbox-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #74b9ff;
+}
+
+.category-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.category-item:hover {
+    background-color: #e8f4f8;
+}
+
+.category-item input[type="checkbox"] {
+    display: none;
+}
+
+.category-item input[type="checkbox"]:checked ~ span {
+    color: #74b9ff;
+    font-weight: 600;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.hosp.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-cancel {
+    background-color: #f1f2f6;
+    color: #2d3436;
+}
+
+.btn-cancel:hover {
+    background-color: #ddd;
+}
+
+.btn-submit {
+    background-color: #74b9ff;
+    color: white;
+}
+
+.btn-submit:hover {
+    background-color: #0984e3;
+    transform: translateY(-2px);
+}
+
+/* 상세 페이지 스타일 */
+.detail-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.hospital-image-section {
+    display: flex;
+    justify-content: center;
+}
+
+.hospital-image {
+    width: 100%;
+    max-width: 300px;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.hospital-info-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.info-table tr {
+    border-bottom: 1px solid #eee;
+}
+
+.info-table td {
+    padding: 15px 0;
+    vertical-align: top;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #2d3436;
+    width: 120px;
+}
+
+.info-value {
+    color: #636e72;
+}
+
+.info-value a {
+    color: #74b9ff;
+    text-decoration: none;
+}
+
+.info-value a:hover {
+    text-decoration: underline;
+}
+
+/* 리뷰 섹션 */
+.review-section {
+    border-top: 1px solid #eee;
+    padding-top: 30px;
+}
+
+.review-header {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.review-header h3 {
+    background-color: #ffffff;
+    color: #ff6b6b;
+    padding: 10px 20px;
+    border-radius: 20px;
+    display: inline-block;
+    border: 1px solid #ff6b6b;
+    margin: 0;
+}
+
+.review-stats {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #636e72;
+}
+
+.review-list {
+    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.review-update-container {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.author-rating {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+}
+
+.review-item {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.review-author {
+    font-weight: 600;
+    color: #2d3436;
+}
+
+.review-date-container {
+    display: flex;
+    /* flex-direction: column; */
+    justify-content: flex-start;
+    align-items: flex-end;
+    gap: 5px;
+    width: 900px;
+}
+
+.review-date {
+    color: #636e72;
+    font-size: 12px;
+}
+
+.review-content {
+    color: #2d3436;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.review-rating {
+    color: #ffd700;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 3px;
+}
+
+.review-update-container> button {
+    background-color: white;
+    color: #f27a7a;
+    border: none;
+    padding: 10px 9px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 30px;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.review-form {
+    margin-top: 30px;
+}
+
+.review-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.star-rating {
+    margin-left: 15px;
+}
+
+.review-input-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.review-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 25px;
+    font-size: 14px;
+    outline: none;
+}
+
+.review-input:focus {
+    border-color: #74b9ff;
+    box-shadow: 0 0 0 3px rgba(116, 185, 255, 0.1);
+}
+
+.review-submit-btn {
+    padding: 12px 24px;
+    background-color: #e17055;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.review-submit-btn:hover {
+    background-color: #d63031;
+    transform: translateY(-2px);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    .form-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .detail-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .hospital-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-tags {
+        justify-content: center;
+    }
+
+    .animal-icons {
+        gap: 10px;
+    }
+
+    .animal-icon {
+        font-size: 24px;
+    }
+
+    .animal-icons .text {
+        font-size: 18px;
+    }
+
+    .button-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .review-input-container {
+        flex-direction: column;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 20px;
+    }
+
+    .checkbox-group {
+        grid-template-columns: 1fr;
+    }
+
+    .category-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .filter-tags {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .hospital-info {
+        padding: 15px;
+    }
+}
+
+
+
+.image-upload-area {
+  width: 200px;
+  height: 250px;
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: 0.3s ease;
+}
+
+.image-upload-area:hover {
+  border-color: #888;
+}
+
+.image-upload-area img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+}
+
+/* 별점 스타일 */
+.rating .star {
+    font-size: 2rem;
+    color: #ddd;
+    cursor: pointer;
+}
+
+
+.rating:hover .star {
+    color: #f7d106; /* 호버 시 별 색상 */
+}
+
+
+.rating:hover .star:hover ~ .star {
+    color: #ddd; /* 호버 시 선택된 별 이후 별 색상 */
+}
+
+.rating .star.selected {
+    color: #f7d106; /* 선택된 별 색상 */
+}
+/* .rating .star.selected, 
+.rating .star:hover,
+.rating .star:hover ~ .star {
+    color: #f7d106;
+} */
+
+/* 리뷰 카드 내 수정/삭제 버튼 링크 */
+.review-actions a {
+    margin-right: 10px;
+    cursor: pointer;
+    color: #007bff; /* 링크 색상 */
+    text-decoration: none; /* 밑줄 제거 */
+}
+
+.review-actions a:hover {
+    text-decoration: underline; /* 호버 시 밑줄 표시 */
+}

@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.aloha.zootopia.mapper.PostMapper">
+
+  <resultMap id="PostMap" type="com.aloha.zootopia.domain.Posts">
+    <id property="postId" column="post_id" />
+    <result property="id" column="id" />
+    <result property="category" column="category" />
+    <result property="title" column="title" />
+    <result property="content" column="content" />
+    <result property="viewCount" column="view_count" />
+    <result property="likeCount" column="like_count" />
+    <result property="commentCount" column="comment_count" />
+    <result property="createdAt" column="created_at" />
+    <result property="updatedAt" column="updated_at" />
+    <result property="userId" column="user_id" />
+    <result property="thumbnailUrl" column="thumbnail_url" />
+
+    <association property="user" javaType="com.aloha.zootopia.domain.Users">
+      <id property="userId" column="user_id"/>
+      <result property="nickname" column="nickname"/>
+      <result property="profileImg" column="profile_img"/>
+    </association>
+
+      <collection property="tagList" ofType="com.aloha.zootopia.domain.Tag">
+          <id property="tagId" column="tag_id"/>
+          <result property="name" column="tag_name"/>
+      </collection>
+  </resultMap>
+
+<select id="list" resultMap="PostMap">
+  SELECT 
+    p.*, 
+    u.nickname,
+    u.profile_img,
+    t.tag_id, t.name AS tag_name,
+    (
+      SELECT image_url 
+      FROM post_images 
+      WHERE post_id = p.post_id 
+      ORDER BY ordering ASC 
+      LIMIT 1
+    ) AS thumbnail_url
+  FROM posts p
+  LEFT JOIN users u ON p.user_id = u.user_id
+  LEFT JOIN post_tags pt ON p.post_id = pt.post_id
+  LEFT JOIN tags t ON pt.tag_id = t.tag_id
+  ORDER BY p.post_id DESC
+</select>
+
+  <!-- 페이징 목록 -->
+  <select id="page" resultMap="PostMap">
+    SELECT 
+      p.*,
+      u.nickname,
+      u.profile_img
+    FROM posts p
+    LEFT JOIN users u ON p.user_id = u.user_id
+    <where>
+      <choose>
+        <when test="category != null and category != ''">
+          p.category = #{category}   
+        </when>
+        <otherwise>
+          p.category != '자랑글'       
+        </otherwise>
+      </choose>
+    </where>
+    ORDER BY p.post_id DESC
+    LIMIT #{offset}, #{size}
+  </select>
+
+
+  <!-- 전체 수 -->
+  <select id="count" resultType="long">
+    SELECT COUNT(*) FROM posts
+    <where>
+      <choose>
+        <when test="category != null and category != ''">
+          category = #{category}
+        </when>
+        <otherwise>
+          category != '자랑글'
+        </otherwise>
+      </choose>
+    </where>
+  </select>
+
+  <!-- 인기글 TOP N -->
+  <select id="selectTopNByLikeCount" resultMap="PostMap">
+    SELECT 
+      p.*,
+      u.nickname,
+      u.profile_img
+    FROM posts p
+    LEFT JOIN users u ON p.user_id = u.user_id
+    ORDER BY p.like_count DESC
+    LIMIT #{limit}
+  </select>
+
+  <!-- 게시글 단건 조회 -->
+  <select id="selectById" resultMap="PostMap">
+    SELECT 
+      p.*,
+      u.nickname,
+      u.profile_img
+    FROM posts p
+    LEFT JOIN users u ON p.user_id = u.user_id
+    WHERE p.post_id = #{post_id}
+  </select>
+
+  <!-- 등록 -->
+  <insert id="insert" parameterType="com.aloha.zootopia.domain.Posts" useGeneratedKeys="true" keyProperty="postId">
+    INSERT INTO posts (
+      category, title, content, user_id, created_at, updated_at
+    ) VALUES (
+      #{category}, #{title}, #{content}, #{userId}, NOW(), NOW()
+    )
+  </insert>
+
+
+  <!-- 썸네일만 업데이트 -->
+  <update id="updateThumbnail" parameterType="com.aloha.zootopia.domain.Posts">
+    UPDATE posts
+    SET thumbnail_url = #{thumbnailUrl}
+    WHERE post_id = #{postId}
+  </update>
+
+  <!-- 수정 -->
+  <update id="updateById" parameterType="com.aloha.zootopia.domain.Posts">
+    UPDATE posts
+    SET
+      title = #{title},
+      content = #{content},
+      category = #{category},
+      updated_at = NOW()
+    WHERE post_id = #{postId}
+  </update>
+
+  <!-- 삭제 -->
+  <delete id="deleteById">
+    DELETE FROM posts WHERE post_id = #{postId}
+  </delete>
+
+  <!-- 조회순 -->
+  <update id="updateViewCount" parameterType="int">
+    UPDATE posts
+    SET view_count = view_count + 1
+    WHERE post_id = #{postId}
+  </update>
+
+  <!-- 댓글 수 증가-->
+  <update id="updateCommentCount" parameterType="int">
+    UPDATE posts
+    SET comment_count = comment_count + 1
+    WHERE post_id = #{postId}
+  </update>
+  <!-- 댓글 수 감소 -->
+  <update id="minusCommentCount" parameterType="int">
+    UPDATE posts
+    SET comment_count = comment_count - 1
+    WHERE post_id = #{postId}
+  </update>
+
+  <!-- 인기글 -->
+  <select id="selectTop10ByPopularity" resultType="com.aloha.zootopia.domain.Posts">
+    SELECT 
+      post_id,
+      title,
+      category,
+      view_count,
+      like_count,
+      comment_count
+    FROM posts
+    ORDER BY (view_count * 0.3 + like_count * 1.0 + comment_count * 0.7) DESC
+    LIMIT 10
+  </select>
+
+  <!-- 태그 -->
+  <select id="selectTagsByPostIds" resultType="com.aloha.zootopia.domain.Tag">
+    SELECT
+      pt.post_id,
+      t.tag_id,
+      t.name
+    FROM post_tags pt
+    JOIN tags t ON pt.tag_id = t.tag_id
+    WHERE pt.post_id IN
+    <foreach item="id" collection="list" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+  </select>
+
+
+<!-- 게시글 검색 + 페이징 -->
+<select id="pageBySearch" resultMap="PostMap">
+  SELECT 
+    p.*,
+    u.nickname,
+    u.profile_img,
+    t.tag_id,
+    t.name AS tag_name
+  FROM posts p
+  LEFT JOIN users u ON p.user_id = u.user_id
+  LEFT JOIN post_tags pt ON p.post_id = pt.post_id
+  LEFT JOIN tags t ON pt.tag_id = t.tag_id
+  <where>
+    <if test="pagination.category != null">
+      p.category = #{pagination.category}
+    </if>
+
+    <if test="type == 'title'">
+      AND p.title LIKE CONCAT('%', #{keyword}, '%')
+    </if>
+    <if test="type == 'titleContent'">
+      AND (p.title LIKE CONCAT('%', #{keyword}, '%') OR p.content LIKE CONCAT('%', #{keyword}, '%'))
+    </if>
+    <if test="type == 'tag'">
+      AND p.post_id IN (
+        SELECT pt.post_id
+        FROM post_tags pt
+        JOIN tags t ON pt.tag_id = t.tag_id
+        WHERE t.name LIKE CONCAT('%', #{keyword}, '%')
+      )
+    </if>
+  </where>
+  ORDER BY p.post_id DESC
+  LIMIT #{pagination.offset}, #{pagination.limit}
+</select>
+
+  <select id="countBySearch" resultType="long">
+    SELECT COUNT(*) FROM posts
+    <where>
+      <if test="type == 'title'">
+        title LIKE CONCAT('%', #{keyword}, '%')
+      </if>
+      <if test="type == 'titleContent'">
+        (title LIKE CONCAT('%', #{keyword}, '%') OR content LIKE CONCAT('%', #{keyword}, '%'))
+      </if>
+      <if test="type == 'tag'">
+        post_id IN (
+          SELECT pt.post_id
+          FROM post_tags pt
+          JOIN tags t ON pt.tag_id = t.tag_id
+          WHERE t.name LIKE CONCAT('%', #{keyword}, '%')
+        )
+      </if>
+    </where>
+  </select>
+
+  <select id="pageByPopularity" resultMap="PostMap">
+    SELECT 
+      p.*,
+      u.nickname,
+      u.profile_img
+    FROM posts p
+    LEFT JOIN users u ON p.user_id = u.user_id
+    <where>
+      <choose>
+        <when test="category != null and category != ''">
+          p.category = #{category}
+        </when>
+        <otherwise>
+          p.category != '자랑글'
+        </otherwise>
+      </choose>
+    </where>
+    ORDER BY (p.view_count * 0.3 + p.like_count * 1.0 + p.comment_count * 0.7) DESC
+    LIMIT #{offset}, #{size}
+  </select>
+
+  <select id="findByUserId" resultType="com.aloha.zootopia.domain.Posts">
+    SELECT *
+    FROM posts
+    WHERE user_id = #{userId}
+    ORDER BY created_at DESC
+  </select>
+
+
+
+
+</mapper>

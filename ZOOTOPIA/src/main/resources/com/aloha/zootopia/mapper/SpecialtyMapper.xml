@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.aloha.zootopia.mapper.SpecialtyMapper">
+
+  <!-- 모든 진료 과목 리스트 조회 -->
+  <select id="findAll" resultType="com.aloha.zootopia.domain.Specialty">
+    SELECT specialty_id, category
+    FROM specialty
+  </select>
+
+  <!-- 특정 병원에 연결된 진료 과목 리스트 조회 -->
+  <select id="findByHospitalId" parameterType="int" resultType="com.aloha.zootopia.domain.Specialty">
+    SELECT s.specialty_id, s.category
+    FROM hospital_specialty hs
+    JOIN specialty s ON hs.specialty_id = s.specialty_id
+    WHERE hs.hospital_id = #{hospitalId}
+  </select>
+
+</mapper>

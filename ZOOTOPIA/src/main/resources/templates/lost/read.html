@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${post.title}">유실동물 게시글</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/assets/dist/css/header.css}">
+  <link rel="stylesheet" th:href="@{/css/lostread.css}">
+</head>
+
+<body>
+
+  <div th:replace="fragments/header :: header"></div>
+
+  <div class="lost-container">
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="tolist">
+        <a th:href="@{/lost/list}" class="d-flex align-items-center mb-1"
+          style="text-decoration: none; color: #F35F4C;">유실동물 게시판
+          <img width="15" height="15" th:src="@{/img/pinkarrow.png}" alt="forward" />
+        </a>
+      </div>
+      <div th:if="${isOwner}" class="d-flex justify-content-end align-items-center pb-2">
+        <a th:href="@{'/lost/edit/' + ${post.postId}}" class="btn btn-sm btn-outline-secondary me-2">수정</a>
+        <form th:action="@{'/lost/delete/' + ${post.postId}}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+          <button type="submit" class="btn btn-sm btn-outline-danger">삭제</button>
+        </form>
+      </div>
+    </div>
+    <!-- 상단 문구 -->
+    <div class="lost-header">
+      <img th:src="@{/img/lostmain.png}" alt="잃어버린 가족을 찾고 있어요">
+    </div>
+
+    <!-- 정보 영역 -->
+    <div class="info-box">
+      <div class="main-des">
+        <div class="post-content" th:utext="${post.content}"></div>
+        <!-- 공유 버튼 -->
+        <div class="post-actions d-flex justify-content-center">
+          <div id="shareBtn" class="btn btn-share d-flex align-items-center justify-content-center">
+            <img th:src="@{/img/share.png}" alt="공유하기" width="25" class="me-2">공유하기
+          </div>
+        </div>
+      </div>
+
+      <div class="lost-info">
+        <div class="lost-detail d-flex justify-content-between align-items-center">
+          <div class="info-row d-flex align-items-center">
+            <div class="info-label">잃어버린 장소</div>
+            <div class="info-content" th:text="${post.lostLocation}">장소</div>
+          </div>
+          <div class="date info-row d-flex align-items-center">
+            <div class="info-label">유실 날짜</div>
+            <div class="info-content" th:text="${#temporals.format(post.lostTime, 'yyyy-MM-dd')}"></div>
+          </div>
+        </div>
+        <div class="lost-title d-flex justify-content-between align-items-center">
+          <div class="info-row d-flex align-items-center">
+            <div class="info-label">글 제목</div>
+            <div class="info-content" th:text="${post.title}"></div>
+          </div>
+          <div class="info-row d-flex align-items-center">
+            <div class="info-label">연락처</div>
+            <div class="info-content" th:text="${post.contactPhone}"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tag-list mt-3">
+        <span th:each="tag : ${post.tagList}" class="badge bg-secondary me-1">
+          <span th:text="'#' + ${tag.name}">#태그</span>
+        </span>
+      </div>
+    </div>
+
+
+    <div class="comment-box mt-5">
+      <span class="fw-bold">💬 댓글 <span th:text="${#lists.size(post.comments)}">0</span></span>
+
+      <!-- ✅ 댓글 목록 출력 -->
+      <div class="comment-list mt-3">
+        <div th:each="comment : ${post.comments}">
+          <div th:with="commentItem=${comment}">
+            <div
+              th:insert="~{this :: renderComment(commentItem=${commentItem}, postId=${post.postId}, loginUserId=${loginUserId}, editId=${editId})}">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ 댓글 작성 폼 -->
+      <div sec:authorize="isAuthenticated()">
+        <form th:action="@{/lost/comments/add}" method="post" class="mt-4">
+          <input type="hidden" name="postId" th:value="${post.postId}" />
+          <div class="mb-3">
+            <textarea class="form-control" name="content" rows="3" placeholder="댓글 내용을 입력해주세요" required></textarea>
+          </div>
+          <div class="d-flex justify-content-end align-items-center">
+            <button type="submit" class="btn comment-b">댓글쓰기</button>
+          </div>
+        </form>
+      </div>
+      <div sec:authorize="isAnonymous()" class="mt-4">
+        <div class="mb-3">
+          <textarea class="form-control" rows="3" placeholder="댓글을 작성하려면 로그인하세요"
+            readonly></textarea>
+        </div>
+        <div class="d-flex justify-content-end align-items-center">
+          <a href="/login" class="btn comment-b">로그인하기</a>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ✅ 댓글 렌더링 재귀 fragment 정의 -->
+    <th:block th:fragment="renderComment(commentItem, postId, loginUserId, editId)">
+      <div th:if="${commentItem != null}" class="card-body comment-line"
+        th:classappend="${commentItem.parentId != null} ? ' comment-reply ms-5' : ''">
+        <div class="d-flex justify-content-between">
+          <div class="d-flex align-items-center mb-1">
+            <a th:href="@{'/mypage/' + ${post.user.userId}}">
+              <img
+                th:src="${commentItem != null and commentItem.profileImg != null} ? ${commentItem.profileImg} : '/img/default-profile.png'"
+                class="profile-img rounded-circle me-2" alt="프로필" width="30" height="30">
+            </a>
+            <div class="fw-semibold me-2" th:text="${commentItem.nickname}">작성자</div>
+            <div class="text-muted small" th:text="${#dates.format(commentItem.createdAt, 'yy-MM-dd HH:mm')}">작성일</div>
+            <span class="text-muted small"
+              th:if="${commentItem.updatedAt.time != commentItem.createdAt.time}">(수정됨)</span>
+          </div>
+
+          <!-- 수정/삭제 -->
+          <div class="d-flex gap-2 mt-2" th:if="${loginUserId != null and loginUserId == commentItem.userId}">
+            <a th:href="@{'/lost/read/' + ${postId} + '?editId=' + ${commentItem.commentId}}"
+              class="btn btn-sm btn-outline-secondary">수정</a>
+            <form th:action="@{'/comments/delete/' + ${commentItem.commentId}}" method="post"
+              onsubmit="return confirm('댓글을 삭제하시겠습니까?');">
+              <input type="hidden" name="postId" th:value="${postId}" />
+              <button type="submit" class="btn btn-sm btn-outline-danger">삭제</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- 내용 or 수정 -->
+        <div th:if="${editId != commentItem.commentId}" class="comment-content" th:text="${commentItem.content}">댓글 내용
+        </div>
+        <form th:if="${editId == commentItem.commentId}" th:action="@{/comments/update}" method="post">
+          <input type="hidden" name="commentId" th:value="${commentItem.commentId}" />
+          <input type="hidden" name="postId" th:value="${postId}" />
+          <textarea class="form-control" name="content" rows="3" th:text="${commentItem.content}"></textarea>
+          <div class="d-flex gap-2 mt-2">
+            <button type="submit" class="btn btn-sm comment-update">수정 완료</button>
+            <a th:href="@{'/lost/read/' + ${postId}}" class="btn btn-sm btn-secondary">취소</a>
+          </div>
+        </form>
+
+        <div class="btn btn-reply">
+          <a href="javascript:void(0)" th:onclick="'showReplyForm(' + ${commentItem.commentId} + ')'">답글</a>
+        </div>
+
+        <!-- 답글 작성 폼 -->
+        <div sec:authorize="isAuthenticated()">
+          <form th:action="@{/lost/comments/reply}" method="post" th:id="'replyForm-' + ${commentItem.commentId}"
+            style="display:none;" class="mt-2 ms-5">
+            <input type="hidden" name="postId" th:value="${postId}" />
+            <input type="hidden" name="parentId" th:value="${commentItem.commentId}" />
+            <textarea name="content" class="form-control" rows="2" placeholder="답글을 입력해주세요"></textarea>
+            <button type="submit" class="btn btn-sm btn-outline-secondary mt-2">등록</button>
+          </form>
+        </div>
+        <div sec:authorize="isAnonymous()" th:id="'replyForm-' + ${commentItem.commentId}" style="display:none;"
+          class="mt-2 ms-5">
+          <textarea class="form-control" rows="2" placeholder="답글을 입력하려면 로그인해주세요"
+            readonly></textarea>
+          <a href="/login" class="btn btn-sm btn-outline-secondary mt-2">로그인</a>
+        </div>
+
+
+
+        <!-- 자식 댓글 재귀 렌더링 -->
+        <div class="comment-children mt-3 ms-5"
+          th:if="${commentItem.replies != null and !commentItem.replies.isEmpty()}">
+          <div th:each="child : ${commentItem.replies}">
+            <div th:with="commentItem=${child}">
+              <div
+                th:insert="~{this :: renderComment(commentItem=${commentItem}, postId=${postId}, loginUserId=${loginUserId}, editId=${editId})}">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </th:block>
+  </div>
+  </div>
+
+  <div th:replace="fragments/footer :: footer"></div>
+
+  <script th:src="@{/assets/dist/js/header.js}"></script>
+  <script>
+    document.getElementById("shareBtn").addEventListener("click", function () {
+      const url = window.location.href;
+      navigator.clipboard.writeText(url).then(() => {
+        alert("링크가 복사되었습니다!");
+      });
+    });
+
+    function showReplyForm(commentId) {
+      document.querySelectorAll('[id^="replyForm-"]').forEach(f => f.style.display = 'none');
+      document.getElementById('replyForm-' + commentId).style.display = 'block';
+    }
+
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.aloha.zootopia.mapper.ParttimeJobMapper">
+
+  <!-- 등록 -->
+  <insert id="insertJob">
+  INSERT INTO parttime_job
+  (title, location, pay, start_date, end_date, user_id, pet_info, memo)
+  VALUES
+  (#{title}, #{location}, #{pay}, #{startDate}, #{endDate}, #{userId}, #{petInfo}, #{memo})
+  </insert>
+
+  <!-- 목록 -->
+  <select id="listJobs" resultType="com.aloha.zootopia.domain.ParttimeJob">
+    SELECT
+        pj.job_id,
+        pj.user_id,
+        pj.title,
+        pj.location,
+        pj.pay,
+        pj.start_date,
+        pj.end_date,
+        pj.pet_info,
+        pj.memo,
+        pj.created_at,
+        u.nickname
+    FROM
+        parttime_job pj
+        JOIN users u ON pj.user_id = u.user_id
+    ORDER BY
+        pj.created_at DESC
+</select>
+
+  <!-- 상세 -->
+  <select id="selectJobById" resultType="com.aloha.zootopia.domain.ParttimeJob">
+    SELECT
+        pj.job_id,
+        pj.user_id,
+        pj.title,
+        pj.location,
+        pj.pay,
+        pj.start_date,
+        pj.end_date,
+        pj.pet_info,
+        pj.memo,
+        pj.created_at,
+        u.nickname
+    FROM
+        parttime_job pj
+        JOIN users u ON pj.user_id = u.user_id
+    WHERE
+        pj.job_id = #{jobId}
+  </select>
+
+  <!-- 수정 -->
+<update id="updateJob">
+  UPDATE parttime_job
+  SET
+    title = #{title},
+    location = #{location},
+    pay = #{pay},
+    start_date = #{startDate},
+    end_date = #{endDate},
+    pet_info = #{petInfo},
+    memo = #{memo}
+  WHERE job_id = #{jobId}
+</update>
+
+  <!-- 삭제 -->
+  <delete id="deleteJob">
+    DELETE FROM parttime_job WHERE job_id = #{jobId}
+  </delete>
+
+  <!-- 🔸 필터링된 목록 조회 -->
+  <select id="selectFilteredJobs" resultType="com.aloha.zootopia.domain.ParttimeJob">
+    SELECT
+      pj.job_id,
+      pj.user_id,
+      pj.title,
+      pj.location,
+      pj.pay,
+      pj.start_date,
+      pj.end_date,
+      pj.pet_info,
+      pj.memo,
+      pj.created_at,
+      u.nickname
+    FROM parttime_job pj
+    JOIN users u ON pj.user_id = u.user_id
+    WHERE 1 = 1
+
+    <if test="location != null and location != ''">
+      AND pj.location LIKE CONCAT('%', #{location}, '%')
+    </if>
+
+    <if test="animalType != null and animalType != ''">
+      AND pj.pet_info LIKE CONCAT('%', #{animalType}, '%')
+    </if>
+
+    <if test="payRange != null and payRange != ''">
+      <choose>
+        <when test="payRange.equals('low')">
+          AND pj.pay &lt; 10000
+        </when>
+        <when test="payRange.equals('mid')">
+          AND pj.pay BETWEEN 10000 AND 20000
+        </when>
+        <when test="payRange.equals('high')">
+          AND pj.pay &gt; 20000
+        </when>
+      </choose>
+    </if>
+
+    <if test="startDate != null and startDate != ''">
+      AND pj.start_date &gt;= #{startDate}
+    </if>
+    <if test="endDate != null and endDate != ''">
+      AND pj.end_date &lt;= #{endDate}
+    </if>
+
+    <if test="keyword != null and keyword != ''">
+      AND (
+        pj.title LIKE CONCAT('%', #{keyword}, '%')
+        OR pj.memo LIKE CONCAT('%', #{keyword}, '%')
+        OR pj.pet_info LIKE CONCAT('%', #{keyword}, '%')
+        OR pj.location LIKE CONCAT('%', #{keyword}, '%')
+      )
+    </if>
+
+    ORDER BY pj.created_at DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <!-- 🔸 필터링된 개수 조회 -->
+  <select id="countFilteredJobs" parameterType="map" resultType="int">
+    SELECT COUNT(*) FROM parttime_job pj
+    WHERE 1 = 1
+
+    <if test="location != null and location != ''">
+      AND pj.location LIKE CONCAT('%', #{location}, '%')
+    </if>
+
+    <if test="animalType != null and animalType != ''">
+      AND pj.pet_info LIKE CONCAT('%', #{animalType}, '%')
+    </if>
+
+    <if test="payRange != null and payRange != ''">
+      <choose>
+        <when test="payRange.equals('low')">
+          AND pj.pay &lt; 10000
+        </when>
+        <when test="payRange.equals('mid')">
+          AND pj.pay BETWEEN 10000 AND 20000
+        </when>
+        <when test="payRange.equals('high')">
+          AND pj.pay &gt; 20000
+        </when>
+      </choose>
+    </if>
+
+    <if test="startDate != null and startDate != ''">
+      AND pj.start_date &gt;= #{startDate}
+    </if>
+    <if test="endDate != null and endDate != ''">
+      AND pj.end_date &lt;= #{endDate}
+    </if>
+
+    <if test="keyword != null and keyword != ''">
+      AND (
+        pj.title LIKE CONCAT('%', #{keyword}, '%')
+        OR pj.memo LIKE CONCAT('%', #{keyword}, '%')
+        OR pj.pet_info LIKE CONCAT('%', #{keyword}, '%')
+        OR pj.location LIKE CONCAT('%', #{keyword}, '%')
+      )
+    </if>
+  </select>
+
+  <!-- 페이징 처리용 SELECT -->
+  <select id="selectPaged" resultType="com.aloha.zootopia.domain.ParttimeJob">
+    SELECT
+        pj.job_id,
+        pj.user_id,
+        pj.title,
+        pj.location,
+        pj.pay,
+        pj.start_date,
+        pj.end_date,
+        pj.pet_info,
+        pj.memo,
+        pj.created_at,
+        u.nickname
+    FROM parttime_job pj
+    JOIN users u ON pj.user_id = u.user_id
+    ORDER BY pj.created_at DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <!-- 전체 개수 카운트 -->
+  <select id="countAllJobs" resultType="int">
+    SELECT COUNT(*) FROM parttime_job
+  </select>
+
+</mapper>

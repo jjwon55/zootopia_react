@@ -1,0 +1,10 @@
+.container {
+    border: 1px solid #cccccc;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.toMypage {
+  color: #F35F4C;
+  font-size: 14px;
+}

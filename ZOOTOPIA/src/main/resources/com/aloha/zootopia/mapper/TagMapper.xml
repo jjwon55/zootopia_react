@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.aloha.zootopia.mapper.TagMapper">
+
+  <!-- ✅ 1. 태그 ID 조회 (이름으로) -->
+  <select id="findTagIdByName" parameterType="String" resultType="Integer">
+    SELECT tag_id FROM tags WHERE name = #{name}
+  </select>
+
+  <!-- ✅ 2. 태그 삽입 -->
+  <insert id="insertTag" parameterType="com.aloha.zootopia.domain.Tag"
+          useGeneratedKeys="true" keyProperty="tagId">
+    INSERT INTO tags (name) VALUES (#{name})
+  </insert>
+
+  <!-- ✅ 3. 커뮤니티용: post_tags 연결 -->
+  <insert id="insertPostTag" parameterType="map">
+    INSERT INTO post_tags (post_id, tag_id)
+    VALUES (#{postId}, #{tagId})
+  </insert>
+
+  <delete id="deletePostTagsByPostId" parameterType="int">
+    DELETE FROM post_tags WHERE post_id = #{postId}
+  </delete>
+
+  <!-- ✅ 4. 유실동물용: lost_animal_tags 연결 -->
+  <insert id="insertLostPostTag" parameterType="map">
+    INSERT INTO lost_animal_tags (post_id, tag_id)
+    VALUES (#{postId}, #{tagId})
+  </insert>
+
+  <delete id="deleteLostPostTagsByPostId" parameterType="int">
+    DELETE FROM lost_animal_tags WHERE post_id = #{postId}
+  </delete>
+
+  <!-- ✅ 5. 커뮤니티 게시글 ID로 태그 이름 불러오기 -->
+  <select id="getTagsByPostId" parameterType="int" resultType="string">
+    SELECT t.name
+    FROM post_tags pt
+    JOIN tags t ON pt.tag_id = t.tag_id
+    WHERE pt.post_id = #{postId}
+  </select>
+
+  <!-- ✅ 6. 유실동물 게시글 ID로 태그 이름 불러오기 -->
+  <select id="getLostTagsByPostId" parameterType="int" resultType="string">
+    SELECT t.name
+    FROM lost_animal_tags lt
+    JOIN tags t ON lt.tag_id = t.tag_id
+    WHERE lt.post_id = #{postId}
+  </select>
+
+  <!-- ✅ 7. 유실동물 다건 조회용: 게시글 ID들로 태그 리스트 불러오기 -->
+  <select id="selectTagsByPostIds" resultType="com.aloha.zootopia.domain.Tag">
+    SELECT lt.post_id, t.tag_id, t.name
+    FROM lost_animal_tags lt
+    JOIN tags t ON lt.tag_id = t.tag_id
+    WHERE lt.post_id IN
+    <foreach collection="list" item="id" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+  </select>
+
+</mapper>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <title>자랑 게시판</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/assets/dist/css/header.css}">
+  <link rel="stylesheet" th:href="@{/css/showoff_list.css}">
+</head>
+
+<body>
+  <!-- header -->
+  <div th:replace="fragments/header :: header"></div>
+
+  <!-- 🔥 실시간 인기게시물 -->
+  <section class="hot-posts container my-4">
+    <h2>🔥 실시간 인기게시물</h2>
+    <div class="hot-posts-columns d-flex flex-row gap-5">
+      <!-- 왼쪽 5개 -->
+      <ol class="list-unstyled">
+        <li th:each="post, iterStat : ${topList}">
+          <div class="mb-1" th:if="${iterStat.count <= 5}">
+            <div class="d-flex align-items-center">
+              <span class="bd-no text-center fw-bold" th:text="${iterStat.count}"></span>
+              <span class="bd-ca badge mx-2 text-center" th:text="${post.category}">카테고리</span>
+              <a class="text-decoration-none" th:href="@{'/showoff/read/' + ${post.postId}}"
+                th:text="${post.title ?: '제목없음'}">제목</a>
+            </div>
+          </div>
+        </li>
+      </ol>
+
+      <!-- 오른쪽 5개 -->
+      <ol class="list-unstyled">
+        <li th:each="post, iterStat : ${topList}">
+          <div class="mb-1" th:if="${iterStat.count > 5}">
+            <div class="d-flex align-items-center">
+              <span class="bd-no text-center fw-bold" th:text="${iterStat.count}"></span>
+              <span class="bd-ca badge mx-2 text-center" th:text="${post.category}">카테고리</span>
+              <a class="text-decoration-none" th:href="@{'/showoff/read/' + ${post.postId}}"
+                th:text="${post.title ?: '제목없음'}">제목</a>
+            </div>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 광고 배너 -->
+  <div class="banner text-center my-4">
+    <img th:src="@{/img/catppl.jpg}" alt="광고배너" class="img-fluid">
+  </div>
+
+  <!-- 📋 자랑 게시판 목록 -->
+  <section class="showoff-list py-4">
+    <!-- 헤더 영역 -->
+    <div class="community-header">
+      <div class="title-with-icon">
+        <img th:src="@{/img/chat.png}" class="icon">
+        <h2 class="fs-3 mb-0">자랑글</h2>
+      </div>
+      <div class="community-controls">
+        <form method="get" th:action="@{/showoff/list}" class="d-flex align-items-center">
+          <select name="sort" class="form-select w-auto me-2" onchange="this.form.submit()">
+            <option value="latest" th:selected="${sort == 'latest'}">최신순</option>
+            <option value="popular" th:selected="${sort == 'popular'}">인기순</option>
+          </select>
+        </form>
+        <a href="/showoff/create" class="btn-write" sec:authorize="isAuthenticated()">
+          <img th:src="@{/img/write.png}" class="icon"> 글쓰기
+        </a>
+      </div>
+    </div>
+
+    <!-- 카드 그리드 -->
+    <div class="row row-cols-2 row-cols-md-4 g-4">
+      <div class="col" th:each="post : ${list}">
+        <a th:href="@{/showoff/read/{id}(id=${post.postId})}" class="text-decoration-none text-dark">
+          <div class="card h-100 shadow-sm border-0">
+            <img th:src="${post.thumbnailUrl != null} ? ${post.thumbnailUrl} : '/img/default-thumbnail.png'"
+              class="card-img-top" style="aspect-ratio: 1/1; object-fit: cover; border-radius: 12px 12px 0 0;"
+              alt="썸네일" />
+            <div class="card-body p-3">
+              <h6 class="card-title text-truncate mb-1" th:text="${post.title}">제목</h6>
+              <a th:href="@{'/mypage/' + ${post.user.userId}}">
+                <img th:src="${post.user.profileImg != null} ? ${post.user.profileImg} : '/img/default-profile.png'"
+                  class="profile-img">
+              </a>
+              <span th:text="${post.user != null and post.user.nickname != null}
+                          ? ${post.user.nickname}
+                          : '알 수 없음'">
+                작성자
+              </span>
+            </div>
+            <div class="card-footer d-flex justify-content-between px-3 pb-2 text-muted small bg-white border-top-0">
+              <div>
+                <i class="bi bi-heart-fill text-danger"></i> <span th:text="${post.likeCount}">0</span>
+              </div>
+              <div class="gap-1">
+                <i class="bi bi-eye"></i> <span th:text="${post.viewCount}">0</span>
+                <span class="">&middot;</span>
+                <i class="bi bi-chat-dots"></i> <span th:text="${post.commentCount}">0</span>
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="search-bar mt-5 mb-4">
+      <form th:action="@{/posts/list}" method="get" class="d-flex gap-2 align-items-center">
+
+        <!-- 검색 조건 -->
+        <select name="type" class="form-select w-auto">
+          <option value="title" th:selected="${type} == 'title'">제목</option>
+          <option value="titleContent" th:selected="${type} == 'titleContent'">제목+내용</option>
+          <option value="tag" th:selected="${type} == 'tag'">태그</option>
+        </select>
+
+        <!-- 검색어 입력창 -->
+        <input type="text" name="keyword" class="form-control search" placeholder="검색어 입력" th:value="${keyword}" />
+
+        <!-- 검색 버튼 -->
+        <button type="submit" class="btn btn-search">검색</button>
+      </form>
+    </div>
+
+    <!-- 📄 페이지네이션 -->
+    <div class="pagination">
+      <ul class="pagination justify-content-center">
+
+        <!-- 이전 버튼 -->
+        <li class="page-item" th:if="${pageInfo.start > 1}">
+          <a class="page-link" th:href="@{/showoff/list(page=${pageInfo.start - 1})}">이전</a>
+        </li>
+
+        <!-- 페이지 번호 반복 -->
+        <li class="page-item" th:each="pageNum : ${#numbers.sequence(pageInfo.start, pageInfo.end)}"
+          th:classappend="${pageInfo.page == pageNum} ? 'active'">
+          <a class="page-link" th:href="@{/showoff/list(page=${pageNum}, sort=${sort})}" th:text="${pageNum}">1</a>
+        </li>
+
+        <!-- 다음 버튼 -->
+        <li class="page-item" th:if="${pageInfo.end < pageInfo.last}">
+          <a class="page-link" th:href="@{/showoff/list(page=${pageInfo.end + 1})}">다음</a>
+        </li>
+
+      </ul>
+    </div>
+  </section>
+  <!-- footer -->
+  <div th:replace="fragments/footer :: footer"></div>
+  <script th:src="@{/assets/dist/js/header.js}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

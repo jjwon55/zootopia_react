@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.aloha.zootopia.mapper.ParttimeJobApplicantMapper">
+
+    <!-- ✅ 여기!! resultMap 먼저 정의 -->
+  <resultMap id="ApplicantWithUserInfo" type="com.aloha.zootopia.domain.ParttimeJobApplicant">
+    <id property="applicantId" column="applicant_id" />
+    <result property="jobId" column="job_id" />
+    <result property="userId" column="user_id" />
+    <result property="introduction" column="introduction" />
+    <result property="createdAt" column="created_at" />
+    <result property="email" column="email" />
+    <result property="phone" column="phone" />
+  </resultMap>
+
+
+  <!-- 지원 등록 -->
+  <insert id="insertApplicant">
+    INSERT INTO parttime_job_applicant
+    (job_id, user_id, introduction)
+    VALUES
+    (#{jobId}, #{userId}, #{introduction})
+  </insert>
+
+  <!-- 특정 알바의 지원자 조회 -->
+  <select id="selectApplicantsByJobId" resultMap="ApplicantWithUserInfo">
+    SELECT 
+      a.applicant_id,
+      a.job_id,
+      a.user_id,
+      a.introduction,
+      a.created_at,
+      u.email,
+      u.phone
+    FROM parttime_job_applicant a
+    JOIN users u ON a.user_id = u.user_id
+    WHERE a.job_id = #{jobId}
+    ORDER BY a.created_at DESC
+  </select>
+
+  <!-- 단일 지원자 조회 추가 -->
+  <select id="selectApplicant" resultType="com.aloha.zootopia.domain.ParttimeJobApplicant">
+    SELECT *
+    FROM parttime_job_applicant
+    WHERE applicant_id = #{applicantId}
+  </select>
+
+  <select id="getApplicantByJobIdAndUserId" resultMap="ApplicantWithUserInfo">
+    SELECT 
+      a.applicant_id,
+      a.job_id,
+      a.user_id,
+      a.introduction,
+      a.created_at,
+      u.email,
+      u.phone
+    FROM parttime_job_applicant a
+    JOIN users u ON a.user_id = u.user_id
+    WHERE a.job_id = #{jobId} AND a.user_id = #{userId}
+  </select>
+
+    <!-- 지원자 수 -->
+  <select id="countApplicantsByJobId" resultType="int">
+    SELECT COUNT(*) FROM parttime_job_applicant WHERE job_id = #{jobId}
+  </select>
+
+  <!-- 페이징된 지원자 목록 -->
+  <select id="getPagedApplicants" resultMap="ApplicantWithUserInfo">
+    SELECT 
+      a.applicant_id,
+      a.job_id,
+      a.user_id,
+      a.introduction,
+      a.created_at,
+      u.email,
+      u.phone
+    FROM parttime_job_applicant a
+    JOIN users u ON a.user_id = u.user_id
+    WHERE a.job_id = #{jobId}
+    ORDER BY a.created_at DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <!-- 지원 취소 -->
+  <delete id="deleteApplicant">
+    DELETE FROM parttime_job_applicant
+    WHERE applicant_id = #{applicantId}
+  </delete>
+
+  <!-- (선택) 지원자 소개글/평점 수정 -->
+  <update id="updateApplicant">
+    UPDATE parttime_job_applicant
+    SET introduction = #{introduction},
+        rating = #{rating},
+        review_count = #{reviewCount}
+    WHERE applicant_id = #{applicantId}
+  </update>
+
+</mapper>

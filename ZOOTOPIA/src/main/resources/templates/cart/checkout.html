@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>결제 - ZOOTOPIA 스토어</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Header CSS -->
+    <link rel="stylesheet" href="/assets/dist/css/header.css">
+    <!-- Footer CSS -->
+    <link rel="stylesheet" href="/assets/dist/css/footer.css">
+    <style>
+        .btn-primary {
+            background-color: #F27A7A;
+            border-color: #F27A7A;
+        }
+        .btn-primary:hover {
+            background-color: #E06B6B;
+            border-color: #E06B6B;
+        }
+        .text-primary {
+            color: #F27A7A !important;
+        }
+        .checkout-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .payment-method {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .payment-method:hover {
+            border-color: #F27A7A;
+            background: #fef7f7;
+        }
+        .payment-method.selected {
+            border-color: #F27A7A;
+            background: #fef7f7;
+        }
+        .order-summary {
+            background: linear-gradient(135deg, #F27A7A 0%, #E06B6B 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            position: sticky;
+            top: 20px;
+        }
+        .product-item {
+            border-bottom: 1px solid #eee;
+            padding: 1rem 0;
+        }
+        .product-item:last-child {
+            border-bottom: none;
+        }
+        .breadcrumb-item.active {
+            color: #F27A7A;
+        }
+        .breadcrumb-item + .breadcrumb-item::before {
+            color: #F27A7A;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Fragment -->
+    <div th:replace="fragments/header :: header"></div>
+
+    <!-- 메인 컨테이너 -->
+    <div class="container mt-4">
+        <!-- 브레드크럼 -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/" class="text-primary">홈</a></li>
+                <li class="breadcrumb-item"><a href="/products/listp" class="text-primary">스토어</a></li>
+                <li class="breadcrumb-item"><a href="/cart" class="text-primary">장바구니</a></li>
+                <li class="breadcrumb-item active" aria-current="page">결제</li>
+            </ol>
+        </nav>
+
+        <!-- 페이지 제목 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="text-primary fw-bold">
+                    <i class="fas fa-credit-card me-2"></i>주문/결제
+                </h2>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 결제 정보 입력 -->
+            <div class="col-md-8">
+                <!-- 주문 상품 확인 -->
+                <div class="checkout-section">
+                    <h5 class="text-primary mb-3">
+                        <i class="fas fa-box me-2"></i>주문 상품 확인
+                    </h5>
+                    <div th:each="item : ${checkoutItems}" class="product-item">
+                        <div class="row align-items-center">
+                            <div class="col-2">
+                                <img th:src="${item.imageUrl}" class="img-fluid rounded" alt="상품 이미지"
+                                     style="height: 60px; object-fit: cover;"
+                                     onerror="this.src='/img/default-thumbnail.png'">
+                            </div>
+                            <div class="col-6">
+                                <h6 class="mb-1" th:text="${item.name}">상품명</h6>
+                                <small class="text-muted">수량: <span th:text="${item.quantity}">1</span>개</small>
+                            </div>
+                            <div class="col-4 text-end">
+                                <span class="fw-bold text-primary" th:text="${#numbers.formatInteger(item.price * item.quantity, 0, 'COMMA')} + '원'">가격</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 배송 정보 -->
+                <div class="checkout-section">
+                    <h5 class="text-primary mb-3">
+                        <i class="fas fa-truck me-2"></i>배송 정보
+                    </h5>
+                    <form id="deliveryForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="receiverName" class="form-label">받는 분</label>
+                                <input type="text" class="form-control" id="receiverName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="receiverPhone" class="form-label">연락처</label>
+                                <input type="tel" class="form-control" id="receiverPhone" placeholder="010-0000-0000" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="zipcode" class="form-label">우편번호</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="zipcode" readonly>
+                                    <button type="button" class="btn btn-outline-primary" onclick="searchAddress()">검색</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label">주소</label>
+                            <input type="text" class="form-control" id="address" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="detailAddress" class="form-label">상세주소</label>
+                            <input type="text" class="form-control" id="detailAddress" placeholder="상세주소를 입력하세요">
+                        </div>
+                        <div class="mb-3">
+                            <label for="deliveryMemo" class="form-label">배송 메모</label>
+                            <select class="form-select" id="deliveryMemo">
+                                <option value="">배송 메모를 선택하세요</option>
+                                <option value="door">문 앞에 놓아주세요</option>
+                                <option value="security">경비실에 맡겨주세요</option>
+                                <option value="direct">직접 받을게요</option>
+                                <option value="call">배송 전에 연락주세요</option>
+                                <option value="custom">직접 입력</option>
+                            </select>
+                            <input type="text" class="form-control mt-2" id="customMemo" placeholder="배송 메모를 입력하세요" style="display: none;">
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 결제 방법 -->
+                <div class="checkout-section">
+                    <h5 class="text-primary mb-3">
+                        <i class="fas fa-payment me-2"></i>결제 방법
+                    </h5>
+                    <div class="payment-method" onclick="selectPaymentMethod('card')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="paymentMethod" id="cardPayment" value="card">
+                            <label class="form-check-label" for="cardPayment">
+                                <i class="fas fa-credit-card me-2 text-primary"></i>
+                                <strong>신용카드/체크카드</strong>
+                                <div class="small text-muted mt-1">
+                                    안전한 카드 결제 (VISA, MasterCard, 국내 카드)
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="payment-method" onclick="selectPaymentMethod('bank')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="paymentMethod" id="bankPayment" value="bank">
+                            <label class="form-check-label" for="bankPayment">
+                                <i class="fas fa-university me-2 text-primary"></i>
+                                <strong>계좌이체</strong>
+                                <div class="small text-muted mt-1">
+                                    실시간 계좌이체 (수수료 무료)
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 결제 동의 -->
+                <div class="checkout-section">
+                    <h5 class="text-primary mb-3">
+                        <i class="fas fa-check-circle me-2"></i>결제 동의
+                    </h5>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="agreeAll">
+                        <label class="form-check-label fw-bold" for="agreeAll">
+                            전체 약관에 동의합니다
+                        </label>
+                    </div>
+                    <div class="ms-3">
+                        <div class="form-check mb-1">
+                            <input class="form-check-input agreement-item" type="checkbox" id="agreeTerms" required>
+                            <label class="form-check-label" for="agreeTerms">
+                                <span class="text-danger">[필수]</span> 이용약관 동의
+                            </label>
+                        </div>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input agreement-item" type="checkbox" id="agreePrivacy" required>
+                            <label class="form-check-label" for="agreePrivacy">
+                                <span class="text-danger">[필수]</span> 개인정보 처리방침 동의
+                            </label>
+                        </div>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input agreement-item" type="checkbox" id="agreePayment" required>
+                            <label class="form-check-label" for="agreePayment">
+                                <span class="text-danger">[필수]</span> 결제대행 서비스 약관 동의
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="agreeMarketing">
+                            <label class="form-check-label" for="agreeMarketing">
+                                [선택] 마케팅 정보 수신 동의
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 주문 요약 -->
+            <div class="col-md-4">
+                <div class="order-summary">
+                    <h5 class="mb-4"><i class="fas fa-calculator me-2"></i>결제 정보</h5>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>상품 금액</span>
+                        <span th:text="${#numbers.formatInteger(totalAmount, 0, 'COMMA')} + '원'">0원</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>배송비</span>
+                        <span th:text="${totalAmount >= 30000 ? '무료' : '3,000원'}">3,000원</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>할인 금액</span>
+                        <span>-0원</span>
+                    </div>
+                    
+                    <hr class="text-light">
+                    
+                    <div class="d-flex justify-content-between mb-4">
+                        <h6 class="mb-0">최종 결제 금액</h6>
+                        <h4 class="mb-0 fw-bold" th:text="${#numbers.formatInteger(totalAmount + (totalAmount >= 30000 ? 0 : 3000), 0, 'COMMA')} + '원'">총금액</h4>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-light btn-lg" onclick="processPayment()">
+                            <i class="fas fa-credit-card me-2"></i><span id="finalAmountText" th:text="${#numbers.formatInteger(totalAmount + (totalAmount >= 30000 ? 0 : 3000), 0, 'COMMA')} + '원 결제하기'">결제하기</span>
+                        </button>
+                        <a href="/cart" class="btn btn-outline-light">
+                            <i class="fas fa-arrow-left me-2"></i>장바구니로 돌아가기
+                        </a>
+                    </div>
+                    
+                    <div class="mt-3 text-center">
+                        <small class="text-light">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            안전한 결제를 위해 SSL 암호화를 사용합니다
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 결제 완료 모달 -->
+    <div class="modal fade" id="paymentSuccessModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-check-circle fa-5x text-success"></i>
+                    </div>
+                    <h4 class="text-primary mb-3">결제가 완료되었습니다!</h4>
+                    <p class="text-muted mb-4">
+                        주문번호: <strong id="orderNumber">ZOOTOPIA-20250108-001</strong><br>
+                        결제 금액: <strong id="paidAmount" th:text="${#numbers.formatInteger(totalAmount + (totalAmount >= 30000 ? 0 : 3000), 0, 'COMMA')} + '원'">0원</strong>
+                    </p>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary" onclick="goToHome()">
+                            <i class="fas fa-home me-2"></i>홈으로 이동
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="continueShopping()">
+                            <i class="fas fa-store me-2"></i>쇼핑 계속하기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Fragment -->
+    <div th:replace="fragments/footer :: footer"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 결제 방법 선택
+        function selectPaymentMethod(method) {
+            document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`input[value="${method}"]`).checked = true;
+            document.querySelector(`input[value="${method}"]`).closest('.payment-method').classList.add('selected');
+        }
+        
+        // 전체 동의 체크박스
+        document.getElementById('agreeAll').addEventListener('change', function() {
+            const isChecked = this.checked;
+            document.querySelectorAll('.agreement-item').forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+            document.getElementById('agreeMarketing').checked = isChecked;
+        });
+        
+        // 개별 동의 체크박스
+        document.querySelectorAll('.agreement-item, #agreeMarketing').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const allRequired = document.querySelectorAll('.agreement-item');
+                const allChecked = Array.from(allRequired).every(cb => cb.checked);
+                const marketingChecked = document.getElementById('agreeMarketing').checked;
+                document.getElementById('agreeAll').checked = allChecked && marketingChecked;
+            });
+        });
+        
+        // 배송 메모 선택
+        document.getElementById('deliveryMemo').addEventListener('change', function() {
+            const customMemo = document.getElementById('customMemo');
+            if (this.value === 'custom') {
+                customMemo.style.display = 'block';
+                customMemo.required = true;
+            } else {
+                customMemo.style.display = 'none';
+                customMemo.required = false;
+                customMemo.value = '';
+            }
+        });
+        
+        // 주소 검색 (가상)
+        function searchAddress() {
+            // 실제로는 다음 주소 API 등을 사용
+            const zipcode = '12345';
+            const address = '서울특별시 강남구 테헤란로 123';
+            
+            document.getElementById('zipcode').value = zipcode;
+            document.getElementById('address').value = address;
+            document.getElementById('detailAddress').focus();
+        }
+        
+        // 결제 처리
+        function processPayment() {
+            // 필수 입력값 검증
+            const form = document.getElementById('deliveryForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // 결제 방법 선택 확인
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+            if (!paymentMethod) {
+                alert('결제 방법을 선택해주세요.');
+                return;
+            }
+            
+            // 필수 약관 동의 확인
+            const requiredAgreements = document.querySelectorAll('.agreement-item');
+            const allAgreed = Array.from(requiredAgreements).every(cb => cb.checked);
+            if (!allAgreed) {
+                alert('필수 약관에 동의해주세요.');
+                return;
+            }
+            
+            // 결제 처리 시뮬레이션
+            const paymentText = paymentMethod.value === 'card' ? '카드 결제' : '계좌이체';
+            
+            // 로딩 표시 (실제로는 결제 API 호출)
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>결제 처리중...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                // 주문번호 생성
+                const orderNumber = 'ZOOTOPIA-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + 
+                                   String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+                document.getElementById('orderNumber').textContent = orderNumber;
+                
+                // 결제 완료 모달 표시
+                const modal = new bootstrap.Modal(document.getElementById('paymentSuccessModal'));
+                modal.show();
+                
+                // 버튼 복원
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                
+                // 장바구니 비우기 (실제로는 서버에서 처리)
+                clearCartAfterPayment();
+                
+            }, 2000);
+        }
+        
+        // 결제 완료 후 장바구니 비우기
+        function clearCartAfterPayment() {
+            // 실제로는 서버 API 호출하여 주문 처리 및 장바구니 초기화
+            console.log('결제 완료 - 장바구니 초기화');
+        }
+        
+        // 홈으로 이동
+        function goToHome() {
+            window.location.href = '/';
+        }
+        
+        // 쇼핑 계속하기
+        function continueShopping() {
+            window.location.href = '/products/listp';
+        }
+    </script>
+
+    <!-- Header JS -->
+    <script src="/assets/dist/js/header.js"></script>
+</body>
+</html>

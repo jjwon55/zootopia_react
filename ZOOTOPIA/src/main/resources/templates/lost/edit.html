@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>유실동물 수정</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
+  <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
+  <link rel="stylesheet" th:href="@{/css/posts_create.css}">
+  <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <form th:action="@{'/lost/edit/' + ${post.postId}}" method="post" onsubmit="return onSubmit()">
+    <input type="hidden" name="postId" th:value="${post.postId}" />
+
+    <!-- 제목 -->
+    <div class="form-group">
+      <label for="title">제목</label>
+      <input type="text" id="title" name="title" placeholder="제목을 입력해 주세요" class="form-control"
+             th:value="${post.title}">
+    </div>
+
+    <!-- 잃어버린 장소 -->
+    <div class="form-group mt-3">
+      <label for="lostLocation">잃어버린 장소</label>
+      <input type="text" id="lostLocation" name="lostLocation" placeholder="예: 서울시 강남구 OO공원"
+             class="form-control" th:value="${post.lostLocation}">
+    </div>
+
+    <!-- 잃어버린 시간 -->
+    <div class="form-group mt-3">
+      <label for="lostTime">유실 날짜</label>
+      <input type="date" id="lostTime" name="lostTime"
+            class="form-control"
+            th:value="${post.lostTime != null} ? ${#temporals.format(post.lostTime, 'yyyy-MM-dd')} : ''">
+    </div>
+
+    <!-- 연락처 -->
+    <div class="form-group mt-3">
+      <label for="contactPhone">연락처</label>
+      <input type="text" id="contactPhone" name="contactPhone" placeholder="예: 010-1234-5678"
+             class="form-control" th:value="${post.contactPhone}">
+    </div>
+
+    <!-- 본문 -->
+    <div class="form-group mt-4">
+      <label>내용</label>
+      <div id="editor"></div>
+      <input type="hidden" name="content" id="content">
+    </div>
+
+    <!-- 태그 -->
+    <div class="form-group mt-3">
+      <label for="tags">#태그</label>
+      <input type="text" id="tags" name="tags" class="form-control"
+             placeholder="예) 강아지, 말티즈, 분홍목줄, 서울 강남"
+             th:value="${post.tags}">
+    </div>
+
+    <!-- 등록 버튼 -->
+    <div class="form-group text-right mt-4">
+      <button type="submit" class="btn btn-primary">수정 완료</button>
+    </div>
+  </form>
+</div>
+
+<script th:inline="javascript">
+  const initialContent = /*[[${post.content}]]*/ "";
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+
+<script>
+  // 태그 처리
+  const input = document.querySelector('#tags');
+  const tagify = new Tagify(input, {
+    originalInputValueFormat: values => values.map(tag => tag.value).join(',')
+  });
+
+  if (input.value) {
+    tagify.removeAllTags();
+    tagify.addTags(input.value.split(',').map(tag => tag.trim()));
+  }
+
+  const editor = new toastui.Editor({
+    el: document.querySelector('#editor'),
+    height: '500px',
+    initialEditType: 'wysiwyg',
+    previewStyle: 'vertical',
+    initialValue: initialContent,
+    hooks: {
+      addImageBlobHook: async (blob, callback) => {
+        const formData = new FormData();
+        formData.append('image', blob);
+        const res = await fetch('/lost/upload/image', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await res.json();
+        callback(result.imageUrl);
+        editor.insertText('\n\n');
+      }
+    }
+  });
+
+  function onSubmit() {
+    const title = document.getElementById("title").value.trim();
+    const content = editor.getHTML();
+
+    if (title.length < 1) {
+      alert("제목을 입력해주세요.");
+      document.getElementById("title").focus();
+      return false;
+    }
+
+    if (content.replace(/<[^>]*>/g, '').trim().length < 5) {
+      alert("내용을 5자 이상 입력해주세요.");
+      return false;
+    }
+
+    document.getElementById("content").value = content;
+    return true;
+  }
+</script>
+
+</body>
+</html>

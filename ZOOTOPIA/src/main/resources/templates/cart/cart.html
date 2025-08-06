@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>장바구니 - ZOOTOPIA 스토어</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Header CSS -->
+    <link rel="stylesheet" href="/assets/dist/css/header.css">
+    <!-- Footer CSS -->
+    <link rel="stylesheet" href="/assets/dist/css/footer.css">
+    <style>
+        .btn-primary {
+            background-color: #F27A7A;
+            border-color: #F27A7A;
+        }
+        .btn-primary:hover {
+            background-color: #E06B6B;
+            border-color: #E06B6B;
+        }
+        .btn-outline-primary {
+            border-color: #F27A7A;
+            color: #F27A7A;
+        }
+        .btn-outline-primary:hover {
+            background-color: #F27A7A;
+            border-color: #F27A7A;
+        }
+        .text-primary {
+            color: #F27A7A !important;
+        }
+        .cart-item {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        .cart-item:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .quantity-btn {
+            width: 35px;
+            height: 35px;
+            border: 1px solid #F27A7A;
+            background: white;
+            color: #F27A7A;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .quantity-btn:hover {
+            background: #F27A7A;
+            color: white;
+        }
+        .quantity-input {
+            width: 60px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        .total-section {
+            background: linear-gradient(135deg, #F27A7A 0%, #E06B6B 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            position: sticky;
+            top: 20px;
+        }
+        .breadcrumb-item.active {
+            color: #F27A7A;
+        }
+        .breadcrumb-item + .breadcrumb-item::before {
+            color: #F27A7A;
+        }
+        .empty-cart {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Fragment -->
+    <div th:replace="fragments/header :: header"></div>
+
+    <!-- 메인 컨테이너 -->
+    <div class="container mt-4">
+        <!-- 성공 메시지 -->
+        <div class="alert alert-success alert-dismissible fade show" th:if="${param.added}">
+            <i class="fas fa-check-circle me-2"></i>
+            장바구니에 상품이 추가되었습니다!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <!-- 브레드크럼 -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/" class="text-primary">홈</a></li>
+                <li class="breadcrumb-item"><a href="/products/listp" class="text-primary">스토어</a></li>
+                <li class="breadcrumb-item active" aria-current="page">장바구니</li>
+            </ol>
+        </nav>
+
+        <!-- 페이지 제목 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="text-primary fw-bold">
+                    <i class="fas fa-shopping-cart me-2"></i>장바구니
+                    <span class="badge bg-primary ms-2" th:text="${totalQuantity}">0</span>
+                </h2>
+                
+                <!-- 디버깅 정보 (개발 완료 후 주석 처리) -->
+                <!--
+                <div class="alert alert-info mt-3" style="font-size: 0.9em;">
+                    <strong>🔍 디버깅 정보:</strong><br>
+                    - 총 상품 수: <span th:text="${cartItems != null ? cartItems.size() : 'null'}">0</span><br>
+                    - 총 수량: <span th:text="${totalQuantity}">0</span><br>
+                    - 총 금액: <span th:text="${totalAmount}">0</span>원<br>
+                    - cartItems 존재: <span th:text="${cartItems != null ? '예' : '아니오'}">아니오</span><br>
+                    - cartItems 비어있음: <span th:text="${cartItems == null or cartItems.isEmpty() ? '예' : '아니오'}">예</span>
+                </div>
+                -->
+            </div>
+        </div>
+
+        <!-- 장바구니가 비어있는 경우 -->
+        <div class="row" th:if="${cartItems == null or cartItems.isEmpty()}">
+            <div class="col-12">
+                <div class="empty-cart">
+                    <i class="fas fa-shopping-cart fa-5x mb-4"></i>
+                    <h3>장바구니가 비어있습니다</h3>
+                    <p>원하는 상품을 장바구니에 담아보세요.</p>
+                    <a href="/products/listp" class="btn btn-primary mt-3">
+                        <i class="fas fa-store me-2"></i>쇼핑 계속하기
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 장바구니 상품 목록 -->
+        <div class="row" th:if="${cartItems != null and !cartItems.isEmpty()}">
+            <div class="col-md-8">
+                <!-- 상품 목록 -->
+                <div th:each="item : ${cartItems}" class="cart-item">
+                    <div class="row align-items-center">
+                        <!-- 상품 이미지 -->
+                        <div class="col-md-2 col-3">
+                            <img th:src="${item.imageUrl}" class="img-fluid rounded" alt="상품 이미지"
+                                 style="height: 80px; object-fit: cover;"
+                                 onerror="this.src='/img/default-thumbnail.png'">
+                        </div>
+
+                        <!-- 상품 정보 -->
+                        <div class="col-md-4 col-9">
+                            <h6 class="text-primary fw-bold mb-1" th:text="${item.name}">상품명</h6>
+                            <small class="text-muted" th:text="${item.category}">카테고리</small>
+                            <div class="mt-1">
+                                <span class="fw-bold text-primary" th:text="${#numbers.formatInteger(item.price, 0, 'COMMA')} + '원'">가격</span>
+                            </div>
+                        </div>
+
+                        <!-- 수량 조절 -->
+                        <div class="col-md-3 col-6 mt-2 mt-md-0">
+                            <div class="quantity-controls">
+                                <form th:action="@{/cart/update}" method="post" style="display: inline;">
+                                    <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+                                    <input type="hidden" name="productNo" th:value="${item.productNo}" />
+                                    <button type="submit" name="quantity" th:value="${item.quantity - 1}" 
+                                            class="quantity-btn" th:disabled="${item.quantity == 1}">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </form>
+                                <input type="number" class="quantity-input" th:value="${item.quantity}" min="1" max="99" readonly />
+                                <form th:action="@{/cart/update}" method="post" style="display: inline;">
+                                    <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+                                    <input type="hidden" name="productNo" th:value="${item.productNo}" />
+                                    <button type="submit" name="quantity" th:value="${item.quantity + 1}" 
+                                            class="quantity-btn">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- 가격 및 삭제 -->
+                        <div class="col-md-2 col-6 text-end mt-2 mt-md-0">
+                            <div class="fw-bold text-primary mb-2" th:text="${#numbers.formatInteger(item.price * item.quantity, 0, 'COMMA')} + '원'">총가격</div>
+                            <form th:action="@{/cart/remove}" method="post" style="display: inline;">
+                                <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+                                <input type="hidden" name="productNo" th:value="${item.productNo}" />
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 쇼핑 계속하기 버튼 -->
+                <div class="mt-4">
+                    <a href="/products/listp" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>쇼핑 계속하기
+                    </a>
+                </div>
+            </div>
+
+            <!-- 주문 요약 -->
+            <div class="col-md-4">
+                <div class="total-section">
+                    <h5 class="mb-4"><i class="fas fa-calculator me-2"></i>주문 요약</h5>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>상품 금액</span>
+                        <span th:text="${#numbers.formatInteger(totalAmount, 0, 'COMMA')} + '원'">0원</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>배송비</span>
+                        <span th:text="${totalAmount >= 30000 ? '무료' : '3,000원'}">3,000원</span>
+                    </div>
+                    
+                    <hr class="text-light">
+                    
+                    <div class="d-flex justify-content-between mb-4">
+                        <h6 class="mb-0">총 결제 금액</h6>
+                        <h5 class="mb-0 fw-bold" th:text="${#numbers.formatInteger(totalAmount + (totalAmount >= 30000 ? 0 : 3000), 0, 'COMMA')} + '원'">총금액</h5>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-light btn-lg" onclick="checkout()">
+                            <i class="fas fa-credit-card me-2"></i>주문하기
+                        </button>
+                        <button class="btn btn-outline-light" onclick="clearCart()">
+                            <i class="fas fa-trash me-2"></i>장바구니 비우기
+                        </button>
+                    </div>
+                    
+                    <div class="mt-3 text-center">
+                        <small class="text-light">
+                            <i class="fas fa-info-circle me-1"></i>
+                            30,000원 이상 구매 시 무료배송
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function updateQuantity(productNo, newQuantity) {
+            if (newQuantity < 1) {
+                if (confirm('상품을 삭제하시겠습니까?')) {
+                    removeItem(productNo);
+                }
+                return;
+            }
+            
+            const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+            
+            fetch('/cart/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    [header]: token
+                },
+                body: new URLSearchParams({
+                    'productNo': productNo,
+                    'quantity': newQuantity
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('오류: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('수량 변경 중 오류가 발생했습니다.');
+            });
+        }
+        
+        function removeItem(productNo) {
+            if (!confirm('상품을 삭제하시겠습니까?')) {
+                return;
+            }
+            
+            const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+            
+            fetch('/cart/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    [header]: token
+                },
+                body: new URLSearchParams({
+                    'productNo': productNo
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('오류: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('상품 삭제 중 오류가 발생했습니다.');
+            });
+        }
+        
+        function checkout() {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/cart/checkout';
+            
+            // CSRF 토큰 추가
+            const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_csrf';
+            csrfInput.value = token;
+            form.appendChild(csrfInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+        
+        function clearCart() {
+            if (!confirm('장바구니를 모두 비우시겠습니까?')) {
+                return;
+            }
+            
+            // 전체 비우기 API 호출
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/cart/clear';
+            
+            // CSRF 토큰 추가
+            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_csrf';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+
+    <!-- Footer Fragment -->
+    <div th:replace="fragments/footer :: footer"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Header JS -->
+    <script src="/assets/dist/js/header.js"></script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <title>마이페이지</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" th:href="@{/assets/dist/css/header.css}" />
+  <link rel="stylesheet" th:href="@{/css/mypage.css}">
+</head>
+
+<body class="py-4">
+  <div th:replace="fragments/header :: header"></div>
+
+
+  <div class="my-container d-flex flex-column justify-content-center">
+    <!-- 👤 사용자 프로필 -->
+    <div class="mypage-section">
+      <div class="d-flex justify-content-between">
+        <div class="section-title">내 프로필</div>
+        <a th:if="${#authentication.principal.userId == user.userId}" th:href="@{/mypage/edit}" class="btn btn-sm">수정하기</a>
+      </div>
+      <div class="d-flex align-items-center">
+        <img th:src="${user.profileImg != null} ? ${user.profileImg} : '/img/default-profile.png'"
+          class="profile-img me-3" alt="프로필 이미지">
+        <div>
+          <div><strong th:text="${user.nickname}">닉네임</strong></div>
+          <div class="text-muted" th:text="${user.email}">이메일</div>
+          <div th:if="${user.intro != null}" th:text="${user.intro}">소개 문구</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🐶 반려동물 정보 -->
+    <div class="mypage-section">
+      <div class="section-title">반려동물 정보</div>
+      <div th:if="${#lists.isEmpty(pets)}">등록된 반려동물이 없습니다.</div>
+      <div th:each="pet : ${pets}" class="pet-card">
+        <div><strong th:text="${pet.name}">복실이</strong> (<span th:text="${pet.species}">강아지</span>)</div>
+        <div th:text="'품종: ' + ${pet.breed}">믹스</div>
+        <div th:text="'생일: ' + ${#temporals.format(pet.birthDate, 'yyyy-MM-dd')}">2020-01-01</div>
+      </div>
+    </div>
+
+    <!-- 📝 내가 쓴 글 -->
+    <div class="mypage-section">
+      <div class="section-title">📄 작성한 글</div>
+      <div class="post-list">
+        <ul class="list-unstyled" th:if="${!#lists.isEmpty(myPosts)}">
+          <li th:each="post : ${myPosts}" class="post-item">
+            <span class="badge category-badge" th:text="${post.category}">자유글</span>
+            <a th:if="${post.category == '자랑글'}" th:href="@{'/showoff/read/' + ${post.postId}}" th:text="${post.title}"
+              class="post-title"></a>
+            <a th:if="${post.category == '자유글' or post.category == '질문글'}" th:href="@{'/posts/read/' + ${post.postId}}"
+              th:text="${post.title}" class="post-title"></a>
+            <a th:if="${post.category == '유실동물'}" th:href="@{'/lost/read/' + ${post.postId}}" th:text="${post.title}"
+              class="post-title"></a>
+          </li>
+        </ul>
+        <div th:if="${#lists.isEmpty(myPosts)}" class="no-post">작성한 게시글이 없습니다.</div>
+      </div>
+    </div>
+
+    <div class="mypage-section">
+      <div class="section-title">💬 작성한 댓글</div>
+      <div class="comment-list">
+        <ul class="list-unstyled" th:if="${!#lists.isEmpty(myComments)}">
+          <li th:each="comment : ${myComments}" class="comment-item">
+            <div class="comment-meta">
+              <span class="badge category-badge" th:text="${comment.postCategory}">카테고리</span>
+              <a th:if="${comment.postCategory == '자랑글'}" th:href="@{'/showoff/read/' + ${comment.postId}}"
+                th:text="${comment.postTitle}" class="comment-title"></a>
+              <a th:if="${comment.postCategory == '자유글' or comment.postCategory == '질문글'}"
+                th:href="@{'/posts/read/' + ${comment.postId}}" th:text="${comment.postTitle}"
+                class="comment-title"></a>
+              <a th:if="${comment.postCategory == null or (comment.postCategory != '자랑글' and comment.postCategory != '자유글' and comment.postCategory != '질문글')}"
+                th:href="@{'/lost/read/' + ${comment.postId}}" th:text="${comment.postTitle}" class="comment-title"></a>
+            </div>
+            <div class="comment-content" th:text="'작성한 댓글 : ' + ${comment.content}">댓글 내용</div>
+          </li>
+        </ul>
+        <div th:if="${#lists.isEmpty(myComments)}" class="no-comment">작성한 댓글이 없습니다.</div>
+      </div>
+    </div>
+
+    <div class="mypage-section mb-3">
+      <div class="section-title">❤️ 좋아요한 글</div>
+      <div class="like-list">
+        <ul class="list-unstyled" th:if="${!#lists.isEmpty(likedPosts)}">
+          <li th:each="post : ${likedPosts}" class="like-item">
+            <span class="badge category-badge" th:text="${post.category}">카테고리</span>
+
+            <a th:if="${post.category == '자랑글'}" th:href="@{'/showoff/read/' + ${post.postId}}" th:text="${post.title}"
+              class="like-title"></a>
+
+            <a th:if="${post.category == '자유글' or post.category == '질문글'}" th:href="@{'/posts/read/' + ${post.postId}}"
+              th:text="${post.title}" class="like-title"></a>
+
+            <a th:if="${post.category != '자랑글' and post.category != '자유글' and post.category != '질문글'}"
+              th:href="@{'/lost/read/' + ${post.postId}}" th:text="${post.title}" class="like-title"></a>
+          </li>
+        </ul>
+        <div th:if="${#lists.isEmpty(likedPosts)}" class="no-like">좋아요한 글이 없습니다.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div th:replace="fragments/footer :: footer"></div>
+<script th:src="@{/assets/dist/js/header.js}"></script>
+</body>
+
+</html>

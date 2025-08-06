@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8">
+  <title>내 주변 검색</title>
+  <script type="text/javascript"
+    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=042e9d921821591dcceda5a68e03040f&libraries=services"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" th:href="@{/assets/dist/css/header.css}" />
+  <link rel="stylesheet" th:href="@{/css/map.css}" />
+</head>
+
+<body>
+  <div th:replace="fragments/header :: header"></div>
+
+  <div class="map_container">
+    <div class="map-layout d-flex">
+      <!-- 📍 왼쪽: 검색 영역 -->
+      <div class="left-panel d-flex flex-column gap-2">
+        <div class="custom-search-bar">
+          <input type="text" id="keyword" class="custom-search-input" placeholder="장소, 검색" />
+          <button class="custom-search-button" onclick="search()">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+        <div id="placesList" class="list-panel"></div>
+      </div>
+
+      <!-- 🗺️ 오른쪽: 지도 영역 -->
+      <div id="map" class="map-panel"></div>
+    </div>
+  </div>
+
+  <div id="popup" class="custom-popup" style="display:none"></div>
+  <div th:replace="fragments/footer :: footer"></div>
+
+  <script th:src="@{/assets/dist/js/header.js}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    var map = new kakao.maps.Map(document.getElementById('map'), {
+      center: new kakao.maps.LatLng(37.5665, 126.9780), // 기본값: 서울 시청
+      level: 4
+    });
+
+    var ps = new kakao.maps.services.Places();
+    var markers = [];
+
+    // 반경 계산
+    function getRadiusByLevel(level) {
+      if (level <= 3) return 1000;
+      if (level === 4) return 2000;
+      if (level === 5) return 3000;
+      if (level === 6) return 5000;
+      if (level === 7) return 8000;
+      if (level === 8) return 10000;
+      if (level === 9) return 15000;
+      return 20000;
+    }
+
+    // 장소 검색
+    function search(centerLatLng) {
+      const keyword = document.getElementById('keyword').value.trim();
+      if (!keyword) {
+        alert("검색어를 입력하세요.");
+        return;
+      }
+
+      const loc = centerLatLng || map.getCenter(); // 지도 중심 또는 제공된 좌표
+      const radius = getRadiusByLevel(map.getLevel());
+
+      map.setCenter(loc);
+      clearMarkers();
+
+      ps.keywordSearch(keyword, function (data, status) {
+        const listEl = document.getElementById('placesList');
+        listEl.innerHTML = '';
+
+        if (status === kakao.maps.services.Status.OK) {
+          data.forEach(place => {
+            const coords = new kakao.maps.LatLng(place.y, place.x);
+            const marker = new kakao.maps.Marker({ map: map, position: coords });
+            markers.push(marker);
+
+            kakao.maps.event.addListener(marker, 'click', function () {
+              showPopup(place);
+            });
+
+            const item = document.createElement('div');
+            item.className = 'place-item';
+            item.innerHTML = `
+            <strong>${place.place_name}</strong><br>
+            ${place.road_address_name || place.address_name}
+          `;
+            item.onclick = () => {
+              map.setCenter(coords);
+              showPopup(place);
+            };
+            listEl.appendChild(item);
+          });
+        }
+        // else {
+        //   alert('검색 결과가 없습니다.');
+        // }
+      }, {
+        location: loc,
+        radius: radius
+      });
+    }
+
+    // 마커 초기화
+    function clearMarkers() {
+      markers.forEach(marker => marker.setMap(null));
+      markers = [];
+    }
+
+    // 팝업 표시
+    let customOverlay; // 전역 선언
+
+    function showPopup(place) {
+      // 기존 오버레이 제거
+      if (customOverlay) customOverlay.setMap(null);
+
+      const content = `
+    <div class="overlay-wrapper">
+      <div class="overlay-content">
+        <div class="title">
+          <strong>${place.place_name}</strong>
+          <button class="close-btn" onclick="closeOverlay()">X</button>
+        </div>
+        <div class="body">
+          <div class="address">${place.road_address_name || place.address_name}</div>
+          ${place.phone ? `<div class="phone">${place.phone}</div>` : ""}
+          <div class="link">
+            <a href="${place.place_url}" target="_blank">카카오맵에서 보기</a>
+          </div>
+        </div>
+      </div>
+      <div class="overlay-arrow"></div>
+    </div>
+  `;
+
+      customOverlay = new kakao.maps.CustomOverlay({
+
+        content: content,
+        position: new kakao.maps.LatLng(place.y, place.x),
+        xAnchor: 0.5,
+        yAnchor: 1.1
+      });
+
+      customOverlay.setMap(map);
+    }
+
+    function closeOverlay() {
+      if (customOverlay) {
+        customOverlay.setMap(null); // 지도에서 제거
+      }
+    }
+    // 지도 이동 후 자동 검색
+    kakao.maps.event.addListener(map, 'idle', function () {
+      const keyword = document.getElementById('keyword').value.trim();
+      if (keyword) {
+        search(); // 지도 중심 기준 자동 재검색
+      }
+    });
+
+    // 최초 로딩 시 내 위치 기반 첫 검색
+    window.onload = () => {
+      document.getElementById('keyword').value = '동물병원';
+
+      // 🔍 엔터 키 입력 시 검색
+      document.getElementById('keyword').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          search();
+        }
+      });
+
+      navigator.geolocation.getCurrentPosition(function (position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const myLoc = new kakao.maps.LatLng(lat, lng);
+        search(myLoc); // 내 위치 기반 첫 검색
+      }, function (error) {
+        alert("위치 정보를 가져올 수 없습니다. 기본 위치로 검색합니다.");
+        search(); // fallback: 서울 시청
+      });
+    };
+  </script>
+
+</body>
+
+</html>

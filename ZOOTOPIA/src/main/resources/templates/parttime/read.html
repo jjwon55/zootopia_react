@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+                xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>펫 시터 상세</title>
+    <!-- bootstrap css -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Login CSS only -->
+    <link rel="stylesheet" th:href="@{/assets/dist/css/header.css}">
+    <link rel="stylesheet" href="/assets/dist/css/login.css">
+    <link rel="stylesheet" th:href="@{/assets/dist/css/header.css}">
+  <style>
+    .btn {
+      border: 1px solid #F27A7A;
+      background-color: transparent;
+      color: #F27A7A;
+      border-radius: 6px;
+      min-width: 60px;
+    }
+
+    .btn1 {
+      border: 1px solid #F27A7A;
+      background-color: #F27A7A;
+      color: white;
+      border-radius: 6px;
+      min-width: 60px;
+      min-height: 40px;
+    }
+
+    .pagination .page-item.active .page-link {
+      background-color: #F27A7A;
+      border-color: #F27A7A;
+      color: white !important; 
+    }
+
+    .pagination .page-link {
+      color: #F27A7A; /* 기본 글씨 색상 */
+      border: 1px solid #F27A7A;
+      background-color: white;
+    }
+
+    .pagination .page-link:hover {
+      background-color: #fbeaea;
+      color: #F27A7A;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div th:replace="~{fragments/header :: header}"></div>
+
+<div class="container my-5" style="width: 700px; height: 1000px;">
+  <h3 class="text-center mb-5">펫 시터 상세 내용</h3>
+  
+  <div class="card card-custom p-4 d-flex flex-column justify-content-evenly" style="height: auto;">
+    <h5 class="mb-4 text-center text-danger-emphasis" th:text="${job.title}">펫 시터 제목</h5>
+    <div class="mb-4 text-center">
+      <div class="row mb-2">
+        <div class="col-3 fw-bold">지역 :</div>
+        <div class="col-9" th:text="${job.location}">서울 강서구</div>
+      </div>
+      <div class="row mb-2">
+      <div class="col-3 fw-bold">날짜 :</div>
+      <div class="col-9 d-flex flex-column">
+        <div th:text="${#temporals.format(job.startDate, 'yyyy년 MM월 dd일 (E)')}">
+          2025년 07월 25일 (금) 오전 12:00
+        </div>
+        <div>
+          ~
+        </div>
+        <div th:text="${#temporals.format(job.endDate, 'yyyy년 MM월 dd일 (E)')}">
+          2025년 07월 26일 (토) 오전 12:00
+        </div>
+      </div>
+      </div>
+      <div class="row mb-2">
+        <div class="col-3 fw-bold">보수 :</div>
+        <div class="col-9 text-primary fw-bold" th:text="${job.pay + '원'}">10,000원</div>
+      </div>
+      <div class="row mb-2">
+        <div class="col-3 fw-bold">보호자 :</div>
+        <div class="col-9 fw-bold text-success" th:text="${job.nickname}">happy_dog ✅</div>
+      </div>
+      <div class="row">
+        <div class="col-3 fw-bold">동물 :</div>
+        <div class="col-9" th:text="${job.petInfo}">말티즈 (2살, 순함)</div>
+      </div>
+    </div>
+    
+    <div class="bg-light p-3 rounded border flex-shrink-0 mb-3" style="max-height: 200px;">
+      <strong>요청 상세</strong>
+      <div th:if="${job.memo != null}" class="mt-2" th:text="${job.memo}">요청 메모</div>
+      <div th:if="${job.memo == null}" class="mt-2 text-muted">요청사항이 없습니다.</div>
+    </div>
+  
+  <!-- ✅ 버튼 그룹: 로그인한 사용자일 경우 -->
+  <div sec:authorize="isAuthenticated()" class="text-end mt-3 me-4 mb-3">
+
+    <!-- ✅ 작성자이면 수정/삭제/목록 모두 표시 -->
+    <div th:if="${loginUserId == writerId}" class="d-flex justify-content-end gap-2">
+      <a th:href="@{/parttime/update/{jobId}(jobId=${job.jobId})}" class="btn1" style="text-decoration: none; padding: 6px 12px;">수정</a>
+
+      <form th:action="@{/parttime/delete/{jobId}(jobId=${job.jobId})}" method="post">
+        <input type="hidden" name="_method" value="delete" />
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <button type="submit" class="btn1" onclick="return confirm('정말 삭제하시겠습니까?')">삭제</button>
+      </form>
+
+      <a th:href="@{/parttime/list}" class="btn1" style="text-decoration: none; padding: 6px 12px;">목록</a>
+    </div>
+
+    <!-- ✅ 작성자가 아니면 목록 버튼만 표시 -->
+    <div th:if="${loginUserId != writerId}">
+      <a th:href="@{/parttime/list}" class="btn1" style="text-decoration: none; padding: 6px 12px;">목록</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- ✅ 신청 결과 메시지 박스: 로그인 여부, 작성자 여부 관계없이 항상 체크 -->
+<th:block th:if="${successMessage != null or errorMessage != null}">
+  <div class="card mt-5 p-3 shadow-sm mb-1" style="max-width: 600px; margin: 0 auto;">
+    
+    <div class="text-center mb-3">
+      <h6 class="text-secondary">
+        📝 신청 처리 결과 메시지
+      </h6>
+    </div>
+
+    <!-- ✅ 성공 메시지 표시 -->
+    <div th:if="${successMessage}" class="alert alert-success text-center">
+      <strong th:text="${successMessage}"></strong>
+    </div>
+
+    <!-- ❌ 실패 메시지 (중복 신청 등) -->
+    <div th:if="${errorMessage}" class="alert alert-danger text-center">
+      <strong th:text="${errorMessage}"></strong>
+    </div>
+  </div>
+</th:block>
+
+<!-- ✅ 로그인하지 않은 사용자에게 안내 -->
+<div sec:authorize="!isAuthenticated()" class="text-center mt-4">
+  <a th:href="@{/login}" class="btn btn1">🔐 로그인 후 신청하기</a>
+</div>
+
+<!-- ✅ 신청 폼: 로그인 && 작성자가 아니며 && 아직 신청 안한 사용자만 -->
+  <div sec:authorize="isAuthenticated()" th:if="${!isWriter and !hasApplied}" class="card p-3 shadow-sm mb-4 mt-5" style="max-width: 600px; margin: 0 auto;">
+    <form th:action="@{/parttime/job/applicant/apply}" method="post">
+      <input type="hidden" name="jobId" th:value="${job.jobId}" />
+      <div class="form-group mb-3">
+        <label for="introduction" class="form-label fw-bold">자기소개</label>
+        <textarea id="introduction" name="introduction" class="form-control" rows="3" required></textarea>
+      </div>
+      <div class="d-flex justify-content-between">
+        <a th:href="@{/parttime/list}" class="btn">취소</a>
+        <button type="submit" class="btn1">신청하기</button>
+      </div>
+    </form>
+  </div>
+
+
+  <!-- 🧑‍💼 일반 신청자 전용: 내 신청 정보만 표시 -->
+  <div th:if="${!isWriter and hasApplied}" class="mt-5">
+    <h5 class="fw-bold mb-3">📋 지원자 목록</h5>
+
+    <div class="mb-2">
+      <div class="border p-3 rounded" style="background-color: #fafafa; font-size: 0.9rem;">
+        <div>
+          <strong>🧑‍💼 나 :</strong> 
+          <span th:text="${myApplication.introduction}">내 소개</span>
+        </div>
+        <div class="mt-1">
+          <strong>📧 이메일:</strong> <span th:text="${myApplication.email}">내 이메일</span><br />
+          <strong>📱 전화번호:</strong> <span th:text="${myApplication.phone}">내 전화번호</span>
+        </div>
+        <div class="text-end mt-2">
+          <form th:action="@{/parttime/job/applicant/delete/{applicantId}/job/{jobId}(applicantId=${myApplication.applicantId}, jobId=${job.jobId})}" method="post">
+            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('신청을 취소하시겠습니까?')">신청 취소</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 전체 지원자 목록: 작성자 전용 -->
+<div th:if="${loginUserId == writerId}" class="mt-4">
+  <h5 class="fw-bold mb-3">📋 지원자 목록</h5>
+  
+
+  <div th:if="${#lists.isEmpty(applicants)}" class="text-muted">
+    현재 지원자가 없습니다.
+  </div>
+
+  <div th:each="app : ${applicants}" class="mb-2">
+  <div class="border p-3 rounded" style="background-color: #fafafa; font-size: 0.9rem;">
+
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <div><strong>🧑‍💼 ID:</strong> <span th:text="${app.userId}"></span></div>
+        <div><strong>✍</strong> <span th:text="${app.introduction}"></span></div>
+      </div>
+
+      <div class="text-end ms-3">
+        <p class="text-muted mb-1" style="font-size: 0.75rem;" th:text="${#temporals.format(app.createdAt, 'yy.MM.dd HH:mm')}"></p>
+
+        <!-- 연락처 보기 버튼: 작성자에게만 보임 -->
+        <div th:if="${loginUserId == writerId}">
+          <button class="btn btn-sm btn-toggle-contact mt-1" type="button"
+            style="background-color: #F27A7A; color: white; border-radius: 6px; font-size: 0.75rem;"
+            onclick="toggleContact(this)">
+            📞 연락처 보기
+          </button>
+          <div class="mt-1 contact-info d-none">
+            <div><strong>📧 이메일:</strong> <span th:text="${app.email}"></span></div>
+            <div><strong>📱 전화번호:</strong> <span th:text="${app.phone}"></span></div>
+          </div>
+        </div>
+
+        <!-- 본인만 취소 가능 -->
+        <form th:if="${user != null and user.userId == app.userId}"
+              th:action="@{/parttime/job/applicant/delete/{applicantId}/job/{jobId}(applicantId=${app.applicantId}, jobId=${job.jobId})}"
+              method="post">
+            <button type="submit" class="btn btn-outline-danger btn-sm px-2 py-1" style="font-size: 0.75rem; border-radius: 4px;"
+                  onclick="return confirm('정말 취소하시겠습니까?')">❌
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 페이지네이션 -->
+  <nav th:if="${totalApplicantPages > 1}" class="mt-3">
+  <ul class="pagination pagination-sm justify-content-center">
+    <li class="page-item" th:classappend="${applicantPage == 1} ? 'disabled'">
+      <a class="page-link custom-page" th:href="@{/parttime/read/{jobId}(jobId=${job.jobId}, applicantPage=${applicantPage - 1})}">이전</a>
+    </li>
+  
+    <li class="page-item" th:each="i : ${#numbers.sequence(1, totalApplicantPages)}"
+        th:classappend="${i == applicantPage} ? 'active'">
+      <a class="page-link custom-page"
+        th:href="@{/parttime/read/{jobId}(jobId=${job.jobId}, applicantPage=${i})}"
+        th:text="${i}">1</a>
+    </li>
+  
+    <li class="page-item" th:classappend="${applicantPage == totalApplicantPages} ? 'disabled'">
+      <a class="page-link custom-page" th:href="@{/parttime/read/{jobId}(jobId=${job.jobId}, applicantPage=${applicantPage + 1})}">다음</a>
+    </li>
+  </ul>
+  </nav>
+</div>
+
+ 
+</div> <!-- container 끝 -->
+
+
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+    <script th:src="@{/assets/dist/js/header.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+<script th:inline="javascript">
+  function checkLogin(event) {
+    const isAuthenticated = /*[[${#authorization.expression('isAuthenticated()')}]]*/ false;
+
+    if (!isAuthenticated) {
+      event.preventDefault(); // 폼 제출 중단
+      alert("로그인 후 신청하실 수 있습니다.");
+      window.location.href = "/login"; // 로그인 페이지로 이동
+      return false;
+    }
+
+    return true;
+  }
+</script>
+
+<script>
+  function toggleContact(btn) {
+    const info = btn.nextElementSibling;
+    if (info.classList.contains("d-none")) {
+      info.classList.remove("d-none");
+      btn.textContent = "🔒 연락처 숨기기";
+    } else {
+      info.classList.add("d-none");
+      btn.textContent = "📞 연락처 보기";
+    }
+  }
+</script>
+
+</body>
+</html>

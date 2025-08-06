@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.aloha.zootopia.mapper.InsuranceQnaMapper">
+
+    <!-- 질문 등록 -->
+    <insert id="insertQna">
+        INSERT INTO insurance_qna
+        (product_id, user_id, species, question)
+        VALUES
+        (#{productId}, #{userId}, #{species}, #{question})
+    </insert>
+
+    <!-- 특정 상품의 QnA 목록 -->
+    <select id="selectQnaByProductId" resultType="com.aloha.zootopia.domain.InsuranceQna">
+        SELECT * FROM insurance_qna
+        WHERE product_id = #{productId}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 단일 QnA 조회 -->
+    <select id="selectQnaById" resultType="com.aloha.zootopia.domain.InsuranceQna">
+        SELECT * FROM insurance_qna
+        WHERE qna_id = #{qnaId}
+    </select>
+
+    <!-- 답변 작성/수정 (관리자) -->
+    <update id="updateQnaAnswer">
+        UPDATE insurance_qna
+        SET answer = #{answer}
+        WHERE qna_id = #{qnaId}
+    </update>
+
+    <!-- 질문 수정 (작성자) -->
+    <update id="updateQnaQuestion">
+    UPDATE insurance_qna
+    SET
+        species = #{species},
+        question = #{question}
+    WHERE qna_id = #{qnaId}
+    </update>
+
+    <!-- 질문 삭제 -->
+    <delete id="deleteQna">
+        DELETE FROM insurance_qna
+        WHERE qna_id = #{qnaId}
+    </delete>
+
+    <select id="getQnaListPaged" parameterType="map" resultType="com.aloha.zootopia.domain.InsuranceQna">
+        SELECT q.*, u.nickname
+        FROM insurance_qna q
+        JOIN users u ON q.user_id = u.user_id
+        WHERE q.product_id = #{productId}
+        ORDER BY q.created_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countQnaByProduct" resultType="int">
+    SELECT COUNT(*) FROM insurance_qna WHERE product_id = #{productId}
+    </select>
+
+</mapper>

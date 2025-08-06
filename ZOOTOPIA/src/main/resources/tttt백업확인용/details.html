@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>병원 상세</title>
+    <link rel="stylesheet" href="/ZOOTOPIA/src/main/resources/static/css/hospital_style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 상단 로고 -->
+        <div class="logo-container">
+            <div class="logo">
+                <img src="/ZOOTOPIA/src/main/resources/static/img/hosp_logo.png" alt="병원 아이콘" class="logo-icon">
+            </div>
+        </div>
+
+        <!-- 동물 배너 -->
+        <div class="animal-banner">
+            <div class="animal-icons">
+                <span class="animal-icon">🐱</span>
+                <span class="animal-icon">🐶</span>
+                <span class="animal-icon">🐸</span>
+                <span class="text">병원 소개</span>
+                <span class="animal-icon">🦜</span>
+                <span class="animal-icon">🐹</span>
+            </div>
+        </div>
+
+        <!-- 메인 컨텐츠 -->
+        <div class="main-content">
+            <div class="detail-container">
+                <div class="hospital-image-section">
+                    <img src="hospital-building.jpg" alt="병원 건물" class="hospital-image">
+                </div>
+
+                <div class="hospital-info-section">
+                    <table class="info-table">
+                        <tr>
+                            <td class="info-label">병원 이름</td>
+                            <td class="info-value" th:text="${hospital.name}">아크리스 특수동물 병원</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">진료 과목</td>
+                            <td class="info-value">
+                                <span th:each="spec : ${hospital.specialties}" th:text="${spec.category} + ' '">치과, 외과, 내과, 건강검진</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">진료 가능 동물</td>
+                            <td class="info-value">
+                                <span th:each="animal : ${hospital.animals}" th:text="${animal.species} + ' '">포유류, 파충류, 조류, 설치류</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">병원 주소</td>
+                            <td class="info-value" th:text="${hospital.address}">서울특별시 강남구 영은사로 104길 10 동화빌딩 3층</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">홈페이지</td>
+                            <td class="info-value">
+                                <a th:href="${hospital.homepage}" th:text="${hospital.homepage}">https://acrisamc.co.kr/</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">대표번호</td>
+                            <td class="info-value" th:text="${hospital.phone}">02-583-7582</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">이메일</td>
+                            <td class="info-value" th:text="${hospital.email}">X</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+<!-- -------------백업용 250710 16:43--------------------------------------------------------------------------------- -->
+
+<!-- 리뷰 섹션 -->
+            <div class="review-section">
+                <div class="review-header">
+                    <h3>이 병원 어때요?</h3>
+                </div>
+
+                <div class="review-stats">
+                    <span class="review-count" th:text="'댓글 개수 ' + ${#lists.size(hospital.reviews)}">댓글 개수 100</span>
+                </div>
+
+                <!-- [수정] 디버깅을 위한 코드 블록: 리스트의 크기뿐만 아니라 전체 내용을 시각적으로 확인합니다. -->
+                <div style="background-color: #fffbe6; border: 1px solid #ffe58f; padding: 1rem; margin: 1rem 0; border-radius: 4px; font-family: 'Courier New', monospace;">
+                    <h5 style="margin-top: 0; color: #d46b08;">[디버깅 정보]</h5>
+                    <p style="margin-bottom: 0.5rem;"><strong>'hospital.reviews' 리스트 크기: </strong><strong th:text="${#lists.size(hospital.reviews)}">0</strong></p>
+                    <p style="margin-bottom: 0.5rem;"><strong>'hospital.reviews' 리스트 내용:</strong></p>
+                    <pre style="white-space: pre-wrap; word-wrap: break-word; background-color: #fff; padding: 0.5rem; border-radius: 3px;" th:text="${hospital.reviews}"></pre>
+                </div>
+
+                <div class="review-list" >
+                    <div th:if="${#lists.isEmpty(hospital.reviews)}" class="no-reviews-message" style="text-align: center; padding: 20px; color: #666;">
+                        <p>등록된 리뷰가 없습니다.</p>
+                    </div>
+                    <div th:each="review, stat : ${hospital.reviews}" class="review-item" th:id="'review-item-' + ${review.reviewId}">
+
+                        <div class="author-rating">
+                            <div class="review-author" th:text="${review.nickname}">작성자</div>
+                            <div class="review-rating">
+                                <span th:if="${review.rating != null}" th:each="i : ${#numbers.sequence(1, review.rating)}">⭐</span>
+                            </div>
+                        </div>
+
+                        <div class="review-date-container">
+                            <div class="review-date" th:text="${#dates.format(review.createdAt, 'yyyy.MM.dd HH:mm')}">2025.08.27 12:12</div>
+                        </div>
+
+                        <hr style="margin-bottom: 3px; border: none; border-top: 1px solid #ccc;">
+
+                        <div class="review-content" th:id="'review-content-' + ${review.reviewId}" th:text="${review.content}"></div>
+
+                        
+                        <!-- 수정용 hidden form -->
+                        <form th:action="@{/hospitals/{id}/reviews/{reviewId}/edit(id=${hospital.hospitalId}, reviewId=${review.reviewId})}" method="post" class="inline-edit-form" th:id="'edit-form-' + ${review.reviewId}" style="display:none;">
+                            <textarea name="content" th:text="${review.content}" required style="width:90%;height:60px;"></textarea>
+                            <button type="submit" class="review-update-btn">수정완료</button>
+                        </form>
+                        <!-- 수정/삭제 버튼 컨테이너 -->
+                        <div class="review-actions" sec:authorize="isAuthenticated()" th:if="${#authentication.principal.user.userId == review.userId}">
+                            <button type="button" class="hosp-review-update" th:data-review-id="${review.reviewId}">수정</button>
+                            <form th:action="@{/hospitals/{id}/reviews/{reviewId}/delete(id=${hospital.hospitalId}, reviewId=${review.reviewId})}" method="post" style="display: inline;">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <button type="submit" class="hosp-review-delete" onclick="return confirm('정말로 이 리뷰를 삭제하시겠습니까?');">삭제</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 리뷰 작성 폼 -->
+                <div class="review-form">
+                    <form th:action="@{/hospitals/{id}/reviews(id=${hospital.hospitalId})}" method="post" th:object="${reviewForm}">
+                        <div class="review-container">
+                            <div class="star-rating">
+                                <input type="radio" th:field="*{rating}" id="star5" value="5"><label for="star5">⭐⭐⭐⭐⭐</label>
+                                <input type="radio" th:field="*{rating}" id="star4" value="4"><label for="star4">⭐⭐⭐⭐</label>
+                                <input type="radio" th:field="*{rating}" id="star3" value="3"><label for="star3">⭐⭐⭐</label>
+                                <input type="radio" th:field="*{rating}" id="star2" value="2"><label for="star2">⭐⭐</label>
+                                <input type="radio" th:field="*{rating}" id="star1" value="1"><label for="star1">⭐</label>
+                            </div>
+                            <div class="review-input-container">
+                                <input type="text" th:field="*{content}" placeholder="이 병원 어때요? 다른 분들에게 도움이 되는 예쁜말을 남겨주세요" class="review-input" required>
+                                <button type="submit" class="review-submit-btn">남기기</button>
+                            </div>
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 기존 리뷰 수정 스크립트
+        document.querySelectorAll('.hosp-review-update').forEach(btn => {
+            btn.addEventListener('click', (event) => {
+                const reviewId = event.target.getAttribute('data-review-id');
+                
+                // 모든 수정 폼과 리뷰 내용을 원래 상태로 되돌립니다.
+                document.querySelectorAll('.review-item').forEach(item => {
+                    item.querySelector('.review-content').style.display = 'block';
+                    item.querySelector('.inline-edit-form').style.display = 'none';
+                });
+
+                // 클릭된 버튼에 해당하는 수정 폼만 보여줍니다.
+                const contentDiv = document.getElementById(`review-content-${reviewId}`);
+                const editForm = document.getElementById(`edit-form-${reviewId}`);
+                contentDiv.style.display = 'none';
+                editForm.style.display = 'block';
+            });
+        });
+
+        // 리뷰 작성 폼 유효성 검사
+        const reviewForm = document.querySelector('.review-form form');
+        if (reviewForm) {
+            reviewForm.addEventListener('submit', function(event) {
+                const ratingInputs = reviewForm.querySelectorAll('input[name="rating"]');
+                let ratingSelected = false;
+                for (let i = 0; i < ratingInputs.length; i++) {
+                    if (ratingInputs[i].checked) {
+                        ratingSelected = true;
+                        break;
+                    }
+                }
+
+                const contentInput = reviewForm.querySelector('input[name="content"]');
+                const content = contentInput ? contentInput.value.trim() : '';
+
+                if (!ratingSelected) {
+                    alert('별점을 선택해주세요.');
+                    event.preventDefault(); // 제출 방지
+                    return;
+                }
+
+                if (content === '') {
+                    alert('내용을 입력해주세요.');
+                    event.preventDefault(); // 제출 방지
+
+                    // r백업용 날짜 
+                    <span class="review-date">${new Date(review.createdAt).toLocaleDateString()}</span>
+                    return;
+                }
+            });
+        }
+    });
+    </script>
+
+
+
+
+            <!-- ---------------------------------------------------------------------------------------------------------------------- -->
+            <!-- 리뷰 섹션 -->
+            <div class="review-section">
+                <div class="review-header">
+                    <h3>이 병원 어때요?</h3>
+                </div>
+
+                <div class="review-stats">
+                    <span class="review-count" th:text="'댓글 개수 ' + ${#lists.size(reviews)}">댓글 개수 100</span>
+                </div>
+
+                <div class="review-list">
+                    <div th:each="review : ${reviews}" class="review-item">
+                        <div class="review-author">작성자</div>
+                        <div class="review-date">2025.08.27 12:12</div>
+                        <div class="review-content" th:text="${review.content}">Lorem ipsum is a dummy or placeholder text commonly used in graphic design, publishing, and web development. Its purpose is to permit a page layout to be designed, independently of the copy that</div>
+                        <div class="review-rating">
+                            <span th:text="'⭐'.repeat(${review.rating})">⭐⭐⭐⭐⭐</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 리뷰 작성 폼 -->
+                <div class="review-form">
+                    <form th:action="@{/hospitals/{id}/reviews(id=${hospital.hospitalId})}" method="post" th:object="${reviewForm}">
+                        <div class="review-input-container">
+                            <input type="text" th:field="*{content}" placeholder="이 병원 어때요? 자유롭게 생각 남겨주세요" class="review-input" required>
+                            <input type="hidden" th:field="*{rating}" value="5">
+                            <button type="submit" class="review-submit-btn">남기기</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

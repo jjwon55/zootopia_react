@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZOOTOPIA 스토어</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Header CSS -->
+    <link rel="stylesheet" href="/assets/dist/css/header.css">
+    <!-- Footer CSS -->
+    <link rel="stylesheet" href="/assets/dist/css/footer.css">
+    <link rel="stylesheet" href="/assets/dist/css/products.css">
+    <style>
+        .product-card {
+            transition: all 0.3s ease;
+            height: 100%;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .category-btn {
+            transition: all 0.2s ease;
+            border-radius: 20px;
+            padding: 8px 16px;
+        }
+        .category-btn.active {
+            background-color: #F27A7A;
+            color: white;
+            transform: scale(1.05);
+        }
+        .category-btn:not(.active) {
+            border-color: #F27A7A;
+            color: #F27A7A;
+        }
+        .category-btn:not(.active):hover {
+            background-color: #F27A7A;
+            color: white;
+        }
+        .navbar-brand img {
+            height: 40px;
+        }
+        .navbar-sticky {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .search-form {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 25px;
+            overflow: hidden;
+        }
+        .page-header {
+            background: linear-gradient(135deg, #F27A7A 0%, #E06B6B 100%);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+        }
+        .btn-primary {
+            background-color: #F27A7A;
+            border-color: #F27A7A;
+        }
+        .btn-primary:hover {
+            background-color: #E06B6B;
+            border-color: #E06B6B;
+        }
+        .btn-outline-primary {
+            border-color: #F27A7A;
+            color: #F27A7A;
+        }
+        .btn-outline-primary:hover {
+            background-color: #F27A7A;
+            border-color: #F27A7A;
+        }
+        .text-primary {
+            color: #F27A7A !important;
+        }
+        .text-danger {
+            color: #F27A7A !important;
+        }
+        .stats-badge {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+        mark {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .btn-group-sm .btn {
+            transition: all 0.2s ease;
+        }
+        .btn-group-sm .btn:hover {
+            transform: scale(1.1);
+        }
+        .admin-controls .btn {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .admin-controls .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        @media (max-width: 768px) {
+            .category-btn {
+                margin-bottom: 0.5rem;
+                font-size: 0.875rem;
+                padding: 6px 12px;
+                flex: 1 1 auto;
+                min-width: 100px;
+            }
+            .page-header {
+                padding: 2rem 0;
+            }
+            .page-header h1 {
+                font-size: 2rem;
+            }
+            .d-flex.justify-content-center.flex-wrap.gap-2 {
+                justify-content: center !important;
+            }
+        }
+        @media (max-width: 576px) {
+            .category-btn {
+                font-size: 0.75rem;
+                padding: 4px 8px;
+                min-width: 90px;
+            }
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Fragment -->
+    <div th:replace="fragments/header :: header"></div>
+
+    <!-- 메인 컨테이너 -->
+    <div class="container mt-4">
+        <!-- 페이지 헤더 -->
+        <div class="page-header">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <h1 class="display-4 mb-3">
+                            <i class="fas fa-store me-3"></i>ZOOTOPIA 스토어
+                        </h1>
+                        <p class="lead mb-4">귀여운 반려동물과 함께하는 특별한 순간</p>
+                        
+                        <!-- 관리자 전용 상품 등록 버튼 -->
+                        <div class="admin-controls mb-3" sec:authorize="hasRole('ADMIN')">
+                            <a href="/products/create" class="btn btn-success btn-lg">
+                                <i class="fas fa-plus me-2"></i>상품 등록
+                            </a>
+                        </div>
+                        
+                        <div class="d-flex justify-content-center flex-wrap gap-3">
+                            <span class="badge stats-badge fs-6">
+                                <i class="fas fa-box me-1"></i>총 <span th:text="${totalProducts ?: 0}">0</span>개 상품
+                            </span>
+                            <span class="badge stats-badge fs-6">
+                                <i class="fas fa-tags me-1"></i><span th:text="${currentCategory}">전체</span> 카테고리
+                            </span>
+                            <span class="badge stats-badge fs-6" th:if="${currentSearch != null and !currentSearch.isEmpty()}">
+                                <i class="fas fa-search me-1"></i>검색: <span th:text="${currentSearch}"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 상태 정보 (간소화) -->
+        <div class="row mb-4" th:if="${false}">
+            <div class="col-12">
+                <div class="alert alert-success d-flex align-items-center">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <div>
+                        <strong>스토어 페이지가 정상적으로 로드되었습니다!</strong>
+                        <div class="mt-1">
+                            <small class="text-muted">
+                                현재 카테고리: <span class="badge bg-primary" th:text="${currentCategory}">전체</span>
+                                <span th:if="${currentSearch != null and !currentSearch.isEmpty()}" class="ms-2">
+                                    검색어: <span class="badge bg-info" th:text="${currentSearch}"></span>
+                                </span>
+                                페이지: <span class="badge bg-secondary" th:text="${pagination != null ? pagination.page : 1}">1</span>
+                                총 상품 수: <span class="badge bg-warning text-dark" th:text="${totalProducts ?: 0}">0</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 검색 바 -->
+        <div class="row mb-4">
+            <div class="col-md-8 mx-auto">
+                <form method="get" action="/products/listp" class="search-form">
+                    <input type="hidden" name="category" th:value="${currentCategory != '전체' ? currentCategory : ''}">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-0"><i class="fas fa-search" style="color: #F27A7A;"></i></span>
+                        <input type="text" name="search" class="form-control border-0 shadow-none" 
+                               placeholder="상품명을 검색하세요..." th:value="${currentSearch}">
+                        <button class="btn btn-primary border-0" type="submit">
+                            <i class="fas fa-search me-1"></i>검색
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 카테고리 필터 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-center flex-wrap gap-2">
+                    <a href="/products/listp" class="btn category-btn"
+                       th:classappend="${currentCategory == '전체'} ? 'active' : ''">
+                        <i class="fas fa-th-large me-1"></i>전체
+                    </a>
+                    <a href="/products/listp?category=사료" class="btn category-btn"
+                       th:classappend="${currentCategory == '사료'} ? 'active' : ''">
+                        <i class="fas fa-bowl-food me-1"></i>사료
+                    </a>
+                    <a href="/products/listp?category=용품" class="btn category-btn"
+                       th:classappend="${currentCategory == '용품'} ? 'active' : ''">
+                        <i class="fas fa-shopping-bag me-1"></i>용품
+                    </a>
+                    <a href="/products/listp?category=장난감" class="btn category-btn"
+                       th:classappend="${currentCategory == '장난감'} ? 'active' : ''">
+                        <i class="fas fa-dice me-1"></i>장난감
+                    </a>
+                    <a href="/products/listp?category=산책" class="btn category-btn"
+                       th:classappend="${currentCategory == '산책'} ? 'active' : ''">
+                        <i class="fas fa-walking me-1"></i>산책
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 상품 목록 -->
+        <div class="row" th:if="${products != null and !products.isEmpty()}">
+            <div class="col-lg-4 col-md-6 mb-4" th:each="product : ${products}">
+                <div class="card product-card h-100">
+                    <!-- 상품 이미지 -->
+                    <div class="position-relative">
+                        <img th:src="${product.imageUrl}" class="card-img-top" alt="상품 이미지" 
+                             style="height: 200px; object-fit: cover;"
+                             onerror="this.src='/img/default-thumbnail.png'">
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge bg-primary" th:text="${product.category}">카테고리</span>
+                        </div>
+                        <div class="position-absolute bottom-0 start-0 m-2">
+                            <span class="badge bg-success" th:text="${product.status ?: '판매중'}">상태</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 상품 정보 -->
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-primary fw-bold" th:text="${product.name}">상품명</h5>
+                        <p class="card-text text-muted flex-grow-1" th:text="${product.description}">상품 설명</p>
+                        
+                        <!-- 상품 통계 -->
+                        <div class="row text-center mb-3">
+                            <div class="col-4">
+                                <div class="text-muted small">
+                                    <i class="fas fa-eye text-info"></i>
+                                    <div th:text="${product.views ?: 0}">0</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-muted small">
+                                    <i class="fas fa-thumbs-up text-success"></i>
+                                    <div th:text="${product.likes ?: 0}">0</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-muted small">
+                                    <i class="fas fa-box text-warning"></i>
+                                    <div th:text="${product.stock ?: 0}">재고</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 가격 및 액션 -->
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <span class="h4 text-danger mb-0 fw-bold" th:text="${#numbers.formatInteger(product.price, 0, 'COMMA')} + '원'">가격</span>
+                                    <div class="small text-muted">VAT 포함</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-success" type="button" title="좋아요">
+                                            <i class="fas fa-thumbs-up"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" type="button" title="싫어요">
+                                            <i class="fas fa-thumbs-down"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 액션 버튼 -->
+                            <div class="d-grid gap-2">
+                                <a th:href="@{'/products/detail/' + ${product.no}}" class="btn btn-primary">
+                                    <i class="fas fa-info-circle me-1"></i>상세보기
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 상품이 없는 경우 -->
+        <div class="row" th:if="${products == null or products.isEmpty()}">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-search fa-5x text-muted"></i>
+                    </div>
+                    <h3 class="text-muted">상품이 없습니다</h3>
+                    <p class="text-muted">다른 카테고리나 검색어로 시도해보세요.</p>
+                    <a href="/products/listp" class="btn btn-primary mt-3">
+                        <i class="fas fa-redo me-1"></i>전체 상품 보기
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div class="row mt-5" th:if="${pagination != null and pagination.total > 0}">
+            <div class="col-12">
+                <nav aria-label="상품 목록 페이지네이션">
+                    <ul class="pagination justify-content-center">
+                        <!-- 이전 페이지 -->
+                        <li class="page-item" th:classappend="${pagination.page <= 1} ? 'disabled' : ''">
+                            <a class="page-link" th:href="@{/products/listp(page=${pagination.prev}, category=${currentCategory != '전체' ? currentCategory : ''}, search=${currentSearch})}"
+                               th:if="${pagination.page > 1}">
+                                <i class="fas fa-chevron-left"></i> 이전
+                            </a>
+                            <span class="page-link" th:if="${pagination.page <= 1}">
+                                <i class="fas fa-chevron-left"></i> 이전
+                            </span>
+                        </li>
+                        
+                        <!-- 현재 페이지 정보 -->
+                        <li class="page-item active">
+                            <span class="page-link">
+                                <span th:text="${pagination.page}">1</span> / <span th:text="${pagination.last}">1</span>
+                            </span>
+                        </li>
+                        
+                        <!-- 다음 페이지 -->
+                        <li class="page-item" th:classappend="${pagination.page >= pagination.last} ? 'disabled' : ''">
+                            <a class="page-link" th:href="@{/products/listp(page=${pagination.next}, category=${currentCategory != '전체' ? currentCategory : ''}, search=${currentSearch})}"
+                               th:if="${pagination.page < pagination.last}">
+                                다음 <i class="fas fa-chevron-right"></i>
+                            </a>
+                            <span class="page-link" th:if="${pagination.page >= pagination.last}">
+                                다음 <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Fragment -->
+    <div th:replace="fragments/footer :: footer"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Header JS -->
+    <script src="/assets/dist/js/header.js"></script>
+    
+    <!-- 동적 기능 스크립트 -->
+    <script src="/assets/dist/js/products.js"></script>
+</body>
+</html>
