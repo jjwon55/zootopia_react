@@ -37,6 +37,6 @@ out/
 
 ### VS Code ###
 .vscode/
-
+.history/
 
 .gradle/

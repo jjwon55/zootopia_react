@@ -1,9 +1,18 @@
 import React from 'react'
-import {Link} from 'react-router-dom'
+import './App.css';
+
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import Cost from './pages/funeral/cost';
+import Procedure from './pages/funeral/Procedure';
 
 const App = () => {
   return (
-    <Link></Link>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Cost />} />
+        <Route path="/procedure" element={<Procedure />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
