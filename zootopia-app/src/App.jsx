@@ -1,12 +1,18 @@
 import React from 'react'
-import {BrowserRouter, Link, Route, Routes} from 'react-router-dom'
+import './App.css';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import Cost from './pages/funeral/cost';
 import Home from './pages/Home'
+import Procedure from './pages/funeral/Procedure';
 
 const App = () => {
   return (
-      <BrowserRouter>
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/" element={<Cost />} />
+        <Route path="/procedure" element={<Procedure />} />
+
       </Routes>
     </BrowserRouter>
   )
