@@ -2,8 +2,9 @@ import React from 'react'
 import './App.css';
 
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Cost from './pages/funeral/cost';
+import Cost from './pages/funeral/Cost';
 import Procedure from './pages/funeral/Procedure';
+import HospListPage from './pages/hospitals/HospListPage';
 
 const App = () => {
   return (
@@ -11,6 +12,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Cost />} />
         <Route path="/procedure" element={<Procedure />} />
+        <Route path="/service/hospitals" element={<HospListPage />} />
       </Routes>
     </BrowserRouter>
   )

@@ -1,12 +1,11 @@
 import React from 'react'
-import CostComponent from './../../components/funeral/CostComponent';
-
+import CostContainer from './../../containers/funeral/CostContainer';
 
 
 const Cost = () => {
   return (
     <>
-      <CostComponent />
+      <CostContainer />
     </>
   )
 }

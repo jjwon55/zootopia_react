@@ -9,6 +9,8 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
@@ -31,9 +33,6 @@ public class SecurityConfig {
     @Autowired
     private javax.sql.DataSource dataSource;
 
-    // @Autowired
-    // private PasswordEncoder passwordEncoder;
-
     @Autowired
     private UserDetailServiceImpl userDetailServiceImpl;
 
@@ -49,13 +48,13 @@ public class SecurityConfig {
     @Autowired
     private CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
-    @Autowired
-    private CustomOAuth2UserService customOAuth2UserService;
+    // @Autowired
+    // private CustomOAuth2UserService customOAuth2UserService;
 
 
     // 🔐 스프링 시큐리티 설정 메소드
 	@Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2UserService customOAuth2UserService) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http.csrf(csrf -> csrf
                                 .ignoringRequestMatchers("/hospitals/new", "/hospitals/edit")
@@ -88,8 +87,8 @@ public class SecurityConfig {
         // 🔐 OAuth2 로그인 설정 (네이버)
         http.oauth2Login(oauth2 -> oauth2
                             .loginPage("/login") // 사용자 정의 로그인 페이지
-                            .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService))
+                            // .userInfoEndpoint(userInfo -> userInfo
+                            //     .userService(customOAuth2UserService))
                             .successHandler(loginSuccessHandler) // ✅ 소셜 로그인 성공 핸들러 추가
             );
         http.csrf(csrf -> csrf
@@ -161,53 +160,6 @@ public class SecurityConfig {
         }
         return repositoryImpl;
     }
-
-
-    // 👮‍♂️🔐사용자 인증 관리 메소드
-    // 인메모리 방식으로 인증
-    // @Bean
-    // public UserDetailsService userDetailsService() {
-    //     // user 123456
-    //     UserDetails user = User.builder()
-    //                             .username("user")
-    //                             .password(passwordEncoder.encode("123456"))
-    //                             .roles("USER")
-    //                             .build();
-    //     // admin 123456
-    //     UserDetails admin = User.builder()
-    //                             .username("admin")
-    //                             .password(passwordEncoder.encode("123456"))
-    //                             .roles("USER", "ADMIN")
-    //                             .build();
-
-    //     return new InMemoryUserDetailsManager( user, admin );
-    //     // return new JdbcUserDetailsManager( ... );
-    // }
-
-    /**
-     * 🍃 JDBC 인증 방식 빈 등록
-     * @return
-     */
-    // @Bean
-    // public UserDetailsService userDetailsService() {
-    //     JdbcUserDetailsManager userDetailsManager
-    //             = new JdbcUserDetailsManager(dataSource);
-
-    //     // 사용자 인증 쿼리
-    //     String sql1 = " SELECT username, password, enabled "
-    //                 + " FROM user "
-    //                 + " WHERE username = ? "
-    //                 ;
-    //     // 사용자 권한 쿼리
-    //     String sql2 = " SELECT username, auth "
-    //                 + " FROM user_auth "
-    //                 + " WHERE username = ? "
-    //                 ;
-    //     userDetailsManager.setUsersByUsernameQuery(sql1);
-    //     userDetailsManager.setAuthoritiesByUsernameQuery(sql2);
-    //     return userDetailsManager;
-    // }
-
 
     /**
      * 🍃 AuthenticationManager 인증 관리자 빈 등록
