@@ -165,6 +165,7 @@ const HospitalForm = () => {
 
             {/* 소개 */}
             <div className="tw:flex tw:flex-col tw:gap-1">
+              <input type="checkbox" className="ds-checkbox ds-checkbox-warning" />
               <label htmlFor="hospIntroduce" className="tw:font-semibold tw:text-sm">
                 병원 소개
               </label>
@@ -209,7 +210,7 @@ const HospitalForm = () => {
             <div className="tw:flex tw:flex-wrap tw:gap-3 mt-2">
               {dummyAnimalList.map((animal) => (
                 <label key={animal.animalId} className="tw:flex tw:items-center tw:gap-1">
-                  <input type="checkbox" defaultChecked className="ds-checkbox ds-checkbox-warning" />
+                  
                   <input
                     type="checkbox"
                     checked={hospitalForm.animalIds.includes(animal.animalId)}
