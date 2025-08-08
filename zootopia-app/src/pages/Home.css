@@ -1,4 +1,4 @@
-/* 전체 영역 스타일 */
+/* 전체 영역 스타일
 .main {
   background-color: #FFEFEF;
   padding: 50px 0;
@@ -16,18 +16,18 @@
   gap: 40px;
   flex-wrap: wrap;
   justify-content: center;
-}
+} */
 
 /* 로고 이미지 스타일 */
-.main-logo {
+/* .main-logo {
   width: 400px;
   height: auto;
   margin-bottom: 20px;
-}
+} */
 
 /* 텍스트 스타일 */
-.main-title {
+/* .main-title {
   font-weight: bold;
   font-size: 1.8rem;
   margin-bottom: 10px;
-}
+} */

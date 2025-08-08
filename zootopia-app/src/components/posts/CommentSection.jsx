@@ -5,7 +5,6 @@ import { addComment } from '../../apis/posts/comments';
 const CommentSection = ({ postId, comments = [], loginUserId, editId, setEditId }) => {
   const [newComment, setNewComment] = useState('');
   const [replyFormsVisible, setReplyFormsVisible] = useState({});
-  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -14,8 +13,8 @@ const CommentSection = ({ postId, comments = [], loginUserId, editId, setEditId 
     try {
       await addComment(postId, newComment);
       alert('댓글이 등록되었습니다.');
-      window.location.reload(); // 또는 fetchPost() 재호출
       setNewComment('');
+      window.location.reload();
     } catch (err) {
       console.error('댓글 등록 실패:', err);
       alert('댓글 등록 중 오류 발생');
@@ -23,59 +22,69 @@ const CommentSection = ({ postId, comments = [], loginUserId, editId, setEditId 
   };
 
   const handleReplyToggle = (commentId) => {
-    setReplyFormsVisible(prev => ({
+    setReplyFormsVisible((prev) => ({
       ...prev,
-      [commentId]: !prev[commentId]
+      [commentId]: !prev[commentId],
     }));
   };
 
-  
-
-
-//   const parentComments = comments.filter(comment => comment.parentId === null);
-
   return (
-    <div className="comment-box mt-5">
-      <span className="fw-bold">💬 댓글 {comments.length}</span>
+    <div className="tw:mt-10 tw:pt-6 tw:border-t">
+      <span className="tw:font-bold tw:text-lg">💬 댓글 {comments.length}</span>
 
-      <div className="comment-list mt-3">
+      <div className="tw:mt-4">
         {comments.map((comment) => (
-        <CommentItem
+          <CommentItem
             key={comment.commentId}
             comment={comment}
-            replies={comment.replies} // ✅ 여기서 이미 들어있는 구조 그대로 넘김
+            replies={comment.replies}
             postId={postId}
             loginUserId={loginUserId}
             editId={editId}
             setEditId={setEditId}
             replyFormsVisible={replyFormsVisible}
             onReplyToggle={handleReplyToggle}
-        />
+          />
         ))}
       </div>
 
       {loginUserId ? (
-        <form onSubmit={handleSubmit} className="mt-4">
+        <form onSubmit={handleSubmit} className="tw:mt-6">
           <input type="hidden" name="postId" value={postId} />
-          <div className="mb-3">
+          <div className="tw:mb-4">
             <textarea
-              className="form-control"
+              className="tw:w-full tw:border tw:rounded tw:px-4 tw:py-3 tw:resize-none tw:focus:outline-none tw:focus:ring tw:focus:ring-blue-300"
               value={newComment}
-              onChange={e => setNewComment(e.target.value)}
+              onChange={(e) => setNewComment(e.target.value)}
               placeholder="댓글 내용을 입력해주세요"
               required
               rows="3"
             />
           </div>
-          <div className="d-flex justify-content-end align-items-center">
-            <button type="submit" className="btn comment-b">댓글쓰기</button>
+          <div className="tw:flex tw:justify-end">
+            <button
+              type="submit"
+              className="tw:bg-blue-500 tw:text-white tw:px-5 tw:py-2 tw:rounded hover:tw:bg-blue-600"
+            >
+              댓글쓰기
+            </button>
           </div>
         </form>
       ) : (
-        <div className="mt-4">
-          <textarea className="form-control" rows="3" placeholder="댓글을 작성하려면 로그인하세요" readOnly />
-          <div className="d-flex justify-content-end align-items-center">
-            <a href="/login" className="btn comment-b">로그인하기</a>
+        <div className="tw:mt-6">
+          <textarea
+            className="tw:w-full tw:border tw:rounded tw:px-4 tw:py-3 tw:resize-none tw:bg-gray-100"
+            rows="3"
+            placeholder="댓글을 작성하려면 로그인하세요"
+            readOnly
+          />
+          <div className="tw:flex tw:justify-end tw:mt-2">
+            <a
+              href="/login"
+              className="tw:bg-gray-500 tw:text-white tw:px-5 tw:py-2 tw:rounded hover:tw:bg-gray-600"
+            >
+              로그인하기
+            </a>
           </div>
         </div>
       )}

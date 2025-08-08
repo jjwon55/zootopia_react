@@ -1,6 +1,5 @@
 import React from 'react';
 import { Editor } from '@toast-ui/react-editor';
-import './css/Create.css';
 
 const Create = ({
   title,
@@ -13,16 +12,16 @@ const Create = ({
   handleImageUpload,
 }) => {
   return (
-    <div className="container mt-4 create-wrapper">
+    <div className="tw:max-w-4xl tw:mx-auto tw:mt-6 tw:px-4">
       <form onSubmit={onSubmit}>
 
         {/* 📌 카테고리 선택 */}
-        <div className="form-group">
-          <label className="form-label d-block">카테고리</label>
-          <div className="d-flex gap-3 category-buttons">
-            <div className="form-check">
+        <div className="tw:mb-6">
+          <label className="tw:block tw:font-semibold tw:mb-2">카테고리</label>
+          <div className="tw:flex tw:gap-6">
+            <div className="tw:flex tw:items-center">
               <input
-                className="form-check-input"
+                className="tw:mr-2"
                 type="radio"
                 id="cate-free"
                 name="category"
@@ -30,13 +29,13 @@ const Create = ({
                 checked={category === '자유글'}
                 onChange={(e) => setCategory(e.target.value)}
               />
-              <label className="form-check-label" htmlFor="cate-free">
+              <label htmlFor="cate-free" className="tw:text-gray-700">
                 자유게시판
               </label>
             </div>
-            <div className="form-check">
+            <div className="tw:flex tw:items-center">
               <input
-                className="form-check-input"
+                className="tw:mr-2"
                 type="radio"
                 id="cate-question"
                 name="category"
@@ -44,7 +43,7 @@ const Create = ({
                 checked={category === '질문글'}
                 onChange={(e) => setCategory(e.target.value)}
               />
-              <label className="form-check-label" htmlFor="cate-question">
+              <label htmlFor="cate-question" className="tw:text-gray-700">
                 질문있어요
               </label>
             </div>
@@ -52,13 +51,13 @@ const Create = ({
         </div>
 
         {/* 📝 제목 입력 */}
-        <div className="form-group mt-3">
-          <label htmlFor="title" className="form-label">글 제목</label>
+        <div className="tw:mb-6">
+          <label htmlFor="title" className="tw:block tw:font-semibold tw:mb-2">글 제목</label>
           <input
             type="text"
             id="title"
             name="title"
-            className="form-control"
+            className="tw:w-full tw:border tw:rounded tw:px-4 tw:py-2 tw:focus:outline-none tw:focus:ring tw:focus:ring-blue-300"
             placeholder="제목을 입력해 주세요"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -67,8 +66,8 @@ const Create = ({
         </div>
 
         {/* ✍️ 본문 작성 */}
-        <div className="form-group mt-3">
-          <label htmlFor="content" className="form-label">글 작성</label>
+        <div className="tw:mb-6">
+          <label htmlFor="content" className="tw:block tw:font-semibold tw:mb-2">글 작성</label>
           <Editor
             ref={editorRef}
             height="500px"
@@ -82,21 +81,21 @@ const Create = ({
         </div>
 
         {/* 🔖 태그 입력 */}
-        <div className="form-group mt-3">
-          <label htmlFor="tags" className="form-label">#태그</label>
+        <div className="tw:mb-6">
+          <label htmlFor="tags" className="tw:block tw:font-semibold tw:mb-2">#태그</label>
           <input
             type="text"
             id="tags"
             name="tags"
-            className="form-control"
             ref={tagInputRef}
             placeholder="태그를 입력하고 Enter 또는 쉼표(,)로 구분하세요"
+            className="tw:w-full tw:border tw:rounded tw:px-4 tw:py-2 tw:focus:outline-none tw:focus:ring tw:focus:ring-blue-300"
           />
         </div>
 
         {/* ✅ 등록 버튼 */}
-        <div className="form-group text-end mt-4">
-          <button type="submit" className="btn btn-primary">
+        <div className="tw:text-right tw:mt-6">
+          <button type="submit" className="tw:bg-blue-500 tw:text-white tw:px-6 tw:py-2 tw:rounded hover:tw:bg-blue-600">
             글 등록
           </button>
         </div>
