@@ -1,15 +1,74 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import HospitalList from '../../components/hospitals/HospitalList';
 
-const HospListContainer = ({ hospitalData, selectedAnimalIds, onAnimalFilterChange, onPageChange }) => {
+const HospListContainer = () => {
+    const [hospitalData, setHospitalData] = useState({
+        hospitalList: [],
+        pageInfo: {},
+        animalList: [],
+    });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [selectedAnimalIds, setSelectedAnimalIds] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const fetchHospitalData = async (page, animalIds) => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            params.append('pageNum', page);
+            animalIds.forEach(id => params.append('animal', id));
+
+            const response = await axios.get('/api/service/hospitals', { params });
+            
+            const data = response.data || {};
+            setHospitalData({
+                hospitalList: data.hospitalList || [],
+                pageInfo: data.pageInfo || {},
+                animalList: data.animalList || [],
+            });
+            setSelectedAnimalIds(data.selectedAnimals || []);
+
+        } catch (e) {
+            setError(e);
+            setHospitalData({
+                hospitalList: [],
+                pageInfo: {},
+                animalList: [],
+            });
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchHospitalData(currentPage, selectedAnimalIds);
+    }, [currentPage, selectedAnimalIds]);
+
+    const handleAnimalFilterChange = (animalId) => {
+        const newSelectedAnimalIds = selectedAnimalIds.includes(animalId)
+            ? selectedAnimalIds.filter(id => id !== animalId)
+            : [...selectedAnimalIds, animalId];
+        
+        setSelectedAnimalIds(newSelectedAnimalIds);
+        setCurrentPage(1);
+    };
+
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error...</div>;
+
     return (
         <HospitalList
             hospitalList={hospitalData.hospitalList}
             pageInfo={hospitalData.pageInfo}
             animalList={hospitalData.animalList}
             selectedAnimals={selectedAnimalIds}
-            onAnimalFilterChange={onAnimalFilterChange}
-            onPageChange={onPageChange}
+            onAnimalFilterChange={handleAnimalFilterChange}
+            onPageChange={handlePageChange}
         />
     );
 };
