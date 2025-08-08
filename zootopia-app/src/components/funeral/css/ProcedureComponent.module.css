@@ -1,0 +1,121 @@
+.procedureContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 150px;
+  
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background-image: url('src/assets/img/background/funeral_background1.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.mainContent {
+  width: 730px;
+  padding-left: 25px;
+  padding-right: 25px;
+  padding-bottom: 25px;
+  margin-bottom: 150px;
+  box-shadow: 2px 4px 4px rgba(0, 0, 0, 0.25);
+  background-color: rgba(255, 255, 255, 0.247);
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.headline {
+  position: relative;
+  top: -70px;
+}
+
+.innerContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-left: 50px;
+  padding-right: 50px;
+}
+
+.innerContent > div {
+  padding-top: 30px;
+}
+
+/* .c6 */
+.c6 {
+  padding-top: 30px;
+  padding-left: 40px;
+  padding-right: 40px;
+}
+
+/* .side */
+.side {
+  position: relative;
+  left: -480px;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 2px 4px 4px rgba(0,0,0,0.25);
+  background-color: rgba(0, 0, 0, 0.04);
+  width: 130px;
+  height: 150px;
+}
+
+.side span {
+  text-align: center;
+  width: 130px;
+  height: 50px;
+}
+
+
+/* 수정된 .side */
+.side {
+  /* position: static; */ /* 위치 초기화 (relative, left 제거) */
+  /* flex 설정 및 flex-direction 제거하여 Tailwind가 제어 가능하도록 */
+  /* 필요하면 배경과 그림자 유지 */
+  /* box-shadow: 2px 4px 4px rgba(0,0,0,0.25);
+  background-color: rgba(0, 0, 0, 0.04); */
+  
+  /* 크기는 Tailwind 유틸리티 클래스에서 제어하므로 기본 값 제거 */
+  /* width, height 삭제 */
+}
+
+/* 사이드 메뉴 텍스트도 크기 고정 제거 */
+.side span {
+  /* text-align: center; */
+  /* width, height 제거 */
+  /* 필요 시 padding이나 margin만 남겨도 됨 */
+  /* padding: 0.5rem 0; */ /* 예: 위아래 여백 */
+}
+
+
+
+.s1 {
+  font-size: 15px;
+  border-radius: 0 0 0 20px;
+  background-color: rgba(255, 242, 147, 0.3);
+}
+
+.s2, .s3 {
+  line-height: 50px;
+  font-size: 15px;
+}
+
+.s3 {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.s2 a, .s3 a {
+  color: black;
+  text-decoration: none;
+}

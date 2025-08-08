@@ -1,17 +1,14 @@
-/** @type {import('tailwindcss').Config} */
-import daisyui from 'daisyui';
+// tailwind.config.js
 export default {
-  prefix: 'tw-',
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
-    extend: {},
+    extend: {
+      backgroundImage: {
+        'funeral-bg': "url('src/assets/img/background/funeral_background1.jpg')",
+      },
+    },
   },
-  plugins: [require("daisyui")],
-  daisyui: {
-    prefix: 'tw-',
-    themes: ["light", "dark"]
+  corePlugins: {
+    preflight: true, // 강제로 다시 활성화
   },
 }
