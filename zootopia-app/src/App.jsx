@@ -1,21 +1,25 @@
 import React from 'react'
 import './App.css';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Cost from './pages/funeral/cost';
-import Home from './pages/Home'
-import Procedure from './pages/funeral/Procedure';
+import { BrowserRouter, Routes } from 'react-router-dom';
+
+import LoginContextProvider from './context/LoginContextProvider';
+import JjwRoutes from './routes/JjwRoutes';
+import LytRoutes from './routes/LytRoutes';
+import HsmRoutes from './routes/HsmRoutes';
+import SysRoutes from './routes/SysRoutes';
 
 const App = () => {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/" element={<Cost />} />
-        <Route path="/procedure" element={<Procedure />} />
-
-      </Routes>
+      <LoginContextProvider>
+          <JjwRoutes />
+          <SysRoutes />
+          <HsmRoutes />
+          <LytRoutes />
+      </LoginContextProvider>
     </BrowserRouter>
-  )
-}
+  );
+};
+
 
 export default App
