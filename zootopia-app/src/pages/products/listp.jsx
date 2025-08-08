@@ -3,8 +3,8 @@ import { fetchProducts, fetchCategories } from '../../apis/products';
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState(['전체']);
-  const [selectedCategory, setSelectedCategory] = useState('전체');
+  const [categories, setCategories] = useState([{ id: 'all', name: '전체' }]);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -25,7 +25,8 @@ export default function ProductList() {
     try {
       const response = await fetchCategories();
       if (response.success) {
-        setCategories(response.categories);
+        const allCategories = [{ id: 'all', name: '전체' }, ...response.categories];
+        setCategories(allCategories);
       }
     } catch (error) {
       console.error('Failed to load categories:', error);
@@ -54,8 +55,8 @@ export default function ProductList() {
     }
   };
 
-  const handleCategoryChange = (category) => {
-    setSelectedCategory(category);
+  const handleCategoryChange = (categoryId) => {
+    setSelectedCategory(categoryId);
     setCurrentPage(1); // 카테고리 변경 시 첫 페이지로
   };
 
@@ -83,7 +84,8 @@ export default function ProductList() {
               <i className="fas fa-box mr-1"></i>총 {totalProducts}개 상품
             </span>
             <span className="bg-white bg-opacity-20 border border-white border-opacity-30 backdrop-blur px-4 py-2 rounded-full text-sm">
-              <i className="fas fa-tags mr-1"></i>{selectedCategory} 카테고리
+              <i className="fas fa-tags mr-1"></i>
+              {categories.find(cat => cat.id === selectedCategory)?.name || '전체'} 카테고리
             </span>
           </div>
         </div>
@@ -112,15 +114,15 @@ export default function ProductList() {
           <div className="flex justify-center flex-wrap gap-2 mb-6">
             {categories.map(category => (
               <button
-                key={category}
-                onClick={() => handleCategoryChange(category)}
+                key={category.id}
+                onClick={() => handleCategoryChange(category.id)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  selectedCategory === category
+                  selectedCategory === category.id
                     ? 'bg-red-400 text-white transform scale-105'
                     : 'border border-red-400 text-red-400 hover:bg-red-400 hover:text-white'
                 }`}
               >
-                {category}
+                {category.name}
               </button>
             ))}
           </div>
@@ -151,7 +153,7 @@ export default function ProductList() {
                     <img
                       src={product.imageUrl}
                       alt={product.name}
-                      className="w-full h-48 object-cover rounded-t-lg"
+                      className="w-full h-24 sm:h-28 md:h-30 lg:h-32 xl:h-36 2xl:h-40 object-cover rounded-t-lg"
                       onError={(e) => { e.target.src = 'https://via.placeholder.com/300x200'; }}
                     />
                     <div className="p-4">
