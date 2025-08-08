@@ -1,14 +1,18 @@
 import React from 'react'
-import ProcedureComponent from '../../components/funeral/ProcedureComponent'
+import ProcedureContainer from '../../containers/funeral/ProcedureContainer'
 
 
 
-const Cost = () => {
+const Procedure = () => {
+
+  
+
+
   return (
     <>
-      <ProcedureComponent />
+      <ProcedureContainer />
     </>
   )
 }
 
-export default Cost
+export default Procedure
