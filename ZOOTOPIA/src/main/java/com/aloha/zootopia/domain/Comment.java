@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -24,8 +25,9 @@ public class Comment {
     private String nickname;     
     private String profileImg;   
     private Integer parentId; 
-    private List<Comment> replies;
+     private List<Comment> replies = new ArrayList<>(); 
     private String postTitle;
     private String postCategory;
+
     
 }
