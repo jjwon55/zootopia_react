@@ -193,10 +193,9 @@ const HospitalForm = () => {
               {dummySpecialtyList.map((spec) => (
                 <label key={spec.specialtyId} className="tw:flex tw:items-center tw:gap-1">
                   <input
-                    type="checkbox"
+                    type="checkbox" className="ds-checkbox ds-checkbox-error"
                     checked={hospitalForm.specialtyIds.includes(spec.specialtyId)}
                     onChange={() => handleSpecialtyChange(spec.specialtyId)}
-                    className="tw:accent-pink-500"
                   />
                   <span>{spec.category}</span>
                 </label>
@@ -210,6 +209,7 @@ const HospitalForm = () => {
             <div className="tw:flex tw:flex-wrap tw:gap-3 mt-2">
               {dummyAnimalList.map((animal) => (
                 <label key={animal.animalId} className="tw:flex tw:items-center tw:gap-1">
+                  <input type="checkbox" defaultChecked className="ds-checkbox ds-checkbox-warning" />
                   <input
                     type="checkbox"
                     checked={hospitalForm.animalIds.includes(animal.animalId)}

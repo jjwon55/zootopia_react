@@ -14,7 +14,6 @@
     "@tailwindcss/cli": "^4.1.11",
     "autoprefixer": "^10.4.21",
     "@tailwindcss/vite": "^4.1.11",
-    "autoprefixer": "^10.4.21",
     "@toast-ui/editor": "^3.2.2",
     "@toast-ui/react-editor": "^3.2.3",
     "@yaireo/tagify": "^4.35.3",

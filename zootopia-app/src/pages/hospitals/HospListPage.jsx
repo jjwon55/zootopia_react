@@ -1,9 +1,11 @@
 import React from 'react';
 import HospListContainer from '../../containers/hospitals/HospListContainer';
+import Header from '../../components/header/Header';
 
 const HospListPage = () => {
     return (
         <>
+        <Header />
             <div className="hospital-main-container">
                 <div className="logo-container">
                     <div className="logo">

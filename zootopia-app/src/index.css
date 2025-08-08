@@ -1,0 +1,15 @@
+@import "tailwindcss" prefix(tw);
+@plugin "daisyui"{
+  themes: all;
+  root: ":root";
+  include: button, input, select, checkbox, footer, typography, glass, rootcolor, rootscrollgutter;
+  prefix: "ds-";
+  logs: true;
+}
+/* @tailwind base;
+@tailwind components; */
+@tailwind utilities;
+
+body {
+  background-color: #f7f7f7;
+}

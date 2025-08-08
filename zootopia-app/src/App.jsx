@@ -29,14 +29,15 @@ const App = () => {
 
 
         {/* 신유식 */}
-
+        <Route path="/cost" element={<Cost />} />
+        <Route path="/procedure" element={<Procedure />} />
+        <Route path="/service/hospitals" element={<HospListPage />} />
+        <Route path="/service/createhospital" element={<CreateHospitalComponent />} />
         {/* 신유식 */}
 
 
         {/* 이윤태 */}
         <Route path="/" element={<Home />} />
-        <Route path="/cost" element={<Cost />} />
-        <Route path="/procedure" element={<Procedure />} />
 
 
         {/* 이윤태 */}
@@ -45,12 +46,6 @@ const App = () => {
         {/* 홍성민 */}
 
         {/* 홍성민 */}
-
-      
-
-        <Route path="/service/hospitals" element={<HospListPage />} />
-        <Route path="/service/createhospital" element={<CreateHospitalComponent />} />
-
       </Routes>
       </LoginContextProvider>
     </BrowserRouter>
