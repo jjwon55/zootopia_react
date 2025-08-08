@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import defaultHospitalImg from "../../assets/img/default-hospital.png";
 
 const dummySpecialtyList = [
   { specialtyId: 1, category: "내과" },
@@ -87,26 +88,22 @@ const HospitalForm = () => {
 
   return (
     <div
-      className="tw:min-h-screen tw:flex tw:flex-col tw:items-center tw:bg-cover tw:bg-center tw:relative tw:px-4 sm:tw:px-6 lg:tw:px-8"
-      style={{
-        backgroundImage: "url('/img/background/funeral_background1.jpg')",
-      }}
-    >
+      className="tw:min-h-screen tw:flex tw:flex-col tw:items-center tw:bg-cover tw:bg-center tw:relative tw:px-4 sm:tw:px-6 lg:tw:px-8">
       <div className="tw:absolute tw:inset-0 tw:bg-[rgba(255,213,204,0)] tw:-z-10"></div>
 
       {/* 상단 로고 */}
-      <div className="tw:mt-6 tw:mb-4 tw:w-full tw:max-w-5xl">
-        <div className="tw:w-full tw:h-20 sm:tw:h-28 md:tw:h-32 tw:rounded-md tw:overflow-hidden tw:shadow-lg">
+      <div className="tw:mt-6 tw:mb-4 tw:w-full tw:max-w-2xl ">
+        <div className="tw:flex tw:justify-center tw:items-center tw:w-full tw:h-20 sm:tw:h-28 md:tw:h-32 tw:rounded-md tw:overflow-hidden tw:shadow-lg tw:bg-[rgba(89,197,125,0.42)]">
           <img
-            src="/img/hosp_logo.png"
+            src={defaultHospitalImg}
             alt="병원 아이콘"
-            className="tw:w-full tw:h-full tw:object-cover"
+            className="tw:w-[130px] tw:h-[100px] tw:object-fit"
           />
         </div>
       </div>
 
       {/* 메인 컨텐츠 */}
-      <div className="tw:flex tw:flex-col lg:tw:flex-row tw:items-center tw:w-full tw:max-w-5xl tw:gap-5">
+      <div className="tw:flex tw:flex-col lg:tw:flex-row tw:items-center tw:w-full tw:max-w-3xl tw:gap-5">
         {/* 이미지 업로드 */}
         <form
           id="imageForm"
@@ -139,7 +136,7 @@ const HospitalForm = () => {
         <form
           id="generalDataForm"
           onSubmit={handleSubmit}
-          className="tw:flex-1 tw:bg-[rgba(255,135,135,0.53)] tw:p-4 sm:tw:p-6 tw:rounded-xl tw:shadow tw:w-full"
+          className="tw:flex-1 tw:bg-[#ffa1a1] tw:p-4 sm:tw:p-6 tw:rounded-xl tw:shadow tw:w-full"
         >
           <div className="tw:flex tw:flex-col tw:gap-4">
             {[
@@ -187,7 +184,7 @@ const HospitalForm = () => {
       </div>
 
       {/* 진료 과목 & 동물 */}
-      <div className="tw:mt-5 tw:w-full tw:max-w-5xl tw:bg-[rgba(255,163,143,1)] tw:p-4 sm:tw:p-6 tw:rounded-xl tw:shadow">
+      <div className="tw:mt-5 tw:w-full tw:max-w-3xl tw:bg-[#feb0b06b] tw:p-4 sm:tw:p-6 tw:rounded-xl tw:shadow">
         <div className="tw:flex tw:flex-col sm:tw:flex-row tw:gap-6">
           {/* 진료과목 */}
           <div className="tw:flex-1">
@@ -217,7 +214,7 @@ const HospitalForm = () => {
                     type="checkbox"
                     checked={hospitalForm.animalIds.includes(animal.animalId)}
                     onChange={() => handleAnimalChange(animal.animalId)}
-                    className="tw:accent-pink-500"
+                    className="tw:bg-[#ffa1a1]"
                   />
                   <span>{animal.species}</span>
                 </label>
@@ -228,7 +225,7 @@ const HospitalForm = () => {
       </div>
 
       {/* 버튼 영역 */}
-      <div className="tw:flex tw:flex-col sm:tw:flex-row tw:gap-3 tw:mt-4 tw:w-full tw:max-w-5xl">
+      <div className="tw:flex tw:flex-row sm:tw:flex-row tw:gap-16 tw:mt-4 tw:w-full tw:max-w-lg">
         <button
           type="button"
           className="tw:flex-1 sm:tw:flex-none tw:px-4 tw:py-2 tw:rounded tw:bg-gray-400 tw:text-white hover:tw:bg-gray-500"
@@ -239,7 +236,7 @@ const HospitalForm = () => {
         <button
           type="button"
           id="submitAllBtn"
-          className="tw:flex-1 sm:tw:flex-none tw:px-4 tw:py-2 tw:rounded tw:bg-pink-500 tw:text-white hover:tw:bg-pink-600"
+          className="tw:flex-1 sm:tw:flex-none tw:px-4 tw:py-2 tw:rounded tw:bg-[#ffa1a1] tw:text-white hover:tw:bg-pink-600"
           onClick={handleSubmit}
         >
           {hospitalForm.hospitalId ? "수정" : "등록"}
@@ -248,7 +245,7 @@ const HospitalForm = () => {
           <button
             type="button"
             id="deleteBtn"
-            className="tw:flex-1 sm:tw:flex-none tw:px-4 tw:py-2 tw:rounded tw:bg-red-500 tw:text-white hover:tw:bg-red-600"
+            className="tw:flex-1 sm:tw:flex-none tw:px-4 tw:py-2 tw:rounded tw:bg-[#ffa1a1] tw:text-white hover:tw:bg-red-600"
             onClick={handleDelete}
           >
             삭제
