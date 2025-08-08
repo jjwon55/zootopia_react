@@ -66,7 +66,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
         </div>
 
         {posts.map((post) => (
-          <div key={post.postId} className="tw:flex tw:gap-[16px] tw:py-[16px] tw:border-t">
+          <div key={post.postId} className="tw:flex tw:gap-[16px] tw:py-[16px] tw:border-t  tw:border-[#eee] tw:last:border-b">
             <div className="tw:w-[80px] tw:h-[80px]">
               <img
                 src={post.thumbnailUrl ? `http://localhost:8080${post.thumbnailUrl}` : defaultThumbnail}
@@ -128,9 +128,12 @@ const List = ({ posts, topList, pagination, keyword }) => {
             defaultValue={keyword}
             className="tw:flex-grow tw:border tw:rounded tw:px-2 tw:py-1 tw:w-[70%]"
           />
-          <button type="submit" className="tw:bg-[#FF5E5E] tw:text-white tw:px-4 tw:py-1 tw:rounded hover:tw:bg-[#FF5E5E]">
-            검색
-          </button>
+        <button
+          type="submit"
+          className="tw:bg-[#FF5E5E] tw:text-white tw:px-4 tw:py-1 tw:rounded-lg hover:tw:shadow-md transition-shadow"
+        >
+          검색
+        </button>
         </form>
 
         <div className="tw:my-6">
