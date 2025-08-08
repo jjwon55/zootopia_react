@@ -1,5 +1,9 @@
 import React from 'react'
+import './App.css';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import Cost from './pages/funeral/cost';
+import Home from './pages/Home'
+import Procedure from './pages/funeral/Procedure';
 import List from './pages/posts/List'
 import Read from './pages/posts/Read';
 import Create from './pages/posts/Create';
@@ -27,6 +31,9 @@ const App = () => {
 
 
         {/* 이윤태 */}
+        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Cost />} />
+        <Route path="/procedure" element={<Procedure />} />
 
         {/* 이윤태 */}
 
@@ -34,8 +41,10 @@ const App = () => {
         {/* 홍성민 */}
 
         {/* 홍성민 */}
+
+      
       </Routes>
-    </LoginContextProvider>
+      </LoginContextProvider>
     </BrowserRouter>
   )
 }
