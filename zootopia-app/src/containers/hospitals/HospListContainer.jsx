@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { list as listHospitals } from '../../apis/hospitals/createhosp';
 import HospitalList from '../../components/hospitals/HospitalList';
 
 const HospListContainer = () => {
@@ -16,22 +16,16 @@ const HospListContainer = () => {
     const fetchHospitalData = async (page, animalIds) => {
         setLoading(true);
         try {
-            const params = new URLSearchParams();
-            params.append('pageNum', page);
-            animalIds.forEach(id => params.append('animal', id));
-
-            const response = await axios.get('/api/service/hospitals', { params });
-            
+            const response = await listHospitals(animalIds, page);
             const data = response.data || {};
             setHospitalData({
                 hospitalList: data.hospitalList || [],
                 pageInfo: data.pageInfo || {},
                 animalList: data.animalList || [],
             });
-            setSelectedAnimalIds(data.selectedAnimals || []);
-
         } catch (e) {
             setError(e);
+            console.error("Failed to fetch hospital data:", e);
             setHospitalData({
                 hospitalList: [],
                 pageInfo: {},
@@ -49,7 +43,7 @@ const HospListContainer = () => {
         const newSelectedAnimalIds = selectedAnimalIds.includes(animalId)
             ? selectedAnimalIds.filter(id => id !== animalId)
             : [...selectedAnimalIds, animalId];
-        
+
         setSelectedAnimalIds(newSelectedAnimalIds);
         setCurrentPage(1);
     };

@@ -1,0 +1,22 @@
+{
+    "sourceFile": "zootopia-app/tailwind.config.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1754748180034,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1754749055444,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,4 +1,5 @@\n+import daisyui from 'daisyui';\r\n // tailwind.config.js\r\n export default {\r\n   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],\r\n   plugins: [daisyui],\r\n"
+                }
+            ],
+            "date": 1754748180034,
+            "name": "Commit-0",
+            "content": "// tailwind.config.js\r\nexport default {\r\n  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],\r\n  plugins: [daisyui],\r\n  theme: {\r\n    extend: {\r\n      backgroundImage: {\r\n        'funeral-bg': \"url('src/assets/img/background/funeral_background1.jpg')\",\r\n      },\r\n    },\r\n  },\r\n  corePlugins: {\r\n    preflight: true, // 강제로 다시 활성화\r\n  },\r\n}"
+        }
+    ]
+}

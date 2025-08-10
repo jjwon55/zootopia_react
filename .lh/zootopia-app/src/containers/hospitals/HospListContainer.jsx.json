@@ -1,0 +1,18 @@
+{
+    "sourceFile": "zootopia-app/src/containers/hospitals/HospListContainer.jsx",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1754830904975,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1754830904974,
+            "name": "Commit-0",
+            "content": "import React, { useState, useEffect } from 'react';\r\nimport { list as listHospitals } from '../../apis/hospitals/createhosp';\r\nimport HospitalList from '../../components/hospitals/HospitalList';\r\n\r\nconst HospListContainer = () => {\r\n    const [hospitalData, setHospitalData] = useState({\r\n        hospitalList: [],\r\n        pageInfo: {},\r\n        animalList: [],\r\n    });\r\n    const [loading, setLoading] = useState(true);\r\n    const [error, setError] = useState(null);\r\n    const [selectedAnimalIds, setSelectedAnimalIds] = useState([]);\r\n    const [currentPage, setCurrentPage] = useState(1);\r\n\r\n    const fetchHospitalData = async (page, animalIds) => {\r\n        setLoading(true);\r\n        try {\r\n            const response = await listHospitals(animalIds, page);\r\n            const data = response.data || {};\r\n            setHospitalData({\r\n                hospitalList: data.hospitalList || [],\r\n                pageInfo: data.pageInfo || {},\r\n                animalList: data.animalList || [],\r\n            });\r\n            setSelectedAnimalIds(data.selectedAnimals || []);\r\n        } catch (e) {\r\n            setError(e);\r\n            console.error(\"Failed to fetch hospital data:\", e);\r\n            setHospitalData({\r\n                hospitalList: [],\r\n                pageInfo: {},\r\n                animalList: [],\r\n            });\r\n        }\r\n        setLoading(false);\r\n    };\r\n\r\n    useEffect(() => {\r\n        fetchHospitalData(currentPage, selectedAnimalIds);\r\n    }, [currentPage, selectedAnimalIds]);\r\n\r\n    const handleAnimalFilterChange = (animalId) => {\r\n        const newSelectedAnimalIds = selectedAnimalIds.includes(animalId)\r\n            ? selectedAnimalIds.filter(id => id !== animalId)\r\n            : [...selectedAnimalIds, animalId];\r\n\r\n        setSelectedAnimalIds(newSelectedAnimalIds);\r\n        setCurrentPage(1);\r\n    };\r\n\r\n    const handlePageChange = (pageNumber) => {\r\n        setCurrentPage(pageNumber);\r\n    };\r\n\r\n    if (loading) return <div>Loading...</div>;\r\n    if (error) return <div>Error...</div>;\r\n\r\n    return (\r\n        <HospitalList\r\n            hospitalList={hospitalData.hospitalList}\r\n            pageInfo={hospitalData.pageInfo}\r\n            animalList={hospitalData.animalList}\r\n            selectedAnimals={selectedAnimalIds}\r\n            onAnimalFilterChange={handleAnimalFilterChange}\r\n            onPageChange={handlePageChange}\r\n        />\r\n    );\r\n};\r\n\r\nexport default HospListContainer;\r\n"
+        }
+    ]
+}

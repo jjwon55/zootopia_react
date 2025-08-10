@@ -1,4 +1,6 @@
 import React, { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { create as createHospital } from "../../apis/hospitals/createhosp";
 
 const dummySpecialtyList = [
   { specialtyId: 1, category: "내과" },
@@ -29,6 +31,7 @@ const HospitalForm = () => {
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("/img/default-thumbnail.png");
   const fileInputRef = useRef(null);
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -70,13 +73,17 @@ const HospitalForm = () => {
     fileInputRef.current.click();
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const dataToSend = {
-      ...hospitalForm,
-      thumbnailImageFile: thumbnailFile ? thumbnailFile.name : null,
-    };
-    alert(JSON.stringify(dataToSend, null, 2));
+    try {
+      const response = await createHospital(hospitalForm, thumbnailFile);
+      console.log("Hospital created successfully:", response.data);
+      alert("병원 정보가 성공적으로 등록되었습니다.");
+      navigate("/hospitals"); // 성공 시 병원 목록 페이지로 이동
+    } catch (error) {
+      console.error("Failed to create hospital:", error);
+      alert("병원 정보 등록에 실패했습니다.");
+    }
   };
 
   const handleDelete = () => {
@@ -199,7 +206,7 @@ const HospitalForm = () => {
                     type="checkbox"
                     checked={hospitalForm.specialtyIds.includes(spec.specialtyId)}
                     onChange={() => handleSpecialtyChange(spec.specialtyId)}
-                    className="tw:accent-pink-500"
+                    className="tw:accent-pink-500 ds-checkbox ds-checkbox-primary"
                   />
                   <span>{spec.category}</span>
                 </label>
