@@ -1,11 +1,14 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import api from '../api'
 
+
+const BASE_URL = '/service/hospitals';
 // axios 객체 생성
-const api = axios.create({
-  baseURL: '/service/hospitals', // 백엔드 컨트롤러에 명시된 기본 URL
-  withCredentials: true,
-});
+// const api = axios.create({
+//   baseURL: '/service/hospitals', // 백엔드 컨트롤러에 명시된 기본 URL
+//   withCredentials: true,
+// });
 
 // 요청 인터셉터를 사용하여 모든 요청에 JWT 토큰을 추가합니다.
 api.interceptors.request.use((config) => {
@@ -23,22 +26,22 @@ api.interceptors.request.use((config) => {
  * @returns {Promise<object>} - 병원 목록 및 페이지 정보
  */
 export const list = (animal, pageNum = 1) => {
-  return api.get('', { 
-    params: { 
+  return api.get(BASE_URL, {
+    params: {
       animal: animal?.join(','), // 배열을 쉼표로 구분된 문자열로 전달
-      pageNum 
+      pageNum
     }
   });
 };
 
 // ID로 단일 병원 정보를 가져옵니다.
-export const read = (id) => api.get(`/${id}`);
+export const read = (id) => api.get(`${BASE_URL}/${id}`);
 
 /**
  * 새 병원을 생성합니다.
  * @param {object} hospitalForm - 병원 폼 데이터
  * @param {File} thumbnailImageFile - 썸네일 이미지 파일
- * @returns {Promise<object>} 
+ * @returns {Promise<object>}
  */
 export const create = (hospitalForm, thumbnailImageFile) => {
   const formData = new FormData();
@@ -48,7 +51,7 @@ export const create = (hospitalForm, thumbnailImageFile) => {
     formData.append('thumbnailImageFile', thumbnailImageFile);
   }
 
-  return api.post('', formData, {
+  return api.post(BASE_URL, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -69,7 +72,7 @@ export const update = (id, hospitalForm, thumbnailImageFile) => {
     formData.append('thumbnailImageFile', thumbnailImageFile);
   }
 
-  return api.put(`/${id}`, formData, {
+  return api.put(`${BASE_URL}/${id}`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -77,18 +80,18 @@ export const update = (id, hospitalForm, thumbnailImageFile) => {
 };
 
 // ID로 병원을 삭제합니다.
-export const remove = (id) => api.delete(`/${id}`);
+export const remove = (id) => api.delete(`${BASE_URL}/${id}`);
 
 // ###################### 리뷰 관련 API ######################
 
 // 병원의 모든 리뷰 목록을 가져옵니다.
-export const getReviews = (hospitalId) => api.get(`/${hospitalId}/reviews`);
+export const getReviews = (hospitalId) => api.get(`${BASE_URL}/${hospitalId}/reviews`);
 
 // 병원에 새 리뷰를 추가합니다.
-export const addReview = (hospitalId, review) => api.post(`/${hospitalId}/reviews`, review);
+export const addReview = (hospitalId, review) => api.post(`${BASE_URL}/${hospitalId}/reviews`, review);
 
 // 리뷰를 수정합니다.
-export const updateReview = (hospitalId, reviewId, review) => api.put(`/${hospitalId}/reviews/${reviewId}`, review);
+export const updateReview = (hospitalId, reviewId, review) => api.put(`${BASE_URL}/${hospitalId}/reviews/${reviewId}`, review);
 
 // 리뷰를 삭제합니다.
-export const deleteReview = (hospitalId, reviewId) => api.delete(`/${hospitalId}/reviews/${reviewId}`);
+export const deleteReview = (hospitalId, reviewId) => api.delete(`${BASE_URL}/${hospitalId}/reviews/${reviewId}`);

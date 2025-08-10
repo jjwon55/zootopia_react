@@ -3,11 +3,15 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 0,
+            "activePatchIndex": 1,
             "patches": [
                 {
                     "date": 1754830904975,
                     "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1754844444877,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -22,9 +22,8 @@\n                 hospitalList: data.hospitalList || [],\r\n                 pageInfo: data.pageInfo || {},\r\n                 animalList: data.animalList || [],\r\n             });\r\n-            setSelectedAnimalIds(data.selectedAnimals || []);\r\n         } catch (e) {\r\n             setError(e);\r\n             console.error(\"Failed to fetch hospital data:\", e);\r\n             setHospitalData({\r\n"
                 }
             ],
             "date": 1754830904974,
