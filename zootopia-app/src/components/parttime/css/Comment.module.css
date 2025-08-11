@@ -1,0 +1,46 @@
+/* 버튼 */
+.btn1 {
+  border: 1px solid #F27A7A;
+  background-color: #F27A7A;
+  color: #fff;
+  border-radius: 6px;
+  padding: 6px 12px;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* 페이지네이션 버튼 */
+.customPage {
+  color: #F27A7A !important;
+  border-color: #F27A7A !important;
+}
+
+/* 부트스트랩 활성 상태는 전역 선택자로 잡아야 함 */
+:global(.page-item.active) .customPage {
+  background-color: #F27A7A !important;
+  color: #fff !important;
+  border-color: #F27A7A !important;
+}
+
+/* 댓글 박스 */
+.commentBox {
+  background-color: #fdfdfd;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+/* 글쓴이/날짜/내용 */
+.commentWriter {
+  color: #F27A7A;
+  font-weight: 600;
+}
+.commentDate {
+  color: #888;
+  font-size: 0.85rem;
+}
+.commentContent {
+  margin-top: 8px;
+  font-size: 0.95rem;
+}
