@@ -10,10 +10,17 @@ import com.aloha.zootopia.domain.ParttimeJobComment;
 @Mapper
 public interface ParttimeJobCommentMapper {
     void insertComment(ParttimeJobComment comment);
-    List<ParttimeJobComment> selectCommentsByJobId(Long jobId);
+
+    List<ParttimeJobComment> selectCommentsByJobId(@Param("jobId") Long jobId);
+
     List<ParttimeJobComment> selectAll();
-    List<ParttimeJobComment> selectAllPaged(@Param("offset") int offset, @Param("size") int size);
-    int countAll(); 
-    void deleteComment(int commentId);
-    ParttimeJobComment getCommentById(int commentId);
+
+    List<ParttimeJobComment> selectAllPaged(@Param("offset") int offset,
+                                            @Param("size") int size);
+
+    int countAll();
+
+    void deleteComment(@Param("commentId") int commentId);
+
+    ParttimeJobComment getCommentById(@Param("commentId") int commentId);
 }

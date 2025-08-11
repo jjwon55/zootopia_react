@@ -5,9 +5,11 @@ import * as auth from '../apis/auth';
 import * as Swal from '../apis/alert';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
+import { useContext } from 'react'
 
 // 📦 컨텍스트 생성
 export const LoginContext = createContext();
+export const useLoginContext = () => useContext(LoginContext)
 
 const LoginContextProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);

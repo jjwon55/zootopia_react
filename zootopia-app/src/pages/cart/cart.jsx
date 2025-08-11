@@ -4,8 +4,10 @@ import {
   updateCartItem, 
   removeCartItem, 
   clearCart 
+
 } from '../../apis/products/cart';
 import './Cart.css';
+
 
 export default function Cart() {
   const [cartItems, setCartItems] = useState([]);
@@ -22,6 +24,7 @@ export default function Cart() {
       const response = await fetchCartItems(1); // 임시로 userId 1 사용
       if (response.success) {
         setCartItems(response.cartItems || []);
+
       } else {
         // Mock 데이터 사용 (개발용)
         setCartItems([
@@ -64,6 +67,7 @@ export default function Cart() {
           category: '사료'
         }
       ]);
+
     } finally {
       setLoading(false);
     }
@@ -75,12 +79,15 @@ export default function Cart() {
     setUpdating(true);
     try {
       const response = await updateCartItem(id, newQuantity);
+
       if (response.success || true) { // Mock으로 항상 성공 처리
+
         setCartItems(items =>
           items.map(item =>
             item.id === id ? { ...item, quantity: newQuantity } : item
           )
         );
+
       }
     } catch (error) {
       console.error('Failed to update cart item:', error);
@@ -90,12 +97,14 @@ export default function Cart() {
           item.id === id ? { ...item, quantity: newQuantity } : item
         )
       );
+
     } finally {
       setUpdating(false);
     }
   };
 
   const removeItem = async (id) => {
+
     setUpdating(true);
     try {
       const response = await removeCartItem(id);
@@ -106,12 +115,14 @@ export default function Cart() {
       console.error('Failed to remove cart item:', error);
       // Mock으로 삭제
       setCartItems(items => items.filter(item => item.id !== id));
+
     } finally {
       setUpdating(false);
     }
   };
 
   const clearAllItems = async () => {
+
     setUpdating(true);
     try {
       const response = await clearCart(1);
@@ -121,6 +132,7 @@ export default function Cart() {
     } catch (error) {
       console.error('Failed to clear cart:', error);
       setCartItems([]);
+
     } finally {
       setUpdating(false);
     }
@@ -136,14 +148,17 @@ export default function Cart() {
 
   if (loading) {
     return (
+
       <div className="cart-loading">
         <div className="loading-spinner"></div>
         <p>장바구니를 불러오는 중...</p>
+
       </div>
     );
   }
 
   return (
+
     <div className="cart-container">
       <div className="cart-wrapper">
         {/* 브레드크럼 */}
@@ -160,10 +175,12 @@ export default function Cart() {
           <h1 className="cart-title">
             <span className="cart-icon">🛒</span>장바구니
             <span className="cart-count">{getTotalItems()}</span>
+
           </h1>
         </div>
 
         {cartItems.length === 0 ? (
+
           <div className="empty-cart">
             <div className="empty-cart-icon">🛒</div>
             <h2>장바구니가 비어있습니다</h2>
@@ -232,10 +249,12 @@ export default function Cart() {
                 <button onClick={() => window.history.back()} className="back-btn">
                   ← 쇼핑 계속하기
                 </button>
+
               </div>
             </div>
 
             {/* 주문 요약 */}
+
             <div className="order-summary">
               <div className="summary-header">
                 <h2>주문 요약</h2>
@@ -271,6 +290,7 @@ export default function Cart() {
                 <p className="free-shipping-notice">
                   ℹ️ 30,000원 이상 구매 시 무료배송
                 </p>
+
               </div>
             </div>
           </div>

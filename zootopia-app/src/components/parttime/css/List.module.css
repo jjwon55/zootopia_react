@@ -1,0 +1,65 @@
+/* styles/common.css */
+
+/* 버튼 스타일 */
+.btn1 {
+  border: 1px solid #F27A7A;
+  background-color: #F27A7A;
+  text-decoration: none;
+  color: white;
+  border-radius: 6px;
+  padding: 6px 12px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.btn2 {
+  border: 1px solid #F27A7A;
+  background-color: transparent;
+  text-decoration: none;
+  color: #F27A7A;
+  border-radius: 6px;
+  padding: 5px 10px;
+  min-height: 35px;
+}
+
+.btn2:hover {
+  background-color: #f9d2d2;
+}
+
+/* 페이지네이션 */
+.custom-page {
+  color: #F27A7A !important;
+  border-color: #F27A7A !important;
+}
+
+.page-item.active .custom-page {
+  background-color: #F27A7A !important;
+  color: white !important;
+  border-color: #F27A7A !important;
+}
+
+/* 댓글 스타일 */
+.comment-writer {
+  color: #F27A7A;
+  font-weight: 600;
+}
+
+.comment-date {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.comment-content {
+  margin-top: 8px;
+  font-size: 0.95rem;
+}
+
+.comment-box {
+  background-color: #fdfdfd;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+

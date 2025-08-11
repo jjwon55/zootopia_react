@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { fetchProducts, fetchCategories } from '../../apis/products';
+
 import SearchSection from '../../components/products/search/SearchSection';
 import ProductCard from '../../components/products/ProductCard';
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -26,6 +28,7 @@ export default function ProductList() {
   const loadCategories = async () => {
     try {
       const response = await fetchCategories();
+
       if (response && response.success && Array.isArray(response.categories)) {
         const categoryList = [
           { name: '전체', icon: '📋' },
@@ -79,16 +82,20 @@ export default function ProductList() {
     return icons[category] || '📦';
   };
 
+
   const loadProducts = async () => {
     setLoading(true);
     try {
       const response = await fetchProducts({
+
         category: selectedCategory === '전체' ? '' : selectedCategory,
+
         search: searchTerm,
         page: currentPage,
         size: 12
       });
       
+
       if (response && response.success) {
         setProducts(response.products || []);
         setTotalProducts(response.totalProducts || 0);
@@ -107,10 +114,12 @@ export default function ProductList() {
       setProducts(dummyProducts);
       setTotalProducts(dummyProducts.length);
       setTotalPages(1);
+
     } finally {
       setLoading(false);
     }
   };
+
 
   const generateDummyProducts = () => {
     const productTemplates = [
@@ -186,6 +195,7 @@ export default function ProductList() {
   const handleSearch = (term) => {
     setSearchTerm(term);
     setCurrentPage(1);
+
   };
 
   const handleProductClick = (productId) => {
@@ -193,6 +203,7 @@ export default function ProductList() {
   };
 
   return (
+
     <div className="min-h-screen" style={{ backgroundColor: '#f8f9fa' }}>
       {/* 검색 섹션 */}
       <SearchSection
@@ -227,20 +238,25 @@ export default function ProductList() {
                     product={product}
                     onClick={handleProductClick}
                   />
+
                 ))}
               </div>
             )}
 
             {/* 페이지네이션 */}
             {totalPages > 1 && (
+
               <div className="flex justify-center mt-8">
+
                 <div className="flex gap-2">
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
+
                     className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
                   >
                     이전
+
                   </button>
                   
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -249,9 +265,11 @@ export default function ProductList() {
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
+
                         className={`px-4 py-2 rounded-lg transition-colors ${
                           currentPage === pageNum
                             ? 'bg-pink-400 text-white'
+
                             : 'border border-gray-300 hover:bg-gray-100'
                         }`}
                       >
@@ -263,14 +281,18 @@ export default function ProductList() {
                   <button
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
+
                     className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
                   >
                     다음
+
                   </button>
                 </div>
               </div>
             )}
+
           </React.Fragment>
+
         )}
       </div>
     </div>

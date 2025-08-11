@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchProductDetail } from '../../apis/products';
+
 import { addToCart } from '../../apis/products/cart';
 import './ProductDetail.css';
 
@@ -9,15 +10,19 @@ export default function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+
   const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
     loadProductDetail();
+
   }, [productId]);
+
 
   const loadProductDetail = async () => {
     setLoading(true);
     try {
+
       console.log('Loading product detail for ID:', productId);
       const response = await fetchProductDetail(productId);
       console.log('API response:', response);
@@ -32,19 +37,23 @@ export default function ProductDetail() {
     } catch (error) {
       console.error('Failed to load product detail:', error);
       setProduct(null);
+
     } finally {
       setLoading(false);
     }
   };
 
+
   const handleQuantityChange = (change) => {
     const newQuantity = quantity + change;
     if (newQuantity >= 1 && newQuantity <= (product?.stock || 10)) {
+
       setQuantity(newQuantity);
     }
   };
 
   const handleAddToCart = async () => {
+
     if (!product) return;
 
     setAddingToCart(true);
@@ -68,17 +77,20 @@ export default function ProductDetail() {
       if (goToCart) {
         window.location.href = '/cart';
       }
+
     } finally {
       setAddingToCart(false);
     }
   };
 
   const handleBuyNow = () => {
+
     if (!product) return;
     
     const orderData = {
       items: [{
         productId: product.no,
+
         productName: product.name,
         price: product.price,
         quantity: quantity,
@@ -87,6 +99,7 @@ export default function ProductDetail() {
       totalAmount: product.price * quantity
     };
     
+
     localStorage.setItem('tempOrder', JSON.stringify(orderData));
     window.location.href = '/checkout';
   };
@@ -272,10 +285,12 @@ export default function ProductDetail() {
                   onClick={handleBuyNow}
                 >
                   💳 바로 구매
+
                 </button>
               </div>
             </div>
           </div>
+
         </div>
 
         {/* 상품 설명 */}
@@ -313,6 +328,7 @@ export default function ProductDetail() {
           100% { transform: rotate(360deg); }
         }
       `}</style>
+
     </div>
   );
 }
