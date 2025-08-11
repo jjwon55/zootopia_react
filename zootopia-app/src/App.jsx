@@ -12,8 +12,8 @@ const App = () => {
   return (
     <BrowserRouter>
       <LoginContextProvider>
-          <JjwRoutes />
           <SysRoutes />
+          <JjwRoutes />
           <HsmRoutes />
           <LytRoutes />
       </LoginContextProvider>

@@ -23,10 +23,12 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.aloha.zootopia.domain.Animal;
 import com.aloha.zootopia.domain.CustomUser;
 import com.aloha.zootopia.domain.HospReview;
 import com.aloha.zootopia.domain.Hospital;
 import com.aloha.zootopia.domain.PageInfo;
+import com.aloha.zootopia.domain.Specialty;
 import com.aloha.zootopia.dto.HospitalForm;
 import com.aloha.zootopia.service.HospReviewService;
 import com.aloha.zootopia.service.hospital.HospitalService;
@@ -36,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @RequestMapping("/service/hospitals")
 public class HospitalController {
 
@@ -49,12 +51,14 @@ public class HospitalController {
     // 병원 목록
     @GetMapping
     public ResponseEntity<Map<String, Object>> list(
-            @RequestParam(required = false) List<Integer> animal,
+            @RequestParam(value = "animal", required = false) List<Integer> animal,
             @RequestParam(value = "pageNum", defaultValue = "1") int pageNum) {
 
+        List<Integer> animalListParam = (animal != null) ? new ArrayList<>(animal) : null;
+
         int pageSize = 6;
-        int total = hospitalService.getHospitalCount(animal);
-        List<Hospital> hospitalList = hospitalService.getHospitalList(animal, pageNum, pageSize);
+        int total = hospitalService.getHospitalCount(animalListParam);
+        List<Hospital> hospitalList = hospitalService.getHospitalList(animalListParam, pageNum, pageSize);
 
         PageInfo pageInfo = new PageInfo();
         pageInfo.setPageNum(pageNum);
@@ -77,9 +81,24 @@ public class HospitalController {
         response.put("hospitalList", hospitalList);
         response.put("pageInfo", pageInfo);
         response.put("animalList", hospitalService.getAllAnimals());
+        response.put("specialtyList", hospitalService.getAllSpecialties());
         response.put("selectedAnimals", animal == null ? new ArrayList<>() : animal);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // 모든 동물 목록 조회
+    @GetMapping("/animals")
+    public ResponseEntity<List<Animal>> getAllAnimals() {
+        List<Animal> animals = hospitalService.getAllAnimals();
+        return new ResponseEntity<>(animals, HttpStatus.OK);
+    }
+
+    // 모든 진료 과목 목록 조회
+    @GetMapping("/specialties")
+    public ResponseEntity<List<Specialty>> getAllSpecialties() {
+        List<Specialty> specialties = hospitalService.getAllSpecialties();
+        return new ResponseEntity<>(specialties, HttpStatus.OK);
     }
 
     // 병원 상세 정보

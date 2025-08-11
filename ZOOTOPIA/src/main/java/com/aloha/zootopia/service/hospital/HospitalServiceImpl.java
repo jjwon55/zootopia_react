@@ -2,6 +2,7 @@ package com.aloha.zootopia.service.hospital;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -173,6 +174,5 @@ public HospitalServiceImpl(HospitalMapper hospitalMapper) {
     public Hospital getHospital(Integer id) {
         return hospitalMapper.findById(id);
     }
-
 
 }

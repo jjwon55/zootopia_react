@@ -3,11 +3,10 @@
 @tailwind utilities;
 @import "tailwindcss" prefix(tw);
 @plugin "daisyui" {
-  themes: all;
-  root: ":root";
+  themes: light --default, dark --prefersdark, cupcake;
   include: all;
   exclude: ;
-  prefix: 'ds-';
+  prefix: ;
   logs: true;
 }
 

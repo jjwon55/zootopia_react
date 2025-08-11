@@ -19,20 +19,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-/**
- * 병원 목록을 조회합니다.
- * @param {Array<number>} animal - 필터링할 동물 ID 배열
- * @param {number} pageNum - 페이지 번호
- * @returns {Promise<object>} - 병원 목록 및 페이지 정보
- */
-export const list = (animal, pageNum = 1) => {
-  return api.get(BASE_URL, {
-    params: {
-      animal: animal?.join(','), // 배열을 쉼표로 구분된 문자열로 전달
-      pageNum
-    }
-  });
-};
+
 
 // ID로 단일 병원 정보를 가져옵니다.
 export const read = (id) => api.get(`${BASE_URL}/${id}`);
@@ -95,3 +82,19 @@ export const updateReview = (hospitalId, reviewId, review) => api.put(`${BASE_UR
 
 // 리뷰를 삭제합니다.
 export const deleteReview = (hospitalId, reviewId) => api.delete(`${BASE_URL}/${hospitalId}/reviews/${reviewId}`);
+
+/**
+ * 모든 동물 목록을 가져옵니다.
+ * @returns {Promise<object>} - 동물 목록
+ */
+export const getAllAnimals = () => {
+  return api.get(`${BASE_URL}/animals`);
+};
+
+/**
+ * 모든 진료 과목 목록을 가져옵니다.
+ * @returns {Promise<object>} - 진료 과목 목록
+ */
+export const getAllSpecialties = () => {
+  return api.get(`${BASE_URL}/specialties`);
+};
