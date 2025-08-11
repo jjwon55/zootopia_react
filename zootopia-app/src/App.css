@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import "tailwindcss" prefix(tw);
+@plugin "daisyui" {
+  themes: all;
+  root: ":root";
+  include: all;
+  exclude: ;
+  prefix: 'ds-';
+  logs: true;
+}
+
+body {
+  background-color: #f5f5f5;
+}

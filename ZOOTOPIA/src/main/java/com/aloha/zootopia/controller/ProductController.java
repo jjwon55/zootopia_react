@@ -6,8 +6,8 @@ import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,11 +32,90 @@ public class ProductController {
     @org.springframework.beans.factory.annotation.Autowired
     private com.aloha.zootopia.service.FileUploadService fileUploadService;
     
-    // 테스트용 API 엔드포인트
-    @GetMapping("/test")
+    // React API 엔드포인트 - 상품 목록 조회
+    @GetMapping("/api/list")
     @ResponseBody
-    public String test() {
-        return "Product Controller is working!";
+    public ResponseEntity<Map<String, Object>> getProductList(
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "12") int size) {
+        
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<Product> products;
+            Pagination pagination;
+            
+            if (search != null && !search.trim().isEmpty()) {
+                // 검색 기능
+                products = productService.searchByName(search.trim(), page, size);
+                pagination = productService.getSearchPagination(page, size, search.trim());
+            } else if (category != null && !category.trim().isEmpty() && !"전체".equals(category)) {
+                // 카테고리별 조회
+                products = productService.listByCategoryAndPage(category, page, size);
+                pagination = productService.getPagination(page, size, category);
+            } else {
+                // 전체 상품 조회
+                products = productService.listByPage(page, size);
+                pagination = productService.getPagination(page, size, null);
+            }
+            
+            response.put("success", true);
+            response.put("products", products);
+            response.put("pagination", pagination);
+            response.put("totalProducts", pagination.getTotal());
+            response.put("currentPage", page);
+            response.put("totalPages", pagination.getLast());
+            
+        } catch (Exception e) {
+            System.err.println("상품 목록 API 오류: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "상품 목록을 불러오는 중 오류가 발생했습니다.");
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    // React API 엔드포인트 - 상품 상세 조회
+    @GetMapping("/api/detail/{no}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getProductDetail(@PathVariable int no) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Product product = productService.getByNo(no);
+            if (product != null) {
+                response.put("success", true);
+                response.put("product", product);
+            } else {
+                response.put("success", false);
+                response.put("message", "상품을 찾을 수 없습니다.");
+            }
+        } catch (Exception e) {
+            System.err.println("상품 상세 API 오류: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "상품 정보를 불러오는 중 오류가 발생했습니다.");
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    // React API 엔드포인트 - 카테고리 목록 조회
+    @GetMapping("/api/categories")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getCategories() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<String> categories = List.of("전체", "사료", "용품", "장난감", "산책");
+            response.put("success", true);
+            response.put("categories", categories);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "카테고리 목록을 불러오는 중 오류가 발생했습니다.");
+        }
+        
+        return ResponseEntity.ok(response);
     }
     
     // 테스트용 단순 상품 목록 페이지
