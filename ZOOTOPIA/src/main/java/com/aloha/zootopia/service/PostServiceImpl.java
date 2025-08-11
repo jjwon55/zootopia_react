@@ -85,7 +85,8 @@ public class PostServiceImpl implements PostService {
                 .matcher(content);
             if (matcher.find()) {
                 String firstImgSrc = matcher.group(1);
-                post.setThumbnailUrl(firstImgSrc);
+                String thumbnailPath = firstImgSrc.replace("http://localhost:8080", "");
+                post.setThumbnailUrl(thumbnailPath);
                 postMapper.updateThumbnail(post);
             }
         }

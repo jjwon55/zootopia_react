@@ -35,12 +35,12 @@ const List = ({
     <div className="bg-[#f8f9fa] min-h-screen">
       {/* 헤더 자리 */}
       <div className="mx-auto px-4 py-6" style={{ minWidth: 1000, minHeight: 1000 }}>
-        <h2 className="text-center text-2xl font-semibold mb-10">펫 시터</h2>
+        <h2 className="text-center !text-4xl !font-bold mb-10 mt-4">펫 시터</h2>
 
         {/* ====== 필터 폼 ====== */}
         <form
           onSubmit={(e) => { e.preventDefault(); onSearch?.() }}
-          className="flex flex-wrap justify-center items-center gap-2 p-3 rounded shadow-sm mx-auto"
+          className="flex flex-wrap justify-center items-center gap-2 p-3 rounded shadow-sm mx-auto mt-5"
           style={{ backgroundColor: '#ffecec', maxWidth: 900 }}
         >
           {/* 지역 */}
@@ -129,11 +129,11 @@ const List = ({
 
         {/* ====== 카드 그리드 ====== */}
         <div className="mx-auto mt-3 mb-3 p-1 rounded shadow-sm max-w-[1000px] bg-white">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 justify-items-center my-10">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-4 justify-items-center my-10">
             {displayJobs.map(job => (
-              <div key={job.jobId} className="w-[85%] min-w-[300px] flex justify-center">
-                <div className="w-full bg-[#f8fbe9] rounded shadow-sm p-4 border-0">
-                  <h6 className="font-bold mb-4 text-base">🐾 {job.title}</h6>
+             <div key={job.jobId} className="w-full max-w-[400px] md:max-w-[420px]">
+                <div className="bg-[#f8fbe9] rounded shadow-sm p-4">
+                  <h5 className="!font-bold mb-4 text-base">🐾 {job.title}</h5>
                   <p className="mb-1">📍 {job.location}</p>
                   <p className="mb-1">🗓️ {job.startDate} ~ {job.endDate}</p>
                   <p className="mb-1">💰 {job.pay}원</p>
@@ -186,7 +186,7 @@ const List = ({
 
           {/* 등록 버튼 */}
           <div className="text-right mb-5 mr-4">
-            <a href="/parttime/insert" className="inline-flex items-center justify-center border border-[#F27A7A] bg-[#F27A7A] text-white rounded px-3 py-1 text-sm">
+            <a href="/parttime/insert" className="inline-flex items-center justify-center border border-[#F27A7A] bg-[#F27A7A] text-white rounded px-3 py-1 text-sm h-9">
               등록하기
             </a>
           </div>
@@ -194,7 +194,7 @@ const List = ({
 
         {/* ====== 리뷰 영역 ====== */}
         <div className="flex justify-center my-5">
-          <div className="w-full max-w-3xl bg-[#f8f9fa] border rounded p-3">
+          <div className="w-full max-w-3xl bg-[#f8f9fa] border rounded p-3 max-w-[900px]">
             <h5 className="font-bold mb-3 text-center">✍️ 당신의 이야기를 들려주세요</h5>
 
             {/* 댓글 개수 */}

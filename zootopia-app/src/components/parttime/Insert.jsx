@@ -1,22 +1,23 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 const Insert = ({ form, onChange, onSubmit }) => {
   return (
     <form onSubmit={onSubmit}>
       <div className="w-full px-4 py-10">
-        <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-6 md:p-8">
-          <h2 className="text-2xl font-bold text-center mb-8">아르바이트 등록</h2>
+        <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 md:p-8">
+          <h2 className="text-2xl font-bold text-center mb-10">아르바이트 등록</h2>
 
           {/* 제목 */}
-          <div className="mb-5">
+          <div className="mb-5 mt-5">
             <label htmlFor="title" className="block font-semibold mb-2">제목</label>
             <input
               type="text"
               id="title"
               name="title"
-              value={form.title}
+              value={form.title ?? ''}
               onChange={onChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-300"
               required
             />
           </div>
@@ -28,9 +29,9 @@ const Insert = ({ form, onChange, onSubmit }) => {
               type="text"
               id="location"
               name="location"
-              value={form.location}
+              value={form.location ?? ''}
               onChange={onChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-300"
               required
             />
           </div>
@@ -42,9 +43,11 @@ const Insert = ({ form, onChange, onSubmit }) => {
               type="number"
               id="pay"
               name="pay"
-              value={form.pay}
+              value={form.pay ?? ''}
               onChange={onChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
+              min="0"
+              inputMode="numeric"
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-300"
               required
             />
           </div>
@@ -57,9 +60,9 @@ const Insert = ({ form, onChange, onSubmit }) => {
                 type="date"
                 id="startDate"
                 name="startDate"
-                value={form.startDate}
+                value={form.startDate ?? ''}
                 onChange={onChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
+                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-300"
                 required
               />
             </div>
@@ -69,9 +72,9 @@ const Insert = ({ form, onChange, onSubmit }) => {
                 type="date"
                 id="endDate"
                 name="endDate"
-                value={form.endDate}
+                value={form.endDate ?? ''}
                 onChange={onChange}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
+                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-300"
                 required
               />
             </div>
@@ -84,9 +87,9 @@ const Insert = ({ form, onChange, onSubmit }) => {
               type="text"
               id="petInfo"
               name="petInfo"
-              value={form.petInfo}
+              value={form.petInfo ?? ''}
               onChange={onChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-300"
             />
           </div>
 
@@ -97,16 +100,42 @@ const Insert = ({ form, onChange, onSubmit }) => {
               id="memo"
               name="memo"
               rows="6"
-              value={form.memo}
+              value={form.memo ?? ''}
               onChange={onChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-300"
             />
           </div>
 
           {/* 버튼 */}
-          <div className="flex justify-center gap-4">
-            <a href="/parttime/list" className={`${styles.btn2} px-6 py-2 text-sm`}>취소</a>
-            <button type="submit" className={`${styles.btn1} px-6 py-2 text-sm`}>등록</button>
+          <div className="flex justify-center gap-3">
+            <Link
+              to="/parttime/list"
+              className="
+                inline-flex items-center justify-center
+                h-10 w-24 md:w-28 text-sm font-medium
+                rounded border border-[#F27A7A] text-[#F27A7A] bg-white
+                hover:bg-[#F27A7A]/10 active:bg-[#F27A7A]/20
+                focus:outline-none focus:ring-2 focus:ring-[#F27A7A]/30
+                transition-colors
+              "
+            >
+              취소
+            </Link>
+            {/* 등록: 로그인(채움) 스타일 */}
+            <button
+              type="submit"
+              className="
+                inline-flex items-center justify-center
+                h-10 w-24 md:w-28 text-sm font-medium
+                border rounded bg-[#F27A7A] text-white shadow-sm
+                hover:bg-[#e86e6e] active:bg-[#d86464]
+                focus:outline-none focus:ring-2 focus:ring-[#F27A7A]/40
+                disabled:opacity-60 disabled:cursor-not-allowed
+                transition-colors
+              "
+            >
+              등록
+            </button>
           </div>
         </div>
       </div>

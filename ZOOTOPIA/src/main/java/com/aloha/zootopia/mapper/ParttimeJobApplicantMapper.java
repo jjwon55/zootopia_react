@@ -11,19 +11,24 @@ import com.aloha.zootopia.domain.ParttimeJobApplicant;
 @Mapper
 public interface ParttimeJobApplicantMapper {
     void insertApplicant(ParttimeJobApplicant applicant);
-    List<ParttimeJobApplicant> selectApplicantsByJobId(Long jobId);
+
+    List<ParttimeJobApplicant> selectApplicantsByJobId(@Param("jobId") Long jobId);
+
     void updateApplicant(ParttimeJobApplicant applicant);
-    void deleteApplicant(int applicantId);
 
-    ParttimeJobApplicant selectApplicant(int applicantId);
-    
-    ParttimeJobApplicant getApplicantByJobIdAndUserId(@Param("jobId") Long jobId, @Param("userId") Long userId);
+    void deleteApplicant(@Param("applicantId") int applicantId);
 
-    // ✅ 사용자가 이미 지원했는지 확인
+    ParttimeJobApplicant selectApplicant(@Param("applicantId") int applicantId);
+
+    ParttimeJobApplicant getApplicantByJobIdAndUserId(@Param("jobId") Long jobId,
+                                                      @Param("userId") Long userId);
+
     @Select("SELECT COUNT(*) > 0 FROM parttime_job_applicant WHERE job_id = #{jobId} AND user_id = #{userId}")
     boolean hasApplied(@Param("jobId") Long jobId, @Param("userId") Long userId);
 
-    // ✅ 추가
-    int countApplicantsByJobId(Long jobId);
-    List<ParttimeJobApplicant> getPagedApplicants(Long jobId, int offset, int limit);
+    int countApplicantsByJobId(@Param("jobId") Long jobId);
+
+    List<ParttimeJobApplicant> getPagedApplicants(@Param("jobId") Long jobId,
+                                                  @Param("offset") int offset,
+                                                  @Param("limit") int limit);
 }
