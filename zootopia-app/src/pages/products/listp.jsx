@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { fetchProducts, fetchCategories } from '../../apis/products';
 
+import SearchSection from '../../components/products/search/SearchSection';
+import ProductCard from '../../components/products/ProductCard';
+
 export default function ProductList() {
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState(['전체']);
+  const [categories, setCategories] = useState([]);
+
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -24,44 +28,174 @@ export default function ProductList() {
   const loadCategories = async () => {
     try {
       const response = await fetchCategories();
-      if (response.success) {
-        setCategories(response.categories);
+
+      if (response && response.success && Array.isArray(response.categories)) {
+        const categoryList = [
+          { name: '전체', icon: '📋' },
+          ...response.categories.filter(cat => cat !== '전체').map(cat => ({
+            name: cat,
+            icon: getCategoryIcon(cat)
+          }))
+        ];
+        setCategories(categoryList);
+      } else {
+        // 기본 카테고리 설정
+        setCategories([
+          { name: '전체', icon: '📋' },
+          { name: '사료', icon: '🍽️' },
+          { name: '용품', icon: '🛍️' },
+          { name: '장난감', icon: '🏀' },
+          { name: '산책', icon: '🚶‍♂️' },
+          { name: '액세서리', icon: '🎀' },
+          { name: '위생용품', icon: '🧼' },
+          { name: '미용용품', icon: '✂️' }
+        ]);
       }
     } catch (error) {
       console.error('Failed to load categories:', error);
+      // 실패 시 기본 카테고리 사용
+      setCategories([
+        { name: '전체', icon: '📋' },
+        { name: '사료', icon: '🍽️' },
+        { name: '용품', icon: '🛍️' },
+        { name: '장난감', icon: '🏀' },
+        { name: '산책', icon: '🚶‍♂️' },
+        { name: '액세서리', icon: '🎀' },
+        { name: '위생용품', icon: '🧼' },
+        { name: '미용용품', icon: '✂️' }
+      ]);
     }
   };
+
+  const getCategoryIcon = (category) => {
+    const icons = {
+      '사료': '🍽️',
+      '용품': '🛍️',
+      '장난감': '🏀',
+      '산책': '🚶‍♂️',
+      '의류': '👕',
+      '액세서리': '🎀',
+      '건강': '💊',
+      '위생용품': '🧼',
+      '미용용품': '✂️'
+    };
+    return icons[category] || '📦';
+  };
+
 
   const loadProducts = async () => {
     setLoading(true);
     try {
       const response = await fetchProducts({
-        category: selectedCategory,
+
+        category: selectedCategory === '전체' ? '' : selectedCategory,
+
         search: searchTerm,
         page: currentPage,
         size: 12
       });
       
-      if (response.success) {
+
+      if (response && response.success) {
         setProducts(response.products || []);
         setTotalProducts(response.totalProducts || 0);
-        setTotalPages(response.totalPages || 1);
+        setTotalPages(response.totalPages || Math.ceil((response.totalProducts || 0) / 12));
+      } else {
+        // API 실패 시 더미 데이터 사용
+        const dummyProducts = generateDummyProducts();
+        setProducts(dummyProducts);
+        setTotalProducts(dummyProducts.length);
+        setTotalPages(1);
       }
     } catch (error) {
       console.error('Failed to load products:', error);
+      // 에러 시 더미 데이터 사용
+      const dummyProducts = generateDummyProducts();
+      setProducts(dummyProducts);
+      setTotalProducts(dummyProducts.length);
+      setTotalPages(1);
+
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCategoryChange = (category) => {
-    setSelectedCategory(category);
-    setCurrentPage(1); // 카테고리 변경 시 첫 페이지로
+
+  const generateDummyProducts = () => {
+    const productTemplates = [
+      {
+        name: '강아지 사료',
+        description: '영양 만점 강아지 사료로 반려견의 건강한 성장을 도와줍니다.',
+        category: '사료',
+        price: 25000
+      },
+      {
+        name: '고양이 장난감 막대',
+        description: '고양이가 좋아하는 재미있는 깃털 장난감입니다.',
+        category: '장난감',
+        price: 12000
+      },
+      {
+        name: '펫 캐리어',
+        description: '반려동물을 안전하게 이동시킬 수 있는 캐리어입니다.',
+        category: '용품',
+        price: 35000
+      },
+      {
+        name: '강아지 산책용 리드줄',
+        description: '튼튼하고 편안한 강아지 산책용 리드줄입니다.',
+        category: '산책',
+        price: 18000
+      },
+      {
+        name: '고양이 사료',
+        description: '고양이 전용 영양가 높은 프리미엄 사료입니다.',
+        category: '사료',
+        price: 28000
+      },
+      {
+        name: '반려동물 급수기',
+        description: '자동으로 물을 공급하는 스마트 급수기입니다.',
+        category: '용품',
+        price: 45000
+      },
+      {
+        name: '강아지 공 장난감',
+        description: '탄력있고 안전한 재질의 강아지 놀이용 공입니다.',
+        category: '장난감',
+        price: 8000
+      },
+      {
+        name: '고양이 스크래처',
+        description: '고양이의 스트레스 해소에 도움이 되는 스크래처입니다.',
+        category: '용품',
+        price: 22000
+      }
+    ];
+
+    return productTemplates.map((template, index) => ({
+      no: index + 1,
+      name: template.name,
+      description: template.description,
+      price: template.price,
+      imageUrl: `https://picsum.photos/320/200?random=${index + 1}`,
+      isNew: index < 2,
+      views: 50 + index * 10,
+      likes: 5 + index,
+      favorites: 10 + index * 2,
+      category: template.category
+    }));
   };
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1); // 검색 시 첫 페이지로
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    setCurrentPage(1);
+  };
+
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+
   };
 
   const handleProductClick = (productId) => {
@@ -69,138 +203,60 @@ export default function ProductList() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 페이지 헤더 */}
-      <div className="bg-gradient-to-br from-red-400 to-red-500 text-white py-12 mb-8">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold mb-4">
-            <i className="fas fa-store mr-3"></i>ZOOTOPIA 스토어
-          </h1>
-          <p className="text-lg mb-6">귀여운 반려동물과 함께하는 특별한 순간</p>
-          
-          <div className="flex justify-center flex-wrap gap-4">
-            <span className="bg-white bg-opacity-20 border border-white border-opacity-30 backdrop-blur px-4 py-2 rounded-full text-sm">
-              <i className="fas fa-box mr-1"></i>총 {totalProducts}개 상품
-            </span>
-            <span className="bg-white bg-opacity-20 border border-white border-opacity-30 backdrop-blur px-4 py-2 rounded-full text-sm">
-              <i className="fas fa-tags mr-1"></i>{selectedCategory} 카테고리
-            </span>
-          </div>
-        </div>
-      </div>
 
-      <div className="max-w-6xl mx-auto px-4">
-        {/* 검색 및 필터 */}
-        <div className="mb-8">
-          {/* 검색 */}
-          <div className="mb-6">
-            <div className="max-w-md mx-auto">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="상품명을 검색하세요..."
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-red-400"
-                />
-                <i className="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen" style={{ backgroundColor: '#f8f9fa' }}>
+      {/* 검색 섹션 */}
+      <SearchSection
+        onSearch={handleSearch}
+        onCategorySelect={handleCategoryChange}
+        categories={categories}
+        activeCategory={selectedCategory}
+        searchPlaceholder="상품명을 검색하세요..."
+        isLoading={loading}
+      />
 
-          {/* 카테고리 버튼 */}
-          <div className="flex justify-center flex-wrap gap-2 mb-6">
-            {categories.map(category => (
-              <button
-                key={category}
-                onClick={() => handleCategoryChange(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  selectedCategory === category
-                    ? 'bg-red-400 text-white transform scale-105'
-                    : 'border border-red-400 text-red-400 hover:bg-red-400 hover:text-white'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-
+      <div className="max-w-6xl mx-auto px-4 py-6">
         {/* 로딩 상태 */}
         {loading ? (
           <div className="text-center py-16">
-            <i className="fas fa-spinner fa-spin text-4xl text-red-400 mb-4"></i>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-400 mx-auto mb-4"></div>
             <p className="text-gray-600">상품을 불러오는 중...</p>
           </div>
         ) : (
-          <>
+          <React.Fragment>
             {/* 상품 그리드 */}
             {products.length === 0 ? (
               <div className="text-center py-16 text-gray-500">
-                <i className="fas fa-box-open text-6xl mb-4"></i>
+                <div className="text-6xl mb-4">📦</div>
                 <p className="text-xl">조건에 맞는 상품이 없습니다.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+              <div className="products-grid">
                 {products.map(product => (
-                  <div
+                  <ProductCard
                     key={product.no}
-                    onClick={() => handleProductClick(product.no)}
-                    className="bg-white rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300 cursor-pointer"
-                  >
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="w-full h-48 object-cover rounded-t-lg"
-                      onError={(e) => { e.target.src = 'https://via.placeholder.com/300x200'; }}
-                    />
-                    <div className="p-4">
-                      <span className="inline-block bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full mb-2">
-                        {product.category}
-                      </span>
-                      <h3 className="font-bold text-lg mb-2">{product.name}</h3>
-                      <p className="text-gray-600 text-sm mb-3">{product.description}</p>
-                      <div className="flex justify-between items-center">
-                        <span className="text-2xl font-bold text-red-400">
-                          {product.price?.toLocaleString()}원
-                        </span>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // 장바구니 추가 로직
-                            }}
-                            className="bg-red-400 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                          >
-                            <i className="fas fa-shopping-cart mr-1"></i>담기
-                          </button>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleProductClick(product.no);
-                            }}
-                            className="border border-red-400 text-red-400 hover:bg-red-400 hover:text-white px-3 py-2 rounded-lg text-sm transition-colors"
-                          >
-                            <i className="fas fa-eye"></i>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    product={product}
+                    onClick={handleProductClick}
+                  />
+
                 ))}
               </div>
             )}
 
             {/* 페이지네이션 */}
             {totalPages > 1 && (
-              <div className="flex justify-center mb-12">
+
+              <div className="flex justify-center mt-8">
+
                 <div className="flex gap-2">
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+
+                    className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
                   >
-                    <i className="fas fa-chevron-left"></i>
+                    이전
+
                   </button>
                   
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -209,9 +265,11 @@ export default function ProductList() {
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`px-4 py-2 rounded-lg ${
+
+                        className={`px-4 py-2 rounded-lg transition-colors ${
                           currentPage === pageNum
-                            ? 'bg-red-400 text-white'
+                            ? 'bg-pink-400 text-white'
+
                             : 'border border-gray-300 hover:bg-gray-100'
                         }`}
                       >
@@ -223,14 +281,18 @@ export default function ProductList() {
                   <button
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+
+                    className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
                   >
-                    <i className="fas fa-chevron-right"></i>
+                    다음
+
                   </button>
                 </div>
               </div>
             )}
-          </>
+
+          </React.Fragment>
+
         )}
       </div>
     </div>
