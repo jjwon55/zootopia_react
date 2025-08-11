@@ -1,5 +1,4 @@
 import React from 'react'
-import './funeral/css/cost.css'
 
 const CostComponent = () => {
   return (

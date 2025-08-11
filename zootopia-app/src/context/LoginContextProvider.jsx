@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 import api from '../apis/api'
 import * as auth from '../apis/auth'
 import * as Swal from '../apis/alert'
@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom'
 // 📦 컨텍스트 생성
 export const LoginContext = createContext()
 
+export const useLoginContext = () => useContext(LoginContext);
 
 const LoginContextProvider = ({ children }) => {
 
