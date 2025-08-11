@@ -1,210 +1,118 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import api from '../apis/api'
-import * as auth from '../apis/auth'
-import * as Swal from '../apis/alert'
-import Cookies from 'js-cookie'
-import { useNavigate } from 'react-router-dom'
+import React from 'react';
+import { createContext, useEffect, useState } from 'react';
+import api from '../apis/api';
+import * as auth from '../apis/auth';
+import * as Swal from '../apis/alert';
+import Cookies from 'js-cookie';
+import { useNavigate } from 'react-router-dom';
 
 // 📦 컨텍스트 생성
-export const LoginContext = createContext()
-
-export const useLoginContext = () => useContext(LoginContext);
+export const LoginContext = createContext();
 
 const LoginContextProvider = ({ children }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLogin, setIsLogin] = useState(() => localStorage.getItem("isLogin") === "true");
+  const [userInfo, setUserInfo] = useState(() => JSON.parse(localStorage.getItem("userInfo") || "null"));
+  const [roles, setRoles] = useState(() => JSON.parse(localStorage.getItem("roles") || '{"isUser": false, "isAdmin": false}'));
 
-  // 🧊 state
-  // 로딩중
-  const [isLoading, setIsLoading] = useState(true)
-  // 로그인 여부
-  const [isLogin, setIsLogin] = useState( () => {
-    const savedIsLogin = localStorage.getItem("isLogin")
-    return savedIsLogin ?? false
-  })
-  // 사용자 정보
-  const [userInfo, setUserInfo] = useState( () => {
-    const savedUserInfo = localStorage.getItem("userInfo")
-    return savedUserInfo ? JSON.parse(savedUserInfo) : null
-  })
-  // 권한 정보
-  const [roles, setRoles] = useState( () => {
-    const savedRoles = localStorage.getItem("roles")
-    return savedRoles ? JSON.parse(savedRoles) : {isUser : false, isAdmin : false}
-  })
+  const navigate = useNavigate();
 
-  // 페이지 이동
-  const navigate = useNavigate()
   // 🔐 로그인 함수
-  const login = async (username, password) => {
-    console.log(`username : ${username}`);
-    console.log(`password : ${password}`);
-
+  const login = async (email, password) => {
     try {
-      const response = await auth.login(username, password)
-      const data = response.data
-      const status = response.status
-      const headers = response.headers
-      const authorization = headers.authorization
-      const jwt = authorization.replace("Bearer ", "")
-      console.log(`data : ${data}`);
-      console.dir(data)
-      console.log(`data : ${data}`);
-      console.log(`status : ${status}`);
-      console.log(`headers : ${headers}`);
-      console.log(`authorization : ${authorization}`);
-      console.log(`jwt : ${jwt}`);
+      const response = await auth.login(email, password);
+      const jwt = response.data.token;
 
-      // 로그인 성공
-      if ( status ==  200) {
-        // JWT 를 쿠키에 등록
-        Cookies.set("jwt", jwt, {expires: 5})
+      if (!jwt) throw new Error("JWT 없음");
 
-        // 로그인 세팅 - loginSetting()
-        loginSeting(authorization, data)
-
-        // 로그인 성공 alert
-        Swal.alert(`로그인 성공`, `메인 화면으로 이동합니다.`, `success`,
-          () => navigate("/")
-        )
-      }
-      
-    } catch (error) {
-      // 로그인 실패
-         Swal.alert(`로그인 실패`, `아이디 또는 비밀번호가 일치하지 않습니다.`, `error`,
-        )
-        console.log(`로그인 실패`);
-        
+      Cookies.set("jwt", jwt);
+      await loginSetting(`Bearer ${jwt}`);
+      Swal.alert("로그인 성공", "메인 화면으로 이동합니다.", "success", () => navigate("/"));
+    } catch (err) {
+      Swal.alert("로그인 실패", "아이디 또는 비밀번호가 일치하지 않습니다.", "error");
+      console.error("로그인 실패:", err);
     }
-    
-  }
-  // 로그인 세팅
-  const loginSeting = (authorization, data) => {
-    // JWT 를 Authorization 헤더에 등록
-    api.defaults.headers.common.Authorization = authorization
-    // 로그인 여부
-    setIsLogin(true)
-    localStorage.setItem("isLogin", "true")
 
-    // 사용자 정보
-    setUserInfo(data)
-    localStorage.setItem("userInfo", JSON.stringify(data))
-    // 권한 정보
-    const updateRoles = { isUser: false, isAdmin: false}
-    data.authList.forEach( (obj) => {
-      if (obj.auth == 'ROLE_USER') updateRoles.isUser = true  
-      if (obj.auth == 'ROLE_ADMIN') updateRoles.isAdmin = true  
-    })
-    setRoles(updateRoles)
-    localStorage.setItem("roles", JSON.stringify(updateRoles))
-  }
+  };
 
-  // 자동 로그인
-  // 1️⃣ 쿠키에 jwt 가져오기
-  // 2️⃣ jwt 있으면, 사용자 정보 요청
-  // 3️⃣ 로그인 세팅 ( 📦 로그인 여부, 사용자 정보, 권한 )
-  // 🍪 쿠키에 저잗된 JWT 를 읽어와서 로그인 처리
+  // JWT로 사용자 정보 조회 후 로그인 세팅
+  const loginSetting = async (authorization) => {
+    try {
+      api.defaults.headers.common.Authorization = authorization;
+
+      const response = await auth.info();
+      const data = response.data;
+
+      setIsLogin(true);
+      setUserInfo(data);
+      localStorage.setItem("isLogin", "true");
+      localStorage.setItem("userInfo", JSON.stringify(data));
+
+      // 권한 설정
+      const updateRoles = { isUser: false, isAdmin: false };
+      if (Array.isArray(data.authList)) {
+        data.authList.forEach((obj) => {
+          if (obj.auth === 'ROLE_USER') updateRoles.isUser = true;
+          if (obj.auth === 'ROLE_ADMIN') updateRoles.isAdmin = true;
+        });
+      }
+      setRoles(updateRoles);
+      localStorage.setItem("roles", JSON.stringify(updateRoles));
+    } catch (err) {
+      console.error("자동 로그인 실패 또는 JWT 인증 실패:", err);
+      logout(true); // 강제 로그아웃
+    }
+  };
+
+  // 🍪 JWT 쿠키 기반 자동 로그인
   const autoLogin = async () => {
-    // 쿠키에서 jwt 가져오기
-    const jwt = Cookies.get("jwt")
+    const jwt = Cookies.get("jwt");
+    if (!jwt) return;
 
-    if( !jwt )
-      return
+    const authorization = `Bearer ${jwt}`;
+    await loginSetting(authorization);
+  };
 
-    console.log(`jwt : ${jwt}`);
-    const authorization = `Bearer ${jwt}`
-
-    // JWT 를 Authorization 헤더에 등록
-    api.defaults.headers.common.Authorization = authorization
-
-    // 사용자 정보 요청
-    let response
-    let data
-
-    try {
-      response = await auth.info()
-    } catch (error) {
-      console.error(`error : ${error}`);
-      console.log(`status : ${response.status}`);
-      return
-    }
-    if( response.data == 'UNAUTHORIZED' || response.status == 401) {
-      console.error(`jwt 가 만료되었거나 인증에 실패하였습니다.`);
-      return
-      
-    }
-
-    // 인증 성공
-    console.log(`jwt 로 자동 로그인 성공`);
-     
-    data = response.data
-
-    // 로그인 세팅 - loginSetting
-    loginSeting( authorization, data)
-    
-    
-  }
-
-  // 로드아웃 함수
-  const logout = (force=false) => {
-    // 강제 로그아웃
+  // 로그아웃
+  const logout = (force = false) => {
     if (force) {
-      // 로딩 중
-      setIsLoading(true)
-      // 로그아웃 세팅
-      logoutSetting()
-      // 페이지 이동 ➡ "/" (메인)
-      navigate("/")
-      // 로딩 끝
-      setIsLoading(false)
-      return
+      logoutSetting();
+      navigate("/");
+      return;
     }
 
-    // 로그아웃 확인
-    Swal.confirm("로그아웃 하시겠습니까?","로그아웃을 진행합니다.", "warning",
-      (result) => {
-        if (result.isConfirmed) {
-          Swal.alert("로드아웃 성공", "로그아웃 되었습니다.", "success")
-          // 로그아웃 세팅
-          logoutSetting()
-          // 페이지 이동 ➡ "/" (메인)
-          navigate("/")
-          return
-        }
+    Swal.confirm("로그아웃 하시겠습니까?", "로그아웃을 진행합니다.", "warning", (result) => {
+      if (result.isConfirmed) {
+        Swal.alert("로그아웃 완료", "정상적으로 로그아웃 되었습니다.", "success");
+        logoutSetting();
+        navigate("/");
       }
-    )
-  }
+    });
+  };
 
-  // 로그 아웃 세팅
   const logoutSetting = () => {
-    // Authorization 헤더 초기화
-    api.defaults.headers.common.Authorization = undefined
-    // 로그인 정보 
-    setIsLogin(false)
-    localStorage.removeItem("isLogin")
-    // 사용자 정보 삭제
-    setUserInfo(null)
-    localStorage.removeItem("userInfo")
-    // 권한 삭제
-    setRoles({isUser: false, isAdmin: false })
-    localStorage.removeItem("roles")
-    // 쿠키 삭제
-    Cookies.remove("jwt")
-  }
+    delete api.defaults.headers.common.Authorization;
+    setIsLogin(false);
+    setUserInfo(null);
+    setRoles({ isUser: false, isAdmin: false });
+    localStorage.removeItem("isLogin");
+    localStorage.removeItem("userInfo");
+    localStorage.removeItem("roles");
+    Cookies.remove("jwt");
+  };
 
   useEffect(() => {
-    const savedIsLogin = localStorage.getItem("isLogin")
-    if( !savedIsLogin || savedIsLogin == false) {
-      autoLogin()
+    if (!localStorage.getItem("isLogin")) {
+      autoLogin();
     }
-  }, [])
-
-
+    setIsLoading(false);
+  }, []);
 
   return (
-    // 컨텍스트 값 지정 ➡ value{?, ?}
-    <LoginContext.Provider value={ {isLogin, login, userInfo, roles, isLoading, logout} }>
+    <LoginContext.Provider value={{ isLogin, login, userInfo, roles, isLoading, logout }}>
       {children}
     </LoginContext.Provider>
-  )
-}
+  );
+};
 
-export default LoginContextProvider
+export default LoginContextProvider;
