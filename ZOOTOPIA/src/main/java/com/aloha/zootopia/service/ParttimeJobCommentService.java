@@ -12,4 +12,7 @@ public interface ParttimeJobCommentService {
     void deleteComment(int commentId);
     ParttimeJobComment save(ParttimeJobComment comment);
     ParttimeJobComment getCommentById(int commentId);
+
+    List<ParttimeJobComment> getCommentsByJobIdPaged(Long jobId, int offset, int size);
+    int countByJobId(Long jobId);
 }

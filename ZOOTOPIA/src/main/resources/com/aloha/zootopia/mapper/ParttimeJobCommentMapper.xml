@@ -1,55 +1,61 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
 <mapper namespace="com.aloha.zootopia.mapper.ParttimeJobCommentMapper">
 
-  <!-- 댓글 등록 -->
-  <insert id="insertComment" parameterType="com.aloha.zootopia.domain.ParttimeJobComment">
-    INSERT INTO parttime_job_comment (user_id, writer, content, created_at)
-    VALUES (#{userId}, #{writer}, #{content}, #{createdAt})
+  <!-- 필요시 job_id 포함 -->
+  <insert id="insertComment" parameterType="com.aloha.zootopia.domain.ParttimeJobComment" useGeneratedKeys="true" keyProperty="commentId">
+    INSERT INTO parttime_job_comment (user_id, writer, job_id, content, created_at)
+    VALUES (#{userId}, #{writer}, #{jobId}, #{content}, #{createdAt})
   </insert>
 
-  <!-- 댓글 조회 -->
   <select id="selectCommentsByJobId" resultType="com.aloha.zootopia.domain.ParttimeJobComment">
     SELECT * FROM parttime_job_comment
     WHERE job_id = #{jobId}
     ORDER BY created_at ASC
   </select>
 
-  <!-- 전체 댓글 조회 (선택) -->
   <select id="selectAll" resultType="com.aloha.zootopia.domain.ParttimeJobComment">
     SELECT * FROM parttime_job_comment ORDER BY created_at DESC
   </select>
 
-  <select id="selectAllPaged" resultType="ParttimeJobComment">
+  <!-- 🔧 인터페이스와 이름 통일 -->
+  <select id="selectAllPaged" resultType="com.aloha.zootopia.domain.ParttimeJobComment">
     SELECT * FROM parttime_job_comment
     ORDER BY created_at DESC
     LIMIT #{size} OFFSET #{offset}
   </select>
 
-  <!-- 댓글 삭제 -->
   <delete id="deleteComment" parameterType="int">
-    DELETE FROM parttime_job_comment
-    WHERE comment_id = #{commentId}
+    DELETE FROM parttime_job_comment WHERE comment_id = #{commentId}
   </delete>
 
-  <!-- (선택) 댓글 수정 -->
   <update id="updateComment">
     UPDATE parttime_job_comment
     SET content = #{content}
     WHERE comment_id = #{commentId}
   </update>
 
-  <select id="getAllCommentsPaged" resultType="ParttimeJobComment">
-    SELECT * FROM parttime_job_comment
-    ORDER BY created_at DESC
-    LIMIT #{size} OFFSET #{offset}
-  </select>
-
   <select id="countAll" resultType="int">
     SELECT COUNT(*) FROM parttime_job_comment
   </select>
 
+  <select id="getCommentById" resultType="com.aloha.zootopia.domain.ParttimeJobComment">
+    SELECT * FROM parttime_job_comment WHERE comment_id = #{commentId}
+  </select>
+
+  <!-- 특정 알바 댓글 페이징 -->
+  <select id="selectByJobIdPaged" resultType="com.aloha.zootopia.domain.ParttimeJobComment">
+    SELECT *
+    FROM parttime_job_comment
+    WHERE job_id = #{jobId}
+    ORDER BY created_at DESC
+    LIMIT #{size} OFFSET #{offset}
+  </select>
+
+  <select id="countByJobId" resultType="int">
+    SELECT COUNT(*)
+    FROM parttime_job_comment
+    WHERE job_id = #{jobId}
+  </select>
 </mapper>
