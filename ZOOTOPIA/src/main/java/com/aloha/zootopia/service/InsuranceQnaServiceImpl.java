@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.aloha.zootopia.domain.InsuranceQna;
 import com.aloha.zootopia.mapper.InsuranceQnaMapper;
@@ -14,44 +15,34 @@ public class InsuranceQnaServiceImpl implements InsuranceQnaService {
     @Autowired
     private InsuranceQnaMapper qnaMapper;
 
+    @Transactional
     @Override
-    public void registerQuestion(InsuranceQna qna) {
-        qnaMapper.insertQna(qna);
-    }
+    public void registerQuestion(InsuranceQna qna) { qnaMapper.insertQna(qna); }
 
     @Override
-    public List<InsuranceQna> getQnaList(int productId) {
-        return qnaMapper.selectQnaByProductId(productId);
-    }
+    public List<InsuranceQna> getQnaList(int productId) { return qnaMapper.selectQnaByProductId(productId); }
 
     @Override
-    public InsuranceQna getQna(int qnaId) {
-        return qnaMapper.selectQnaById(qnaId);
-    }
+    public InsuranceQna getQna(int qnaId) { return qnaMapper.selectQnaById(qnaId); }
 
+    @Transactional
     @Override
-    public void answerQna(InsuranceQna qna) {
-        qnaMapper.updateQnaAnswer(qna);
-    }
+    public void answerQna(InsuranceQna qna) { qnaMapper.updateQnaAnswer(qna); }
 
+    @Transactional
     @Override
-    public void updateQnaQuestion(InsuranceQna qna) {
-        qnaMapper.updateQnaQuestion(qna);
-    }
+    public void updateQnaQuestion(InsuranceQna qna) { qnaMapper.updateQnaQuestion(qna); }
 
+    @Transactional
     @Override
-    public void deleteQna(int qnaId) {
-        qnaMapper.deleteQna(qnaId);
-    }
-    
+    public void deleteQna(int qnaId) { qnaMapper.deleteQna(qnaId); }
+
     @Override
     public List<InsuranceQna> getQnaListPaged(int productId, int page, int pageSize) {
         int offset = (page - 1) * pageSize;
         return qnaMapper.getQnaListPaged(productId, offset, pageSize);
     }
-    
+
     @Override
-    public int countByProduct(int productId) {
-        return qnaMapper.countQnaByProduct(productId);
-    }
+    public int countByProduct(int productId) { return qnaMapper.countQnaByProduct(productId); }
 }
