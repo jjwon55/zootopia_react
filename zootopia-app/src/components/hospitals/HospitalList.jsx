@@ -61,7 +61,7 @@ const HospitalList = ({
                 <img
                   src={hospital.thumbnailImageUrl && hospital.thumbnailImageUrl !== '' ? hospital.thumbnailImageUrl : '/img/default-hospital.png'}
                   alt="병원 이미지"
-                  className="tw-w-full tw-h-full tw-object-cover tw-group-hover:tw-scale-105 tw-transition-transform tw-duration-300"
+                  className="tw-w-full tw-h-full tw-object-cover tw-group-tw:hover-scale-105 tw-transition-transform tw-duration-300"
                 />
               </div>
               <div className="tw-p-4 tw-flex-1 tw-flex tw-flex-col">
@@ -91,7 +91,7 @@ const HospitalList = ({
               <li>
                 <button
                   onClick={() => onPageChange(1)}
-                  className="tw-px-3 tw-py-1 tw-rounded tw-border tw-border-gray-300 tw-text-gray-600 hover:tw-bg-gray-200"
+                  className="tw-px-3 tw-py-1 tw-rounded tw-border tw-border-gray-300 tw-text-gray-600 tw:hover-bg-gray-200"
                   aria-label="첫 페이지"
                 >
                   &laquo;
@@ -102,7 +102,7 @@ const HospitalList = ({
               <li>
                 <button
                   onClick={() => onPageChange(pageInfo.pageNum - 1)}
-                  className="tw-px-3 tw-py-1 tw-rounded tw-border tw-border-gray-300 tw-text-gray-600 hover:tw-bg-gray-200"
+                  className="tw-px-3 tw-py-1 tw-rounded tw-border tw-border-gray-300 tw-text-gray-600 tw:hover-bg-gray-200"
                   aria-label="이전 페이지"
                 >
                   &lt;
@@ -116,7 +116,7 @@ const HospitalList = ({
                   className={`tw-px-3 tw-py-1 tw-rounded tw-border tw-border-gray-300 
                     ${i === pageInfo.pageNum 
                       ? 'tw-bg-blue-600 tw-text-white' 
-                      : 'tw-text-gray-700 hover:tw-bg-gray-200'}`}
+                      : 'tw-text-gray-700 tw:hover-bg-gray-200'}`}
                   aria-current={i === pageInfo.pageNum ? 'page' : undefined}
                 >
                   {i}
@@ -127,7 +127,7 @@ const HospitalList = ({
               <li>
                 <button
                   onClick={() => onPageChange(pageInfo.pageNum + 1)}
-                  className="tw-px-3 tw-py-1 tw-rounded tw-border tw-border-gray-300 tw-text-gray-600 hover:tw-bg-gray-200"
+                  className="tw-px-3 tw-py-1 tw-rounded tw-border tw-border-gray-300 tw-text-gray-600 tw:hover-bg-gray-200"
                   aria-label="다음 페이지"
                 >
                   &gt;
@@ -138,7 +138,7 @@ const HospitalList = ({
               <li>
                 <button
                   onClick={() => onPageChange(pageInfo.pages)}
-                  className="tw-px-3 tw-py-1 tw-rounded tw-border tw-border-gray-300 tw-text-gray-600 hover:tw-bg-gray-200"
+                  className="tw-px-3 tw-py-1 tw-rounded tw-border tw-border-gray-300 tw-text-gray-600 tw:hover-bg-gray-200"
                   aria-label="마지막 페이지"
                 >
                   &raquo;

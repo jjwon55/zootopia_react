@@ -1,74 +1,26 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Editor } from '@toast-ui/react-editor';
-import '@toast-ui/editor/dist/toastui-editor.css';
 
-const Update = ({
+const ShowoffCreate = ({
   title,
   setTitle,
   category,
-  setCategory,
   tagInputRef,
   onSubmit,
   editorRef,
   handleImageUpload,
-  originalContent,
 }) => {
-  useEffect(() => {
-    if (editorRef?.current) {
-      editorRef.current.getInstance().setHTML(originalContent || '');
-    }
-  }, [originalContent, editorRef]);
-
   return (
     <div className="tw:min-h-screen tw:bg-[#fffdf9] tw:py-10 tw:px-4">
       <div className="tw:max-w-3xl tw:mx-auto tw:bg-white tw:rounded-2xl tw:p-6 md:tw:p-8 tw:shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
         <form onSubmit={onSubmit}>
-          {/* 📌 카테고리 선택 */}
+
+          {/* 📌 카테고리 (고정 표시) */}
           <div className="tw:mb-6">
             <label className="tw:block tw:font-semibold tw:mb-2">카테고리</label>
-            <div className="tw:flex tw:gap-3 tw:flex-wrap">
-              {/* 자유게시판 */}
-              <div className="tw:flex tw:items-center">
-                <input
-                  className="tw:sr-only"
-                  type="radio"
-                  id="cate-free"
-                  name="category"
-                  value="자유글"
-                  checked={category === '자유글'}
-                  onChange={(e) => setCategory(e.target.value)}
-                />
-                <label
-                  htmlFor="cate-free"
-                  className={`tw:select-none tw:cursor-pointer tw:text-sm tw:px-4 tw:py-2 tw:rounded-full tw:inline-flex tw:items-center tw:justify-center
-                    ${category === '자유글' ? 'tw:bg-[#fef0bd] tw:font-bold' : 'tw:bg-[#eee]'}
-                  `}
-                >
-                  자유게시판
-                </label>
-              </div>
-
-              {/* 질문있어요 */}
-              <div className="tw:flex tw:items-center">
-                <input
-                  className="tw:sr-only"
-                  type="radio"
-                  id="cate-question"
-                  name="category"
-                  value="질문글"
-                  checked={category === '질문글'}
-                  onChange={(e) => setCategory(e.target.value)}
-                />
-                <label
-                  htmlFor="cate-question"
-                  className={`tw:select-none tw:cursor-pointer tw:text-sm tw:px-4 tw:py-2 tw:rounded-full tw:inline-flex tw:items-center tw:justify-center
-                    ${category === '질문글' ? 'tw:bg-[#fef0bd] tw:font-bold' : 'tw:bg-[#eee]'}
-                  `}
-                >
-                  질문있어요
-                </label>
-              </div>
-            </div>
+            <span className="tw:inline-block tw:bg-[#fef0bd] tw:font-bold tw:px-4 tw:py-2 tw:rounded-full">
+              {category}
+            </span>
           </div>
 
           {/* 📝 제목 입력 */}
@@ -85,7 +37,7 @@ const Update = ({
                 focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-blue-300
               "
               placeholder="제목을 입력해 주세요"
-              value={title || ''}
+              value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
             />
@@ -100,7 +52,7 @@ const Update = ({
                 height="500px"
                 initialEditType="wysiwyg"
                 previewStyle="vertical"
-                initialValue=""
+                initialValue=" "
                 hooks={{
                   addImageBlobHook: handleImageUpload,
                 }}
@@ -127,7 +79,7 @@ const Update = ({
             />
           </div>
 
-          {/* ✅ 수정 버튼 */}
+          {/* ✅ 등록 버튼 */}
           <div className="tw:text-right tw:mt-6">
             <button
               type="submit"
@@ -139,7 +91,7 @@ const Update = ({
                 tw:transition-colors
               "
             >
-              수정 완료
+              글 등록
             </button>
           </div>
         </form>
@@ -148,4 +100,4 @@ const Update = ({
   );
 };
 
-export default Update;
+export default ShowoffCreate;

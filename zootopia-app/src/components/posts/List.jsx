@@ -6,7 +6,7 @@ import chatIcon from '../../assets/img/chat.png';
 import writeIcon from '../../assets/img/write.png';
 import catPpl from '../../assets/img/catppl.jpg';
 import Ppl from '../../assets/img/ppl2.jpg';
-import './global.css'; // Assuming you have a CSS file for styles
+// import './global.css'; // Assuming you have a CSS file for styles
 
 const List = ({ posts, topList, pagination, keyword }) => {
   const location = useLocation();
@@ -22,7 +22,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
   };
 
   return (
-    <section className="tw:bg-gray-50 tw:text-gray-800">
+    <section className="tw:text-gray-800">
       <section className="tw:max-w-[900px] tw:mx-auto tw:my-8 tw:p-4 tw:bg-[#fffefb] tw:rounded-[10px] tw:border tw:border-[#eee]">
         <h2 className="tw:text-[#ff3c3c] tw:text-[18px] tw:mb-2">🔥 실시간 인기게시물</h2>
         <div className="tw:flex tw:gap-8">
@@ -31,7 +31,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
               {list.map((post, index) => (
                 <li key={post.postId} className="tw:flex tw:items-center tw:gap-2">
                   <span className="tw:text-red-400 tw:font-bold tw:w-6 tw:text-center">{index + 1 + i * 5}</span>
-                  <span className="tw:bg-purple-500 tw:text-white tw:text-xs tw:px-2 tw:py-0.5 tw:rounded">{post.category || '카테고리'}</span>
+                  <span className="tw:bg-[#a06697] tw:text-white tw:text-xs tw:px-2 tw:py-0.5 tw:rounded">{post.category || '카테고리'}</span>
                   <Link className="tw:truncate tw:hover:underline tw:text-inherit tw:no-underline" to={`/posts/read/${post.postId}`}>{post.title || '제목없음'}</Link>
                 </li>
               ))}
@@ -116,7 +116,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
           }}
           className="tw:flex tw:gap-2 tw:mt-6"
         >
-          <select name="type" className="tw:border tw:rounded tw:px-2 tw:py-1 tw:w-[140px]">
+          <select name="type" className="tw:border tw:border-[#dee2e6] tw:rounded tw:px-2 tw:py-1 tw:w-[140px]">
             <option value="title">제목</option>
             <option value="titleContent">제목+내용</option>
             <option value="tag">태그</option>
@@ -126,11 +126,11 @@ const List = ({ posts, topList, pagination, keyword }) => {
             name="keyword"
             placeholder="검색어 입력"
             defaultValue={keyword}
-            className="tw:flex-grow tw:border tw:rounded tw:px-2 tw:py-1 tw:w-[70%]"
+            className="tw:flex-grow tw:border tw:border-[#dee2e6] tw:rounded tw:px-2 tw:py-1 tw:w-[70%]"
           />
         <button
           type="submit"
-          className="tw:bg-[#FF5E5E] tw:text-white tw:px-4 tw:py-1 tw:rounded-lg hover:tw:shadow-md transition-shadow"
+          className="tw:bg-[#FF5E5E] tw:text-white tw:px-4 tw:py-1 tw:rounded-lg tw:hover:shadow-md transition-shadow"
         >
           검색
         </button>

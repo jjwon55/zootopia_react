@@ -12,59 +12,53 @@ import com.aloha.zootopia.domain.Tag;
 @Mapper
 public interface PostMapper {
 
-    // 전체 목록 (비페이징)
     List<Posts> list() throws Exception;
 
-    // 페이징 목록 (카테고리 포함 가능)
     List<Posts> page(Pagination pagination) throws Exception;
 
-    // 전체 게시글 수 (카테고리 포함 가능)
     long count(Pagination pagination) throws Exception;
 
-    // 단건 조회
-    Posts selectById(int postId) throws Exception;
+    // XML: WHERE p.post_id = #{id}
+    Posts selectById(@Param("id") int postId) throws Exception;
 
-    // 등록
     int insert(Posts post) throws Exception;
 
-    // 수정
     int updateById(Posts post) throws Exception;
 
-    // 삭제
-    int deleteById(int postId) throws Exception;
+    // XML: #{postId}
+    int deleteById(@Param("postId") int postId) throws Exception;
 
-    // 썸네일 업데이트
     int updateThumbnail(Posts post) throws Exception;
 
-    // 조회수 증가
-    int updateViewCount(int postId);
+    // XML: #{postId}
+    int updateViewCount(@Param("postId") int postId);
 
-    // 댓글 수 증가/감소
-    int updateCommentCount(int postId);
-    int minusCommentCount(int postId);
+    // XML: #{postId}
+    int updateCommentCount(@Param("postId") int postId);
 
-    // 인기글
-    List<Posts> selectTopNByLikeCount(int limit) throws Exception;
+    // XML: #{postId}  (음수 방지 쿼리로 바꾸는 것도 권장)
+    int minusCommentCount(@Param("postId") int postId);
+
+    // XML: LIMIT #{limit}
+    List<Posts> selectTopNByLikeCount(@Param("limit") int limit) throws Exception;
+
     List<Posts> selectTop10ByPopularity();
 
-    // 태그 조회
     List<Tag> selectTagsByPostIds(@Param("list") List<Integer> postIds);
 
-    // 검색 + 페이징
     List<Posts> pageBySearch(
         @Param("type") String type,
         @Param("keyword") String keyword,
         @Param("pagination") Pagination pagination
     );
 
-    // 검색 결과 개수
     long countBySearch(
         @Param("type") String type,
         @Param("keyword") String keyword
     );
- 
-    
+
     List<Posts> pageByPopularity(Pagination pagination) throws Exception;
 
-    List<Posts> findByUserId(Long userId);
+    // XML: WHERE user_id = #{userId}
+    List<Posts> findByUserId(@Param("userId") Long userId);
 }

@@ -17,7 +17,7 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
-const base = '/posts';
+const base = '/showoff';
 
 export const list = (params) => api.get(base, { params });
 export const read = (id) => api.get(`${base}/${id}`);
@@ -25,4 +25,4 @@ export const create = (data) => api.post(base, data);
 export const update = (id, data) => api.put(`${base}/${id}`, data);
 export const remove = (id) => api.delete(`${base}/${id}`);
 export const toggleLike = (postId) =>
-  api.post(`/posts/${postId}/like`, null, { withCredentials: true });
+  api.post(`/showoff/${postId}/like`, null, { withCredentials: true });

@@ -231,7 +231,7 @@ const HospitalForm = () => {
       <div className="tw:flex tw:flex-col sm:tw:flex-row tw:gap-3 tw:mt-4 tw:w-full tw:max-w-5xl">
         <button
           type="button"
-          className="tw:flex-1 sm:tw:flex-none tw:px-4 tw:py-2 tw:rounded tw:bg-gray-400 tw:text-white hover:tw:bg-gray-500"
+          className="tw:flex-1 sm:tw:flex-none tw:px-4 tw:py-2 tw:rounded tw:bg-gray-400 tw:text-white tw:hover:bg-gray-500"
           onClick={() => window.history.back()}
         >
           취소
@@ -239,7 +239,7 @@ const HospitalForm = () => {
         <button
           type="button"
           id="submitAllBtn"
-          className="tw:flex-1 sm:tw:flex-none tw:px-4 tw:py-2 tw:rounded tw:bg-pink-500 tw:text-white hover:tw:bg-pink-600"
+          className="tw:flex-1 sm:tw:flex-none tw:px-4 tw:py-2 tw:rounded tw:bg-pink-500 tw:text-white tw:hover:bg-pink-600"
           onClick={handleSubmit}
         >
           {hospitalForm.hospitalId ? "수정" : "등록"}
@@ -248,7 +248,7 @@ const HospitalForm = () => {
           <button
             type="button"
             id="deleteBtn"
-            className="tw:flex-1 sm:tw:flex-none tw:px-4 tw:py-2 tw:rounded tw:bg-red-500 tw:text-white hover:tw:bg-red-600"
+            className="tw:flex-1 sm:tw:flex-none tw:px-4 tw:py-2 tw:rounded tw:bg-red-500 tw:text-white tw:hover:bg-red-600"
             onClick={handleDelete}
           >
             삭제
