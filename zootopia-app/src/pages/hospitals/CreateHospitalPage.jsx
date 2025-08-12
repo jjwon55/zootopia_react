@@ -5,7 +5,6 @@ import Header from '../../components/header/Header';
 const CreateHospitalPage = () => {
   return (
     <>
-    <Header />
         <CreateHospitalContainer />
     </>
   )

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { list as listHospitals } from '../../apis/hospitals/hospitallist';
+import { list as listHospitals } from '../../apis/hospitals/hospitalApi';
 import HospitalList from '../../components/hospitals/HospitalList';
 
 const HospListContainer = () => {

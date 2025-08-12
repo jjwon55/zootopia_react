@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import defaultHospitalImg from "../../assets/img/default-hospital.png";
+import { LoginContext } from "../../context/LoginContextProvider";
 
 const HospitalList = ({
   hospitalList,
@@ -9,10 +11,10 @@ const HospitalList = ({
   selectedAnimals,
   onAnimalFilterChange,
   onPageChange,
-  isAdmin = false
 }) => {
   const navigate = useNavigate();
-
+  const { roles } = useContext(LoginContext); // Context에서 값 꺼내기
+  console.log(roles); 
   // 관리자용 병원 등록 버튼 클릭 → SweetAlert 확인 팝업
   const handleCreateHospitalClick = () => {
     Swal.fire({
@@ -26,21 +28,21 @@ const HospitalList = ({
       cancelButtonColor: "#ccc"
     }).then((result) => {
       if (result.isConfirmed) {
-        navigate("/createhospital");
+        navigate("/service/hospitals/createhospital");
       }
     });
   };
 
   // 병원 카드 클릭 → 상세 페이지로 이동
   const handleCardClick = (hospitalId) => {
-    navigate(`/hospital/detail/${hospitalId}`);
+    navigate(`/service/hospitals/hospitaldetail/${hospitalId}`);
   };
 
   return (
     <div className="tw:max-w-[1140px] tw:mx-auto tw:px-[15px] tw:py-[20px]">
       {/* 상단 영역: 관리자 버튼 + 필터 */}
       <div className="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:mb-[20px]">
-        {isAdmin && (
+        {roles && (
           <button
             onClick={handleCreateHospitalClick}
             className="tw:bg-[#74b9ff] tw:text-white tw:px-4 tw:py-2 tw:rounded hover:tw:bg-[#0984e3] tw:mb-3 md:tw:mb-0"
@@ -89,7 +91,7 @@ const HospitalList = ({
               {/* 이미지 */}
               <div className="tw:w-full tw:h-[200px] tw:overflow-hidden">
                 <img
-                  src={hospital.thumbnailUrl}
+                  src={`${hospital.thumbnailImageUrl ? `http://localhost:8080${hospital.thumbnailImageUrl}` : defaultHospitalImg}`}
                   alt={hospital.name}
                   className="tw:w-full tw:h-full tw:object-cover tw:transition-transform hover:tw:scale-105"
                 />
@@ -115,77 +117,71 @@ const HospitalList = ({
         </div>
       )}
 
-      {/* 페이징 */}
-      {pageInfo?.totalPages > 1 && (
-        <div className="tw:flex tw:justify-center tw:mt-8">
-          <nav aria-label="Pagination">
-            <ul className="tw:inline-flex tw:space-x-2 tw:select-none">
-              {pageInfo.pageNum > 1 && (
-                <li>
-                  <button
-                    onClick={() => onPageChange(1)}
-                    className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 hover:tw:bg-gray-200"
-                    aria-label="첫 페이지"
-                  >
-                    &laquo;
-                  </button>
-                </li>
-              )}
-              {pageInfo.hasPreviousPage && (
-                <li>
-                  <button
-                    onClick={() => onPageChange(pageInfo.pageNum - 1)}
-                    className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 hover:tw:bg-gray-200"
-                    aria-label="이전 페이지"
-                  >
-                    &lt;
-                  </button>
-                </li>
-              )}
-              {Array.from(
-                { length: pageInfo.endPage - pageInfo.startPage + 1 },
-                (_, i) => pageInfo.startPage + i
-              ).map((i) => (
-                <li key={i}>
-                  <button
-                    onClick={() => onPageChange(i)}
-                    className={`tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 ${
-                      i === pageInfo.pageNum
-                        ? "tw:bg-[#74b9ff] tw:text-white"
-                        : "tw:text-gray-700 hover:tw:bg-gray-200"
-                    }`}
-                    aria-current={i === pageInfo.pageNum ? "page" : undefined}
-                  >
-                    {i}
-                  </button>
-                </li>
-              ))}
-              {pageInfo.hasNextPage && (
-                <li>
-                  <button
-                    onClick={() => onPageChange(pageInfo.pageNum + 1)}
-                    className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 hover:tw:bg-gray-200"
-                    aria-label="다음 페이지"
-                  >
-                    &gt;
-                  </button>
-                </li>
-              )}
-              {pageInfo.hasLastPage && (
-                <li>
-                  <button
-                    onClick={() => onPageChange(pageInfo.pages)}
-                    className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 hover:tw:bg-gray-200"
-                    aria-label="마지막 페이지"
-                  >
-                    &raquo;
-                  </button>
-                </li>
-              )}
-            </ul>
-          </nav>
-        </div>
-      )}
+      {/* 페이지네이션 */}
+      <div className="tw:flex tw:justify-center tw:mt-8">
+        <nav aria-label="Pagination">
+          <ul className="tw:inline-flex tw:space-x-2 tw:select-none">
+            {pageInfo.pageNum > 1 && (
+              <li>
+                <button
+                  onClick={() => onPageChange(1)}
+                  className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 hover:tw:bg-gray-200"
+                  aria-label="첫 페이지"
+                >
+                  &laquo;
+                </button>
+              </li>
+            )}
+            {pageInfo.hasPreviousPage && (
+              <li>
+                <button
+                  onClick={() => onPageChange(pageInfo.pageNum - 1)}
+                  className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 hover:tw:bg-gray-200"
+                  aria-label="이전 페이지"
+                >
+                  &lt;
+                </button>
+              </li>
+            )}
+            {Array.from({ length: pageInfo.endPage - pageInfo.startPage + 1 }, (_, i) => pageInfo.startPage + i).map(i => (
+              <li key={i}>
+                <button
+                  onClick={() => onPageChange(i)}
+                  className={`tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300
+                    ${i === pageInfo.pageNum
+                      ? 'tw:bg-blue-600 tw:text-white'
+                      : 'tw:text-gray-700 hover:tw:bg-gray-200'}`}
+                  aria-current={i === pageInfo.pageNum ? 'page' : undefined}
+                >
+                  {i}
+                </button>
+              </li>
+            ))}
+            {pageInfo.hasNextPage && (
+              <li>
+                <button
+                  onClick={() => onPageChange(pageInfo.pageNum + 1)}
+                  className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 hover:tw:bg-gray-200"
+                  aria-label="다음 페이지"
+                >
+                  &gt;
+                </button>
+              </li>
+            )}
+            {pageInfo.hasLastPage && (
+              <li>
+                <button
+                  onClick={() => onPageChange(pageInfo.pages)}
+                  className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 hover:tw:bg-gray-200"
+                  aria-label="마지막 페이지"
+                >
+                  &raquo;
+                </button>
+              </li>
+            )}
+          </ul>
+        </nav>
+      </div>
     </div>
   );
 };

@@ -2,12 +2,10 @@ import React from 'react'
 import CreateHospitalComponent from '../../components/hospitals/CreateHospitalComponent'
 
 
-const CreateHospitalContainer = () => {
+const CreateHospitalContainer = ({ hospitalData, isAdmin }) => {
   return (
-    <>
-        <CreateHospitalComponent />
-    </>
-  )
+    <CreateHospitalComponent hospitalData={hospitalData} isAdmin={isAdmin} />
+  );
 }
 
 export default CreateHospitalContainer

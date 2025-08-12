@@ -103,8 +103,9 @@ public class HospitalController {
 
     // 병원 상세 정보
     @GetMapping("/{id}")
-    public ResponseEntity<Hospital> details(@PathVariable Integer id) {
+    public ResponseEntity<Hospital> details(@PathVariable("id") Integer id) {
         Hospital hospital = hospitalService.getHospital(id);
+        log.info("HospitalController - details() 반환 hospital: {}", hospital);
         return new ResponseEntity<>(hospital, HttpStatus.OK);
     }
 
@@ -131,10 +132,14 @@ public class HospitalController {
     // 병원 수정
     @PutMapping("/{id}")
     public ResponseEntity<String> updateHospital(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @Valid @RequestPart("hospitalForm") HospitalForm hospitalForm,
             BindingResult bindingResult,
             @RequestParam(value = "thumbnailImageFile", required = false) MultipartFile thumbnailImageFile) {
+
+        log.info("HospitalController - updateHospital() 진입. id: {}", id);
+        log.info("HospitalController - updateHospital() hospitalForm: {}", hospitalForm);
+        log.info("HospitalController - updateHospital() thumbnailImageFile: {}", thumbnailImageFile != null ? thumbnailImageFile.getOriginalFilename() : "null");
 
         if (bindingResult.hasErrors()) {
             return new ResponseEntity<>("Validation failed: " + bindingResult.getFieldError().getDefaultMessage(), HttpStatus.BAD_REQUEST);
@@ -167,7 +172,7 @@ public class HospitalController {
 
     // 병원 리뷰 목록
     @GetMapping("/{hospitalId}/reviews")
-    public ResponseEntity<List<HospReview>> getReviews(@PathVariable int hospitalId) {
+    public ResponseEntity<List<HospReview>> getReviews(@PathVariable("hospitalId") int hospitalId) {
         log.info("HospitalController - getReviews() 진입. hospitalId: {}", hospitalId);
         List<HospReview> reviews = hospReviewService.listByHospital(hospitalId);
         log.info("HospitalController - getReviews() 반환 리뷰 수: {}", reviews.size());
@@ -176,7 +181,7 @@ public class HospitalController {
 
     // 리뷰 등록
     @PostMapping("/{hospitalId}/reviews")
-    public ResponseEntity<String> addReview(@PathVariable int hospitalId, @RequestBody HospReview hospReview, @AuthenticationPrincipal CustomUser customUser) {
+    public ResponseEntity<String> addReview(@PathVariable("hospitalId") int hospitalId, @RequestBody HospReview hospReview, @AuthenticationPrincipal CustomUser customUser) {
         log.info("HospitalController - addReview() 진입. hospitalId: {}, hospReview: {}", hospitalId, hospReview);
         if (customUser == null) {
             log.warn("HospitalController - addReview() : Unauthorized access - customUser is null");
@@ -186,16 +191,22 @@ public class HospitalController {
         hospReview.setUserId(userId);
         hospReview.setHospitalId(hospitalId);
         
-        hospReviewService.addReview(hospReview);
-        log.info("HospitalController - addReview() : Review added successfully");
-        return new ResponseEntity<>("Review added successfully", HttpStatus.CREATED);
+        try { // try-catch 블록 추가
+            log.info("리뷰 서비스 호출 전: {}", hospReview);
+            hospReviewService.addReview(hospReview);
+            log.info("리뷰 서비스 호출 후 성공");
+            return new ResponseEntity<>("Review added successfully", HttpStatus.CREATED);
+        } catch (Exception e) {
+            log.error("리뷰 등록 중 에러 발생: {}", e.getMessage(), e); // 에러 로그 추가
+            return new ResponseEntity<>("Failed to add review: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     // 리뷰 수정
     @PutMapping("/{hospitalId}/reviews/{reviewId}")
     public ResponseEntity<String> updateReview(
-        @PathVariable int hospitalId,
-        @PathVariable int reviewId,
+        @PathVariable("hospitalId") int hospitalId,
+        @PathVariable("reviewId") int reviewId,
         @RequestBody HospReview hospReview,
         @AuthenticationPrincipal CustomUser customUser
     ) {
@@ -225,8 +236,8 @@ public class HospitalController {
     // 리뷰 삭제
     @DeleteMapping("/{hospitalId}/reviews/{reviewId}")
     public ResponseEntity<String> deleteReview(
-        @PathVariable int hospitalId,
-        @PathVariable int reviewId,
+        @PathVariable("hospitalId") int hospitalId,
+        @PathVariable("reviewId") int reviewId,
         @AuthenticationPrincipal CustomUser customUser
     ) {
         log.info("HospitalController - deleteReview() 진입. hospitalId: {}, reviewId: {}", hospitalId, reviewId);

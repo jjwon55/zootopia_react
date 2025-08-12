@@ -17,6 +17,13 @@ export default defineConfig({
         changeOrigin: true,               // 요청헤더의 Host 도 변경
         secure: false,                    // https 지원 여부
         rewrite: (path) => path.replace(/^\/api/, '')
+      },
+      // 이미지 업로드 경로 프록시 추가
+      '/upload': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/upload/, '/upload'), // /upload 경로를 유지
       }
     }
   }
