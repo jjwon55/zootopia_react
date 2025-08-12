@@ -3,7 +3,7 @@ const API_BASE_URL = 'http://localhost:8080';
 // 제품 목 데이터베이스를 사용해 이미지/가격/카테고리를 동기화
 import { mockProductsDatabase } from '../../utils/products/mockDatabase.js';
 
-// 로컬 스토리지 유틸리티
+// 로컬 스토리지 유틸리티 (userId에 따라 동적 키)
 const cartKey = (userId) => `cart:user:${userId}`;
 const readLocalCart = (userId) => {
   try {

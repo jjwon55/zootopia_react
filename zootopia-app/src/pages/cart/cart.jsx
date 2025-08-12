@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLoginContext } from '../../context/LoginContextProvider';
 import { 
   fetchCartItems, 
   updateCartItem, 
@@ -10,6 +11,8 @@ import './Cart.css';
 
 
 export default function Cart() {
+  const { userInfo } = useLoginContext();
+  const userId = userInfo?.userId || 1;
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -21,7 +24,7 @@ export default function Cart() {
   const loadCartItems = async () => {
     setLoading(true);
     try {
-      const response = await fetchCartItems(1); // 임시로 userId 1 사용
+      const response = await fetchCartItems(userId);
       if (response.success) {
         setCartItems(response.cartItems || []);
       } else {
@@ -90,7 +93,7 @@ export default function Cart() {
 
     setUpdating(true);
     try {
-      const response = await clearCart(1);
+  const response = await clearCart(userId);
       if (response.success || true) { // Mock으로 항상 성공 처리
         setCartItems([]);
       }
