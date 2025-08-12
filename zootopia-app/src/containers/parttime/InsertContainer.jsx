@@ -33,7 +33,7 @@ const InsertContainer = () => {
         userId: userInfo.userId // 백엔드에서 보안을 위해 다시 확인하지만, 명시적으로 전달 가능
       }
 
-      await parttimeApi.registerJob(jobData)
+      await parttimeApi.insertJob(jobData)
       navigate('/parttime/list')
     } catch (error) {
       console.error('등록 실패:', error)

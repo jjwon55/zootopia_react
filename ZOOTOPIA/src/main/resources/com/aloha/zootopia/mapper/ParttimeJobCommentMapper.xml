@@ -43,4 +43,19 @@
   <select id="getCommentById" resultType="com.aloha.zootopia.domain.ParttimeJobComment">
     SELECT * FROM parttime_job_comment WHERE comment_id = #{commentId}
   </select>
+
+  <!-- 특정 알바 댓글 페이징 -->
+  <select id="selectByJobIdPaged" resultType="com.aloha.zootopia.domain.ParttimeJobComment">
+    SELECT *
+    FROM parttime_job_comment
+    WHERE job_id = #{jobId}
+    ORDER BY created_at DESC
+    LIMIT #{size} OFFSET #{offset}
+  </select>
+
+  <select id="countByJobId" resultType="int">
+    SELECT COUNT(*)
+    FROM parttime_job_comment
+    WHERE job_id = #{jobId}
+  </select>
 </mapper>

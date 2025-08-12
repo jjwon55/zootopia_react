@@ -49,8 +49,18 @@ public class ParttimeJobCommentServiceImpl implements ParttimeJobCommentService 
 
     
     @Override
+    public int countByJobId(Long jobId) {
+        return commentMapper.countByJobId(jobId);
+    }
+    
+    @Override
     public ParttimeJobComment getCommentById(int commentId) {
         return commentMapper.getCommentById(commentId);
+    }
+
+    @Override
+    public List<ParttimeJobComment> getCommentsByJobIdPaged(Long jobId, int offset, int size) {
+        return commentMapper.selectByJobIdPaged(jobId, offset, size);
     }
 
 }
