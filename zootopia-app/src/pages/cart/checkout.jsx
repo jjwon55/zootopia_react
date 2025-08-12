@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { KakaoPay } from '../../apis/payments/kakao';
+import { useLoginContext } from '../../context/LoginContextProvider';
 import fallbackImg from '../../assets/react.svg';
 
 export default function Checkout() {
+  const { userInfo } = useLoginContext();
+  const userId = userInfo?.userId || 1;
   const [orderItems, setOrderItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [shippingInfo, setShippingInfo] = useState({
@@ -44,9 +48,9 @@ export default function Checkout() {
       }
     } catch {}
 
-    // 2) 장바구니(localStorage)에서 불러오기 (userId=1 고정)
+    // 2) 장바구니(localStorage)에서 불러오기 (로그인 사용자 기반 키)
     try {
-      const raw = localStorage.getItem('cart:user:1');
+      const raw = localStorage.getItem(`cart:user:${userId}`);
       const cart = raw ? JSON.parse(raw) : [];
       const items = cart.map((it) => ({
         id: it.productId || it.id,
@@ -133,18 +137,38 @@ export default function Checkout() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     // 양식 제출/버튼 클릭 모두 대응
     if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
     }
-    // 결제 처리 로직 (모의)
-  alert('주문이 완료되었습니다!');
-    try {
-      localStorage.removeItem('tempOrder');
-    } catch {}
-    // 결제 완료 후 상품 리스트로 이동
-    window.location.href = '/products/listp';
+
+    if (!canPay) {
+      alert('필수 약관 동의와 주문 정보 확인 후 결제할 수 있습니다.');
+      return;
+    }
+
+    if (paymentMethod === 'kakao') {
+      // 카카오페이 플로우 (데모 모드에서 실제 결제 없음)
+      const amount = getTotalPrice();
+      const orderId = 'ORDER_' + Date.now();
+      const orderName = orderItems.map((i) => i.name).slice(0, 1).join(', ');
+      try {
+        const readyRes = await KakaoPay.ready({ amount, orderId, orderName, items: orderItems });
+        sessionStorage.setItem('kakao:tid', readyRes.tid);
+        sessionStorage.setItem('kakao:orderId', orderId);
+  sessionStorage.setItem('kakao:returnUrl', window.location.origin + '/kakao-pay-mock');
+  sessionStorage.setItem('kakao:userId', String(userId));
+        window.location.href = readyRes.next_redirect_pc_url; // 데모: 내부 모의 결제 페이지로 이동
+      } catch (err) {
+        console.error(err);
+        alert('결제 준비 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      }
+      return;
+    }
+
+    // 그 외 결제수단은 데모 알림만 표시
+    alert('카카오페이로 결제 되었습니다.');
   };
 
   return (

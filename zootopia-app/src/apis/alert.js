@@ -28,3 +28,17 @@ export const confirm = (title, text, icon, callback) => {
   .then( callback )
   
 }
+
+// toast
+export const toast = (title, text = '', icon = 'success', timer = 2500, position = 'top-end') => {
+  return MySwal.fire({
+    title,
+    text,
+    icon,
+    toast: true,
+    position,
+    showConfirmButton: false,
+    timer,
+    timerProgressBar: true
+  });
+}
