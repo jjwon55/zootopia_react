@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchProductDetail } from '../../apis/products';
+// 상세도 55개 Mock DB를 사용하는 API 모듈을 명시적으로 사용
+import { fetchProductDetail } from '../../apis/products/index.js';
 
 import { addToCart } from '../../apis/products/cart';
 import './ProductDetail.css';
@@ -322,7 +323,7 @@ export default function ProductDetail() {
       </div>
       
       {/* 스피너 애니메이션 CSS */}
-      <style jsx>{`
+  <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }

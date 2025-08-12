@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fetchPurchasedProducts } from '../../apis/order';
+import fallbackImg from '../../assets/react.svg';
 
 export default function PurchasedProductList() {
   const [products, setProducts] = useState([]);
@@ -25,10 +26,10 @@ export default function PurchasedProductList() {
         {products.map((product) => (
           <li key={product.id} className="flex items-center bg-white rounded shadow p-4">
             <img
-              src={product.image}
+              src={product.image || product.imageUrl || fallbackImg}
               alt={product.name}
               className="w-20 h-20 object-cover rounded mr-4 border"
-              onError={e => { e.target.src = 'https://via.placeholder.com/80'; }}
+              onError={e => { e.currentTarget.src = fallbackImg; }}
             />
             <div className="flex-1">
               <div className="font-semibold text-lg">{product.name}</div>
