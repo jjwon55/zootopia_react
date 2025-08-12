@@ -23,4 +23,9 @@ public interface ParttimeJobCommentMapper {
     void deleteComment(@Param("commentId") int commentId);
 
     ParttimeJobComment getCommentById(@Param("commentId") int commentId);
+
+    List<ParttimeJobComment> selectByJobIdPaged(@Param("jobId") Long jobId,
+                                                @Param("offset") int offset,
+                                                @Param("size") int size);
+    int countByJobId(@Param("jobId") Long jobId);
 }

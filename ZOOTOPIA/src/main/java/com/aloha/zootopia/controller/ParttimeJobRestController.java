@@ -28,7 +28,7 @@ import com.aloha.zootopia.service.ParttimeJobService;
 import com.aloha.zootopia.service.UserService;
 
 @RestController
-@RequestMapping("/api/parttime/jobs")
+@RequestMapping("/parttime")
 public class ParttimeJobRestController {
 
     @Autowired private ParttimeJobService jobService;
@@ -53,14 +53,15 @@ public class ParttimeJobRestController {
     // 목록 + 필터 + 페이지
     @GetMapping
     public ResponseEntity<?> list(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(required = false) String location,
-            @RequestParam(required = false) String animalType,
-            @RequestParam(required = false) String payRange,
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) String keyword
+        @RequestParam(name = "page", defaultValue = "1") int page,
+        @RequestParam(name = "location", required = false) String location,
+        @RequestParam(name = "animalType", required = false) String animalType,
+        @RequestParam(name = "payRange", required = false) String payRange,
+        @RequestParam(name = "startDate", required = false) String startDate,
+        @RequestParam(name = "endDate", required = false) String endDate,
+        @RequestParam(name = "keyword", required = false) String keyword
     ) {
+        page = Math.max(1, page);
         int pageSize = 8;
         int offset = (page - 1) * pageSize;
 
@@ -101,7 +102,7 @@ public class ParttimeJobRestController {
     // 단건 조회 (상세)
     @GetMapping("/{jobId}")
     public ResponseEntity<?> read(
-            @PathVariable Long jobId,
+            @PathVariable("jobId") Long jobId,
             @RequestParam(name = "applicantPage", defaultValue = "1") int applicantPage,
             Authentication auth
     ) {

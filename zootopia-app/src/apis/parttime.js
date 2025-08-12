@@ -1,30 +1,37 @@
-import api from './api' // axios 인스턴스 (baseURL, interceptor 설정된 파일)
+import api from './api'
 
-/** 1. 아르바이트 전체 목록 조회 (필터링 포함) */
+// 목록
 export const getJobs = (params) => api.get('/parttime', { params })
 
-/** 2. 아르바이트 등록 */
+// 등록
 export const insertJob = (jobData) => api.post('/parttime', jobData)
 
-/** 3. 아르바이트 상세 조회 */
+// 상세 (✅ ReadContainer가 기대하는 이름)
+export const getJobDetail = (jobId, applicantPage = 1) =>
+  api.get(`/parttime/${jobId}`, { params: { applicantPage } })
+     .then(r => r.data)   // ReadContainer는 .data가 벗겨진 형태를 기대
+
+// 기존 함수도 유지하고 싶으면 그대로 두세요
 export const getJobById = (jobId) => api.get(`/parttime/${jobId}`)
 
-/** 4. 아르바이트 수정 */
+// 수정/삭제
 export const updateJob = (jobId, jobData) => api.put(`/parttime/${jobId}`, jobData)
-
-/** 5. 아르바이트 삭제 */
 export const deleteJob = (jobId) => api.delete(`/parttime/${jobId}`)
 
-/** 6. 아르바이트 지원 신청 */
-export const applyToJob = (applyData) => api.post('/parttime/apply', applyData)
-// 예: { jobId, introduction, email, phone }
+// 지원하기 (ReadContainer는 { jobId, introduction } 바디를 보냄)
+export const applyToJob = ({ jobId, introduction, email, phone }) =>
+  api.post('/parttime/apply', { jobId, introduction, email, phone })
+    .then(r => r.data)
 
-/** 7. 특정 아르바이트의 지원자 전체 조회 */
-export const getApplicantsByJob = (jobId) => api.get(`/parttime/${jobId}/applicants`)
+// 지원자 조회(필요시 페이징 파라미터 추가)
+export const getApplicantsByJob = (jobId, page = 1) =>
+  api.get(`/parttime/${jobId}/applicants`, { params: { page } })
+    .then(r => r.data)
 
-/** 8. 특정 지원 신청 취소 */
-export const deleteApplication = (applicantId, jobId) =>
+// 취소 (✅ ReadContainer의 cancelApplication과 이름 맞추기)
+export const cancelApplication = (applicantId, jobId) =>
   api.delete(`/parttime/${jobId}/applicants/${applicantId}`)
+    .then(r => r.data)
 
-/** 9. 로그인 사용자 정보 조회 */
-export const getLoginUser = () => api.get('/auth/me')  // 또는 /users/me
+// 로그인 사용자
+export const getLoginUser = () => api.get('/auth/me')
