@@ -1,115 +1,216 @@
 import React, { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
-import './Header.css';
 import { LoginContext } from '../../context/LoginContextProvider';
 
 const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const { logout, isLogin, userInfo } = useContext(LoginContext); // ✅ context에서 직접 가져오기
-
-  const toggleUserMenu = () => setIsUserMenuOpen(!isUserMenuOpen);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { logout, isLogin, userInfo } = useContext(LoginContext);
 
   const nickname = userInfo?.nickname;
-  const profileImage = userInfo?.profileImg || '/assets/img/default-profile.png'; // ✅ 기본 이미지
+  const profileImage = userInfo?.profileImg || '/assets/img/default-profile.png';
 
   return (
-    <nav className="zootopia-header-wrapper navbar navbar-expand-lg navbar-light bg-white border-bottom">
-      <div className="header-container container-fluid px-4 d-flex justify-content-end" style={{ height: '100px', padding: '10px 0' }}>
-        
+    <nav className="tw:bg-white tw:border-b tw:sticky tw:top-0 tw:z-[1000]">
+      {/* 컨테이너 */}
+      <div className="tw:container tw:mx-auto tw:px-4 tw:h-[100px] tw:flex tw:items-center tw:gap-4">
         {/* 모바일 토글 버튼 */}
-        <button className="navbar-toggler d-lg-none ms-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
-          <span className="navbar-toggler-icon"></span>
+        <button
+          className="tw:ml-auto tw:lg:hidden tw:inline-flex tw:items-center tw:justify-center tw:w-10 tw:h-10 tw:rounded-md tw:border tw:border-gray-200"
+          onClick={() => setIsMobileOpen(true)}
+          aria-label="Open menu"
+        >
+          <span className="tw:block tw:w-5 tw:h-[2px] tw:bg-gray-700 tw:relative before:tw:absolute before:tw:-top-2 before:tw:left-0 before:tw:w-5 before:tw:h-[2px] before:tw:bg-gray-700 after:tw:absolute after:tw:top-2 after:tw:left-0 after:tw:w-5 after:tw:h-[2px] after:tw:bg-gray-700"></span>
         </button>
 
         {/* 로고 */}
-        <Link className="navbar-brand" to="/" style={{ textDecoration: 'none' }}>
-          <div className="header-logo-container">
-            <img src="/assets/dist/img/zootopialogo.png" alt="Zootopia Logo" />
+        <Link to="/" className="tw:flex tw:items-center tw:no-underline">
+          <div className="tw:w-[200px] tw:h-[100px] tw:flex tw:items-center">
+            <img
+              src="/assets/dist/img/zootopialogo.png"
+              alt="Zootopia Logo"
+              className="tw:w-[200px] tw:h-[50px] tw:object-contain"
+            />
           </div>
         </Link>
 
-        {/* 메인 메뉴 */}
-        <div className="main-menu-container">
-          <ul className="main-menu navbar-nav mx-auto d-none d-lg-flex">
-            <div id="horizontal-underline"></div>
-            <li><Link className="nav-link" to="/">홈</Link></li>
-            <li><Link className="nav-link" to="/products/listp">스토어</Link></li>
-            <li><Link className="nav-link" to="/map/map">내 주변 찾기</Link></li>
-            <li><Link className="nav-link" to="/insurance/list">서비스</Link></li>
-            <li><Link className="nav-link" to="/posts/list">커뮤니티</Link></li>
+        {/* 메인 메뉴 (데스크톱) */}
+        <div className="tw:flex-1 tw:hidden tw:lg:flex tw:justify-center">
+          <ul className="tw:flex tw:items-center tw:gap-6 xl:tw:gap-8">
+            {[
+              { to: '/', label: '홈' },
+              { to: '/products/listp', label: '스토어' },
+              { to: '/map/map', label: '내 주변 찾기' },
+              { to: '/insurance/list', label: '서비스' },
+              { to: '/posts', label: '커뮤니티' },
+            ].map((item) => (
+              <li key={item.to}>
+                <Link
+                  to={item.to}
+                  className="tw:text-[18px] tw:text-gray-700 tw:hover:text-[#ff6b6b] tw:no-underline tw:px-2 tw:py-1 tw:rounded-md tw:hover:bg-[#ff6b6b1a] tw:transition"
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
 
-        {/* 로그인/회원가입 또는 사용자 메뉴 */}
-        <div className="d-none d-lg-flex align-items-center" style={{ position: 'relative', zIndex: 1000 }}>
+        {/* 로그인/회원가입 또는 사용자 메뉴 (데스크톱) */}
+        <div className="tw:hidden tw:lg:flex tw:items-center tw:gap-3 tw:relative">
           {!isLogin ? (
-            <div className="header-login-btn-container d-flex align-items-center">
-              <Link to="/login" className="header-login-btn btn me-2 btn-signup">로그인</Link>
-              <Link to="/join" className="header-signup-btn btn btn-outline-danger">회원가입</Link>
+            <div className="tw:flex tw:items-center tw:gap-2">
+              <Link
+                to="/login"
+                className="tw:inline-block tw:bg-[#F27A7A] tw:border tw:border-[#F27A7A] tw:text-white tw:px-4 tw:py-2 tw:rounded tw:text-[0.9rem] tw:no-underline tw:hover:brightness-95 tw:transition"
+              >
+                로그인
+              </Link>
+              <Link
+                to="/join"
+                className="tw:inline-block tw:bg-transparent tw:border tw:border-[#F27A7A] tw:text-[#F27A7A] tw:px-4 tw:py-2 tw:rounded tw:text-[0.9rem] tw:no-underline tw:hover:bg-[#F27A7A] tw:hover:text-white tw:transition"
+              >
+                회원가입
+              </Link>
             </div>
           ) : (
-            <div className="d-flex gap-2 align-items-center">
+            <div className="tw:flex tw:items-center tw:gap-2">
               {/* 유저 드롭다운 */}
-              <div className="user-menu">
+              <div className="tw:relative">
                 <img
                   src={profileImage}
-                  className="user-pic"
                   alt="프로필"
-                  onClick={toggleUserMenu}
+                  className="tw:w-10 tw:h-10 tw:rounded-full tw:cursor-pointer"
+                  onClick={() => setIsUserMenuOpen((v) => !v)}
                 />
                 {isUserMenuOpen && (
-                  <div className="user-sub-menu-wrap" id="userSubMenu">
-                    <div className="user-sub-menu">
-                      <div className="user-info">
-                        <img src={profileImage} alt="프로필" />
-                        <h5>{nickname}</h5>
-                      </div>
-                      <hr />
-                      <Link to="/mypage/mypage" className="user-sub-menu-link">
-                        <img src={profileImage} alt="프로필" />
-                        <p>마이 페이지</p>
-                      </Link>
-                      <button onClick={logout} className="user-sub-menu-logout">
-                        <img src="/assets/dist/img/logout.png" alt="" />
-                        <p>로그아웃</p>
-                      </button>
+                  <div className="tw:absolute tw:top-[calc(100%+10px)] tw:-left-8 tw:w-80 tw:shadow-[0_8px_16px_-4px_rgba(255,107,107,0.28)] tw:bg-[#fdfdfd] tw:rounded-md tw:p-5">
+                    <div className="tw:flex tw:items-center tw:gap-4">
+                      <img
+                        src={profileImage}
+                        alt="프로필"
+                        className="tw:w-14 tw:h-14 tw:rounded-full"
+                      />
+                      <h5 className="tw:m-0 tw:text-[16px] tw:font-medium">{nickname}</h5>
                     </div>
+                    <hr className="tw:my-4 tw:border-t tw:border-[#ccc]" />
+                    <Link
+                      to="/mypage/mypage"
+                      className="tw:flex tw:items-center tw:gap-4 tw:no-underline tw:text-black tw:py-2 tw:hover:font-semibold"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <img
+                        src={profileImage}
+                        alt="프로필"
+                        className="tw:w-10 tw:h-10 tw:rounded-full tw:bg-[#e5e5e5] tw:p-2"
+                      />
+                      <p className="tw:m-0">마이 페이지</p>
+                    </Link>
+                    <button
+                      onClick={logout}
+                      className="tw:flex tw:items-center tw:gap-4 tw:w-full tw:text-left tw:py-2 tw:hover:font-semibold"
+                    >
+                      <img
+                        src="/assets/dist/img/logout.png"
+                        alt=""
+                        className="tw:w-10 tw:h-10 tw:rounded-full tw:bg-[#e5e5e5] tw:p-2"
+                      />
+                      <p className="tw:m-0">로그아웃</p>
+                    </button>
                   </div>
                 )}
               </div>
-              <span className="text-muted me-3" style={{ fontSize: '0.9rem' }}>환영합니다, {nickname}님</span>
-              <button onClick={logout} className="btn btn-sm btn-danger">로그아웃</button>
+              <span className="tw:text-gray-500 tw:text-[0.9rem]">환영합니다, {nickname}님</span>
+              <button
+                onClick={logout}
+                className="tw:bg-[#ff6b6b] tw:hover:bg-[#ff5252] tw:text-white tw:text-sm tw:px-3 tw:py-1.5 tw:rounded"
+              >
+                로그아웃
+              </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* 오프캔버스 메뉴 (모바일 전용) */}
-      <div className="offcanvas offcanvas-end d-lg-none" tabIndex="-1" id="offcanvasNavbar">
-        <div className="offcanvas-header">
-          <h5 className="offcanvas-title" id="offcanvasNavbarLabel">메뉴</h5>
-          <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div className="offcanvas-body">
-          <ul className="navbar-nav justify-content-end flex-grow-1 pe-3">
-            <li><Link className="nav-link" to="/">홈</Link></li>
-            <li><Link className="nav-link" to="/products/listp">스토어</Link></li>
-            <li><Link className="nav-link" to="/map/map">내 주변 찾기</Link></li>
-            <li><Link className="nav-link" to="/insurance/list">서비스</Link></li>
-            <li><Link className="nav-link" to="/posts/list">커뮤니티</Link></li>
-          </ul>
-          {!isLogin ? (
-            <div className="d-flex flex-column gap-2 mt-3">
-              <Link to="/login" className="btn btn-outline-primary btn-sm">로그인</Link>
-              <Link to="/join" className="btn btn-primary btn-sm">회원가입</Link>
-            </div>
-          ) : (
-            <div className="d-flex flex-column gap-2 mt-3">
-              <span className="text-muted small">환영합니다, {nickname}님</span>
-              <button onClick={logout} className="btn btn-outline-danger btn-sm w-100">로그아웃</button>
-            </div>
-          )}
-        </div>
+      {/* 오프캔버스 메뉴 (모바일) */}
+      <div
+        className={`tw:fixed tw:inset-0 tw:z-[1100] ${isMobileOpen ? 'tw:pointer-events-auto' : 'tw:pointer-events-none'}`}
+        aria-hidden={!isMobileOpen}
+      >
+        {/* 배경 */}
+        <div
+          className={`tw:absolute tw:inset-0 tw:bg-black/40 tw:transition-opacity ${isMobileOpen ? 'tw:opacity-100' : 'tw:opacity-0'}`}
+          onClick={() => setIsMobileOpen(false)}
+        />
+        {/* 패널 */}
+        <aside
+          className={`tw:absolute tw:right-0 tw:top-0 tw:h-full tw:w-80 tw:bg-white tw:shadow-xl tw:transition-transform ${isMobileOpen ? 'tw:translate-x-0' : 'tw:translate-x-full'}`}
+        >
+          <div className="tw:flex tw:items-center tw:justify-between tw:px-4 tw:h-14 tw:border-b">
+            <h5 className="tw:text-base tw:font-semibold">메뉴</h5>
+            <button
+              onClick={() => setIsMobileOpen(false)}
+              className="tw:w-9 tw:h-9 tw:inline-flex tw:items-center tw:justify-center tw:rounded-md tw:border tw:border-gray-200"
+              aria-label="Close menu"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="tw:p-4">
+            <ul className="tw:flex tw:flex-col tw:gap-1">
+              {[
+                { to: '/', label: '홈' },
+                { to: '/products/listp', label: '스토어' },
+                { to: '/map/map', label: '내 주변 찾기' },
+                { to: '/insurance/list', label: '서비스' },
+                { to: '/posts/list', label: '커뮤니티' },
+              ].map((item) => (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    onClick={() => setIsMobileOpen(false)}
+                    className="tw:block tw:px-3 tw:py-3 tw:text-gray-700 tw:hover:bg-gray-50 tw:rounded tw:no-underline"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            {!isLogin ? (
+              <div className="tw:flex tw:flex-col tw:gap-2 tw:mt-4">
+                <Link
+                  to="/login"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="tw:border tw:border-blue-500 tw:text-blue-600 tw:text-sm tw:px-3 tw:py-2 tw:rounded tw:text-center tw:no-underline"
+                >
+                  로그인
+                </Link>
+                <Link
+                  to="/join"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="tw:bg-blue-600 tw:text-white tw:text-sm tw:px-3 tw:py-2 tw:rounded tw:text-center tw:no-underline"
+                >
+                  회원가입
+                </Link>
+              </div>
+            ) : (
+              <div className="tw:flex tw:flex-col tw:gap-2 tw:mt-4">
+                <span className="tw:text-gray-500 tw:text-sm">환영합니다, {nickname}님</span>
+                <button
+                  onClick={() => {
+                    setIsMobileOpen(false);
+                    logout();
+                  }}
+                  className="tw:border tw:border-red-500 tw:text-red-600 tw:text-sm tw:px-3 tw:py-2 tw:rounded"
+                >
+                  로그아웃
+                </button>
+              </div>
+            )}
+          </div>
+        </aside>
       </div>
     </nav>
   );
