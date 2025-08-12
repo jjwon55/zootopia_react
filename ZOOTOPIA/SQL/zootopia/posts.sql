@@ -111,6 +111,12 @@ CREATE TABLE user_pets (
 
 
 
+ALTER TABLE post_likes ADD CONSTRAINT uk_post_user UNIQUE (post_id, user_id);
+
+CREATE UNIQUE INDEX uq_post_likes_post_user ON post_likes(post_id, user_id);
 
 
-
+ALTER TABLE posts 
+  MODIFY like_count   INT NOT NULL DEFAULT 0,
+  MODIFY view_count   INT NOT NULL DEFAULT 0,
+  MODIFY comment_count INT NOT NULL DEFAULT 0;

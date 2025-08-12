@@ -15,6 +15,22 @@ export default {
       animation: {
         'bounce-twice': 'bounceTwice 1s ease-in-out infinite',
       }
+      keyframes: {
+        likePop: {
+          '0%': { transform: 'scale(1)' },
+          '30%': { transform: 'scale(1.3)' },
+          '60%': { transform: 'scale(0.9)' },
+          '100%': { transform: 'scale(1)' },
+        },
+        burst: {
+          '0%': { opacity: '1', transform: 'scale(0.5)' },
+          '100%': { opacity: '0', transform: 'scale(2)' },
+        },
+      },
+      animation: {
+        likePop: 'likePop 0.4s ease-out',
+        burst: 'burst 0.5s ease-out',
+      },
     },
   },
   plugins: [daisyui],
@@ -22,3 +38,4 @@ export default {
     preflight: true, // 강제로 다시 활성화
   },
 }
+

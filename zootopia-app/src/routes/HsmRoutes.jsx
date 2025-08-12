@@ -25,7 +25,7 @@ export default function HsmRoutes() {
       <Route path="/checkout" element={<Checkout />} />
 
       {/* 라우팅되지 않는 경로 */}
-      <Route path="*" element={<NotFound />} />
+      {/* <Route path="*" element={<NotFound />} /> */}
     </Routes>
   );
 }

@@ -27,49 +27,96 @@ const ListContainer = () => {
 
   useEffect(() => {
     fetchJobs()
+  }, [page, location, animalType, payRange, startDate, endDate, keyword])
+
+  useEffect(() => {
     fetchComments()
-  }, [searchParams])
+  }, [commentPage])
 
   const fetchJobs = async () => {
-    const res = await parttimeApi.getJobs({
-      page,
-      location,
-      animalType,
-      payRange,
-      startDate,
-      endDate,
-      keyword
-    })
-    setJobs(res.jobs)
-    setTotalPages(res.totalPages)
+    const params = {
+      page: page - 1,         // (현재 백엔드 로그 보니 0 → OFFSET 0 OK, 유지)
+      location: location || undefined,
+      animalType: animalType || undefined,
+      payRange: payRange || undefined,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
+      keyword: keyword || undefined,
+    }
+
+    try {
+      const res = await parttimeApi.getJobs(params)
+      const data = res.data ?? res // (혹시 헬퍼로 data만 리턴한다면 대비)
+
+      const list  = data?.jobs ?? []
+      const pages = Number(data?.totalPages ?? 1)
+
+      console.log('✅ jobs api data:', data)   // 디버깅용
+      setJobs(list)
+      setTotalPages(Math.max(1, pages))
+    } catch (e) {
+      console.error('알바 목록 불러오기 실패:', e)
+      setJobs([])
+      setTotalPages(1)
+    }
   }
 
   const fetchComments = async () => {
     const response = await commentApi.getAllCommentsPaged(commentPage, 6)
-    const { comments, totalPages, totalCount } = response.data
+    const { comments, totalPages, totalComments } = response.data
     setComments(comments)
     setTotalCommentPages(totalPages)
-    setTotalComments(totalCount)
+    setTotalComments(totalComments)
   }
 
-  const handlePageChange = (newPage) => {
-    searchParams.set('page', newPage)
-    setSearchParams(searchParams)
+  const handlePageChange = (nextPage) => {
+  const next = Math.max(1, Number(nextPage))
+  const qp = new URLSearchParams(searchParams)
+    qp.set('page', String(next))
+    setSearchParams(qp)  // 새 인스턴스로 갱신
   }
 
   const handleCommentPageChange = (newPage) => {
-    searchParams.set('commentPage', newPage)
-    setSearchParams(searchParams)
+    const next = new URLSearchParams(searchParams)
+    next.set('commentPage', newPage)
+    setSearchParams(next)
   }
 
-  const handleFilterChange = (key, value) => {
-    if (value) {
-      searchParams.set(key, value)
-    } else {
-      searchParams.delete(key)
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target
+    const next = new URLSearchParams(searchParams) // 새 객체로 복사
+
+    if (value) next.set(name, value)
+    else next.delete(name)
+
+    next.set('page', 1) // 필터 바뀌면 1페이지
+    setSearchParams(next)
+  }
+
+  const handleCommentSubmit = async ({ writer, content }) => {
+    try {
+      await commentApi.createComment({
+        writer,
+        content,
+        // 필요하면 특정 알바 댓글일 때만:
+        // jobId: 현재 화면의 jobId 또는 null
+      })
+      await fetchComments()   // 저장 후 최신 목록 갱신
+    } catch (e) {
+      console.error('댓글 등록 실패:', e)
+      alert('댓글 등록에 실패했습니다.')
     }
-    searchParams.set('page', 1) // 필터 바뀌면 1페이지로
-    setSearchParams(searchParams)
+  }
+
+  const handleCommentDelete = async (commentId) => {
+   if (!window.confirm('댓글을 삭제하시겠습니까?')) return
+   try {
+     await commentApi.deleteComment(commentId)   // axios.delete('/parttime/comments/{id}')
+     await fetchComments()                       // 목록 새로고침
+   } catch (e) {
+     console.error('댓글 삭제 실패:', e)
+     alert(e?.response?.data?.message || '삭제에 실패했습니다.')
+   }
   }
 
   return (
@@ -92,7 +139,8 @@ const ListContainer = () => {
     onPageChange={handlePageChange}
     onCommentPageChange={handleCommentPageChange}  
     onFilterChange={handleFilterChange}
-    onCommentSubmit={fetchComments}
+    onCommentSubmit={handleCommentSubmit}
+    onCommentDelete={handleCommentDelete} 
   />
   )
 }

@@ -20,12 +20,12 @@ const LytRoutes = () => {
         {/* 아르바이트 경로 */}
         <Route path="/parttime/list" element={<List />} />
         <Route path="/parttime/insert" element={<Insert />} />
-        <Route path="/parttime/read/:id" element={<Read />} />
-        <Route path="/parttime/update/:id" element={<Update />} />
+        <Route path="/parttime/read/:jobId" element={<Read />} />
+        <Route path="/parttime/update/:jobId" element={<Update />} />
         <Route path="/insurance/list" element={<InsuranceList />} />
         <Route path="/insurance/create" element={<InsuranceInsert />} />
-        <Route path="/insurance/read/:id" element={<InsuranceRead />} />
-        <Route path="/insurance/update/:id" element={<InsuranceUpdate />} />
+        <Route path="/insurance/read/:jobId" element={<InsuranceRead />} />
+        <Route path="/insurance/update/:jobId" element={<InsuranceUpdate />} />
       </Routes>
     </>
   )

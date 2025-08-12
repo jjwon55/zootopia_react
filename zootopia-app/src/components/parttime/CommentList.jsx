@@ -7,6 +7,7 @@ const CommentList = ({
   totalCommentPages,
   currentPage,
   onPageChange,
+  onDelete, 
 }) => {
   const handleCommentPageChange = (page) => {
     onPageChange(currentPage, page) // 게시글 페이지 유지, 댓글 페이지만 변경
@@ -33,9 +34,7 @@ const CommentList = ({
                   <button
                     type="submit"
                     className="border border-[#F27A7A] text-[#F27A7A] rounded px-3 py-1 text-xs hover:bg-[#f9d2d2] transition"
-                    onClick={(e) => {
-                      if (!window.confirm('댓글을 삭제하시겠습니까?')) e.preventDefault()
-                    }}
+                    onClick={() => onDelete?.(comment.commentId)}
                   >
                     삭제
                   </button>

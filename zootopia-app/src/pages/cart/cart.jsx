@@ -24,49 +24,14 @@ export default function Cart() {
       const response = await fetchCartItems(1); // 임시로 userId 1 사용
       if (response.success) {
         setCartItems(response.cartItems || []);
-
       } else {
-        // Mock 데이터 사용 (개발용)
-        setCartItems([
-          {
-            id: 1,
-            productName: '고양이 사료 - 생선 맛 사료',
-            price: 32000,
-            quantity: 1,
-            imageUrl: '/src/assets/img/products/foodcatfishtaste.png',
-            category: '사료'
-          },
-          {
-            id: 2,
-            productName: '개&고양이 습식 사료',
-            price: 48000,
-            quantity: 1,
-            imageUrl: '/src/assets/img/products/fooddogcatmoistured.png',
-            category: '사료'
-          }
-        ]);
+        // 실패 시 더미 데이터 주입 대신 비워서 사용자 혼란 방지
+        setCartItems([]);
       }
     } catch (error) {
       console.error('Failed to load cart items:', error);
-      // Mock 데이터 사용 (개발용)
-      setCartItems([
-        {
-          id: 1,
-          productName: '고양이 사료 - 생선 맛 사료',
-          price: 32000,
-          quantity: 1,
-          imageUrl: '/src/assets/img/products/foodcatfishtaste.png',
-          category: '사료'
-        },
-        {
-          id: 2,
-          productName: '개&고양이 습식 사료',
-          price: 48000,
-          quantity: 1,
-          imageUrl: '/src/assets/img/products/fooddogcatmoistured.png',
-          category: '사료'
-        }
-      ]);
+  // 실패 시 더미 데이터 주입 대신 비워서 사용자 혼란 방지
+  setCartItems([]);
 
     } finally {
       setLoading(false);
@@ -246,7 +211,7 @@ export default function Cart() {
                 </div>
               ))}
               <div className="continue-shopping">
-                <button onClick={() => window.history.back()} className="back-btn">
+                <button onClick={() => window.location.href = '/products/listp'} className="back-btn">
                   ← 쇼핑 계속하기
                 </button>
 

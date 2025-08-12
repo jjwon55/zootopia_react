@@ -26,7 +26,7 @@
 }
 
 .breadcrumb a:hover {
-  color: #ec4899;
+  color: #ff9999;
 }
 
 .breadcrumb-separator {
@@ -51,7 +51,8 @@
 
 /* 상품 이미지 섹션 */
 .product-image-section {
-  background: #4a4a3a;
+  /* 제품 사진 배경색 변경 */
+  background: #ff9999;
   position: relative;
   display: flex;
   align-items: center;
@@ -268,8 +269,16 @@
   gap: 12px;
 }
 
+.product-actions .btn-cart,
+.product-actions .btn-buy {
+  /* 두 버튼 폭을 항상 동일하게 */
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .btn-cart {
-  background: linear-gradient(135deg, #ff6b9d, #f093a0);
+  /* 장바구니 버튼 색상 통일 */
+  background: #ff9999;
   color: white;
   border: none;
   padding: 14px 24px;
@@ -288,7 +297,7 @@
 }
 
 .btn-cart:hover {
-  background: linear-gradient(135deg, #ff5a8a, #ff9999);
+  background: #ff8585;
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(255, 107, 157, 0.4);
 }
