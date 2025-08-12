@@ -66,9 +66,9 @@ export default function KakaoPayMock() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
       <div className="w-full max-w-md bg-white shadow rounded-lg p-6 text-center">
-        <h1 className="text-xl font-bold mb-2 text-gray-800">카카오페이 데모 결제</h1>
+        <h1 className="text-xl font-bold mb-2 text-gray-800">카카오페이 결제</h1>
         <p className="text-sm text-gray-500 mb-6">
-          실제 결제는 일어나지 않으며, 카카오페이 결제 흐름만 모사합니다.
+          결제 처리 중입니다.
         </p>
 
         {status === 'ready' && (
@@ -85,21 +85,21 @@ export default function KakaoPayMock() {
 
         {status === 'success' && (
           <div className="space-y-2 text-green-600">
-            <div className="text-2xl">결제 성공(데모)</div>
+            <div className="text-2xl">결제 성공</div>
             <div className="text-sm text-gray-500">주문 완료 페이지로 이동합니다...</div>
           </div>
         )}
 
         {status === 'fail' && (
           <div className="space-y-2 text-red-600">
-            <div className="text-2xl">결제 실패/취소(데모)</div>
+            <div className="text-2xl">결제 실패/취소</div>
             <div className="text-sm text-gray-500">잠시 후 결제 페이지로 돌아갑니다...</div>
           </div>
         )}
 
         <div className="mt-6 flex items-center justify-center gap-3">
           <button onClick={onApprove} className="px-4 py-2 rounded bg-yellow-400 hover:bg-yellow-500 text-black font-semibold">
-            결제 승인(모의)
+            결제 승인
           </button>
           <button onClick={onCancel} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold">
             취소
