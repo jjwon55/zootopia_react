@@ -5,11 +5,19 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.aloha.zootopia.domain.CustomUser;
 import com.aloha.zootopia.domain.ParttimeJob;
@@ -18,7 +26,7 @@ import com.aloha.zootopia.service.ParttimeJobApplicantService;
 import com.aloha.zootopia.service.ParttimeJobService;
 
 @RestController
-@RequestMapping("/api/parttime")
+@RequestMapping("/parttime")
 public class ParttimeJobApplicantRestController {
 
     @Autowired private ParttimeJobApplicantService applicantService;
@@ -39,7 +47,7 @@ public class ParttimeJobApplicantRestController {
     }
 
     // 신청
-    @PostMapping("/jobs/{jobId}/applicants")
+    @PostMapping("/{jobId}/applicants")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<?> apply(
             @PathVariable Long jobId,
@@ -62,7 +70,7 @@ public class ParttimeJobApplicantRestController {
     }
 
     // 특정 알바 지원자 목록(작성자/관리자만)
-    @GetMapping("/jobs/{jobId}/applicants")
+    @GetMapping("/{jobId}/applicants")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<?> list(
             @PathVariable Long jobId,

@@ -11,6 +11,7 @@ import com.aloha.zootopia.service.CommentService;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequiredArgsConstructor
@@ -39,7 +40,7 @@ public class CommentController {
 
     // ✅ 댓글 수정
     @PutMapping("/{commentId}")
-    public ResponseEntity<?> updateComment(@PathVariable Integer commentId,
+    public ResponseEntity<?> updateComment(@PathVariable("commentId") Integer commentId,
             @RequestBody Comment comment,
             @AuthenticationPrincipal CustomUser user) throws Exception {
         Comment original = commentService.findById(commentId);
@@ -54,14 +55,24 @@ public class CommentController {
 
     // ✅ 댓글 삭제
     @DeleteMapping("/{commentId}")
-    public ResponseEntity<?> deleteComment(@PathVariable Integer commentId,
+    public ResponseEntity<?> deleteComment(@PathVariable("commentId") Integer commentId,
             @AuthenticationPrincipal CustomUser user) throws Exception {
-        Comment original = commentService.findById(commentId);
-        if (!original.getUserId().equals(user.getUser().getUserId())) {
-            return ResponseEntity.status(403).body("삭제 권한이 없습니다.");
+
+        if (user == null) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
         }
 
+        Comment original = commentService.findById(commentId);
+        if (!Objects.equals(original.getUserId(), user.getUser().getUserId())) {
+            return ResponseEntity.status(403).body("삭제 권한이 없습니다.");
+        }
         commentService.deleteComment(commentId);
+
+        System.out.println("삭제 요청 commentId = " + commentId);
+        System.out.println("원본 댓글 userId = " + original.getUserId());
+        System.out.println("로그인한 userId = " + user.getUser().getUserId());
+
+
         return ResponseEntity.ok().build();
     }
 

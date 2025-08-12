@@ -23,14 +23,8 @@ const List = ({
   onPageChange,
   onCommentPageChange,
   onCommentSubmit,
+  onCommentDelete,
 }) => {
-  // 샘플 카드 (백엔드 연동 전)
-  const sampleJobs = [
-    { jobId: 1, title: '강아지 산책 대행 (1회 30분)', location: '서울 성북구', startDate: '2025-07-01', endDate: '2025-07-03', pay: 10000, nickname: 'happy.dog' },
-    { jobId: 2, title: '앵무새 돌봄 알바 (20분)', location: '경기 안산시', startDate: '2025-07-05', endDate: '2025-07-05', pay: 9000, nickname: 'flying' },
-  ]
-  const displayJobs = jobs.length ? jobs : sampleJobs
-
   return (
     <div className="bg-[#f8f9fa] min-h-screen">
       {/* 헤더 자리 */}
@@ -127,26 +121,33 @@ const List = ({
           </div>
         </form>
 
-        {/* ====== 카드 그리드 ====== */}
+        {/* ====== 카드 영역 (가운데 정렬) ====== */}
         <div className="mx-auto mt-3 mb-3 p-1 rounded shadow-sm max-w-[1000px] bg-white">
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-4 justify-items-center my-10">
-            {displayJobs.map(job => (
-             <div key={job.jobId} className="w-full max-w-[400px] md:max-w-[420px]">
-                <div className="bg-[#f8fbe9] rounded shadow-sm p-4">
-                  <h5 className="!font-bold mb-4 text-base">🐾 {job.title}</h5>
-                  <p className="mb-1">📍 {job.location}</p>
-                  <p className="mb-1">🗓️ {job.startDate} ~ {job.endDate}</p>
-                  <p className="mb-1">💰 {job.pay}원</p>
-                  <p className="mb-1">👤 보호자: {job.nickname}</p>
-                  <div className="flex justify-end gap-2 mt-2">
-                    <a href={`/parttime/read/${job.jobId}`} className="border border-[#F27A7A] text-[#F27A7A] rounded px-3 py-1 text-sm hover:bg-[#f9d2d2]">
-                      상세보기
-                    </a>
+          {jobs.length > 0 ? (
+            <div className="flex flex-wrap justify-center gap-15 my-10">
+              {jobs.map(job => (
+                <div key={job.jobId} className="w-full max-w-[400px] md:max-w-[400px]">
+                  <div className="bg-[#f8fbe9] rounded shadow-sm p-4">
+                    <h5 className="!font-bold mb-4 text-base">🐾 {job.title}</h5>
+                    <p className="mb-1">📍 {job.location}</p>
+                    <p className="mb-1">🗓️ {job.startDate} ~ {job.endDate}</p>
+                    <p className="mb-1">💰 {job.pay}원</p>
+                    <p className="mb-1">👤 보호자: {job.nickname}</p>
+                    <div className="flex justify-end gap-2 mt-2">
+                      <a href={`/parttime/read/${job.jobId}`} className="border border-[#F27A7A] text-[#F27A7A] rounded px-3 py-1 text-sm hover:bg-[#f9d2d2]">
+                        상세보기
+                      </a>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            // 빈 상태
+            <div className="flex justify-center items-center my-16 min-h-[220px]">
+              <p className="text-gray-500 text-center">등록된 펫시터가 없습니다.</p>
+            </div>
+          )}
 
           {/* 페이지네이션 */}
           <div className="text-center my-4">
@@ -213,9 +214,8 @@ const List = ({
 
                 {user && user.userId === c.userId && (
                   <div className="text-right mt-2">
-                    {/* 삭제는 상위에서 처리 */}
                     <button
-                      onClick={() => c.onDelete?.(c.commentId)}
+                      onClick={() => onCommentDelete?.(c.commentId)}
                       className="border border-[#F27A7A] text-[#F27A7A] rounded px-2 py-1 text-xs hover:bg-[#f9d2d2]"
                     >
                       삭제

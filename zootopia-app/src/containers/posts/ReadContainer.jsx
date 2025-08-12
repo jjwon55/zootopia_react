@@ -1,58 +1,53 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import {remove} from '../../apis/posts/posts'
 import Read from '../../components/posts/Read';
-import { useParams, useNavigate  } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { toastSuccess, toastError } from '../../apis/alert';
+import { read as readPost, remove as removePost } from '../../apis/posts/posts';
 
 const ReadContainer = () => {
   const { postId } = useParams();
   const [post, setPost] = useState(null);
-  const [loginUserId, setLoginUserId] = useState(12);
+  const [loginUserId, setLoginUserId] = useState(null);
+  const [isOwner, setIsOwner] = useState(false);
   const [editId, setEditId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchPost = async () => {
+    (async () => {
       try {
-        const res = await axios.get(`/api/posts/${postId}`);
-        setPost(res.data.post);
-        // setLoginUserId(res.data.loginUserId); 
-        console.log('📦 res.data.post.comments:', res.data.post.comments);
-
-      } catch (error) {
-        console.error('게시글 불러오기 실패', error);
-        navigate('/error');
+        const { data } = await readPost(postId);
+        setPost({ ...data.post, liked: data.liked });
+        setLoginUserId(data.loginUserId ?? null);
+        setIsOwner(!!data.isOwner);
+      } catch (err) {
+        toastError('게시글을 불러오지 못했어요.');
+        navigate('/posts');
       }
-    };
-
-    fetchPost();
+    })();
   }, [postId, navigate]);
 
-
-  // ✅ 삭제 핸들러
   const handleDelete = async () => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
-
     try {
-      await remove(postId);
-      alert('삭제 완료');
-      navigate('/posts'); // 목록으로 이동
-    } catch (error) {
-      console.error('삭제 실패:', error);
-      alert('삭제 실패');
+      await removePost(postId);
+      toastSuccess('삭제 완료');
+      navigate('/posts');
+    } catch (err) {
+      toastError('삭제 실패');
     }
   };
 
-
-  if (!post) return <div>로딩 중...</div>;
+  if (!post) return <div className="tw:px-4 tw:py-8">로딩 중...</div>;
 
   return (
     <Read
       post={post}
+      isOwner={isOwner}
       loginUserId={loginUserId}
       editId={editId}
       setEditId={setEditId}
-      onDelete={handleDelete} 
+      onDelete={handleDelete}
     />
   );
 };
