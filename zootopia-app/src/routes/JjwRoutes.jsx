@@ -17,7 +17,6 @@ import LostCreate from '../pages/lost/LostCreate';
 const JjwRoutes = () => {
   return (
   <>
-  {/* <Header /> */}
     <Routes>
       <Route path="/posts" element={<List />} />
       <Route path="/posts/read/:postId" element={<Read />} />
