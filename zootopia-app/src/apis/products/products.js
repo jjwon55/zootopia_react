@@ -1,19 +1,18 @@
 // 상품 관련 API 호출 함수들 (통합)
+import api from '../api';
 import { mockProductsDatabase, simulateApiCall } from '../../utils/products/mockDatabase.js';
-const API_BASE_URL = 'http://localhost:8080';
 
 // 상품 목록 조회
 export async function fetchProducts({ category = '', search = '', page = 1, size = 12 } = {}) {
   try {
-    const qs = new URLSearchParams({
-      category: category === '전체' ? '' : category,
-      search,
-      page,
-      size
+    const { data } = await api.get('/products/api/list', {
+      params: {
+        category: category === '전체' ? '' : category,
+        search,
+        page,
+        size,
+      },
     });
-    const response = await fetch(`${API_BASE_URL}/products/api/list?${qs}`);
-    if (!response.ok) throw new Error('Network response was not ok');
-    const data = await response.json();
     return data;
   } catch (error) {
     console.error('API 호출 실패, Mock 데이터 사용:', error);
@@ -50,10 +49,8 @@ export async function fetchProducts({ category = '', search = '', page = 1, size
 // 상품 상세 조회
 export async function fetchProductDetail(productId) {
   try {
-    const response = await fetch(`${API_BASE_URL}/products/api/detail/${productId}`);
-    if (!response.ok) throw new Error('Network response was not ok');
-    const data = await response.json();
-    return data;
+  const { data } = await api.get(`/products/api/detail/${productId}`);
+  return data;
   } catch (error) {
     console.error('API 호출 실패, Mock 데이터 사용:', error);
     const result = await simulateApiCall((id) => {
@@ -68,10 +65,8 @@ export async function fetchProductDetail(productId) {
 // 카테고리 목록 조회
 export async function fetchCategories() {
   try {
-    const response = await fetch(`${API_BASE_URL}/products/api/categories`);
-    if (!response.ok) throw new Error('Network response was not ok');
-    const data = await response.json();
-    return data;
+  const { data } = await api.get('/products/api/categories');
+  return data;
   } catch (error) {
     console.error('API 호출 실패, Mock 데이터 사용:', error);
     const result = await simulateApiCall(() => {

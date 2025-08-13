@@ -19,7 +19,8 @@ export default function Cart() {
 
   useEffect(() => {
     loadCartItems();
-  }, []);
+    // 로그인 사용자가 바뀌면 장바구니 다시 로드
+  }, [userId]);
 
   const loadCartItems = async () => {
     setLoading(true);
