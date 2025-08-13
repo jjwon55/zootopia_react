@@ -114,3 +114,57 @@ export {
   walkPetBag,
   walkWaterContainer
 };
+
+// 서버에서 내려오는 이미지 경로('/assets/dist/img/products/파일명')를
+// Vite 번들된 로컬 에셋으로 매핑하기 위한 파일명→모듈 URL 매핑 테이블
+export const imagesByFilename = {
+  // 서버 더미와 정확히 일치하는 파일명
+  'foodbirdfallinlove.png': birdFood,
+  'foodbirdowlsee.png': foodBirdOwlSee,
+  'foodbirdscream.png': foodBirdScream,
+  'foodcatfifty.png': foodCatFifty,
+  'foodcatfishtaste.png': foodCatFishTaste,
+  'foodcatgoddu.png': foodCatGoddu,
+  'foodddogaddylovesit.png': foodDogAddyLovesIt,
+  'fooddogandcatdried.png': foodDogAndCatDried,
+  'fooddogcatmoistured.png': foodDogCatMoistured,
+  'fooddoggum1.png': foodDogGum1,
+  'fooddogheartbeam.png': dogFood,
+  'fooddogmeat.png': foodDogMeat,
+  'productcatbellnecklace.png': productCatBellNecklace,
+  'productcatbowl.png': productCatBowl,
+  'productcathygienepad.png': productCatHygienePad,
+  'productcatwaterbowl.png': catBowl,
+  'productdogbowl.png': productDogBowl,
+  'productdogharness.png': dogHarness,
+  'productdoghygienepad.png': productDogHygienePad,
+  'productdogwaterbowl.png': productDogWaterBowl,
+  'producthygieneplasticbag.png': productHygienePlasticBag,
+  'producthygienetoilet.png': productHygieneToilet,
+  'productpetbed.png': productPetBed,
+  'productpetcage.png': productPetCage,
+  'productpetcarriage.png': petCarrier,
+  'productpetcomb.png': productPetComb,
+  'productpetcousion.png': productPetCousion,
+  'productpetcutter.png': productPetCutter,
+  'productpetearcleaner.png': productPetEarCleaner,
+  'productpethouse.png': productPetHouse,
+  'productpetnecklace.png': productPetNecklace,
+  'productpetshampoo.png': petShampoo,
+  'toydogball.png': dogBall,
+  'walkpetbag.png': walkPetBag,
+  // 서버 파일명과 로컬 파일명이 다른 경우 근사치 매핑
+  'toycatfishingrod.png': catToy,            // ~ cat rod
+  'toypetrope.png': toyDogRope,              // pet rope → dog rope
+  'toylaserpointer.png': toyCatSmartLaser,   // laser pointer → smart laser
+  'toychewingbone.png': toyDogBone,          // chewingbone → dog bone
+  'walkdogleash.png': walkDogNeckLeash,      // leash → neck leash
+  'walklednecklace.png': walkDogLEDLeash,    // led necklace → LED leash
+  'walkpetshoes.png': walkDogShoes,          // pet shoes → dog shoes
+  'walkwaterbottle.png': walkWaterContainer, // water bottle → container
+  // 카트 더미 전용 jpg 이름 대응
+  'dogfood.jpg': dogFood,
+  'cattoy.jpg': catToy,
+  'petset.jpg': productPetCage,
+  'default.jpg': productPetBed,
+};
