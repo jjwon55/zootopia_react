@@ -68,7 +68,7 @@ const List = ({ loading, posts = [], topList = [], pagination, keyword }) => {
           </div>
           <div className="tw:flex tw:items-center tw:gap-[10px]">
             <select
-              className="tw:border tw:rounded tw:px-2 tw:py-1 tw:text-sm"
+              className="tw:border tw:border-[#ccc] tw:rounded tw:px-2 tw:py-1 tw:text-sm"
               value={sort}
               onChange={(e) => navigate(buildQuery({ sort: e.target.value, page: 1 }))}
             >
@@ -77,7 +77,7 @@ const List = ({ loading, posts = [], topList = [], pagination, keyword }) => {
             </select>
             <Link
               to="/showoff/create"
-              className="tw:flex tw:items-center tw:gap-[6px] tw:border tw:rounded-[20px] tw:px-[13px] tw:py-[6px] tw:text-[14px] tw:bg-white tw:text-inherit tw:no-underline"
+              className="tw:flex tw:items-center tw:gap-[6px] tw:border tw:border-[#ccc] tw:rounded-[20px] tw:px-[13px] tw:py-[6px] tw:text-[14px] tw:bg-white tw:text-inherit tw:no-underline"
             >
               <img src={writeIcon} className="tw:w-[18px] tw:h-[18px]" alt="글쓰기 아이콘" /> 글쓰기
             </Link>
