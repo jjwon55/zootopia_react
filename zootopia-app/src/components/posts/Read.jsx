@@ -5,7 +5,7 @@ import defaultProfile from '../../assets/img/default-profile.png';
 import pinkArrow from '../../assets/img/pinkarrow.png';
 import Share from '../../assets/img/share.png';
 import CommentSection from './CommentSection';
-import { toastSuccess, toastInfo, toastError } from '../../apis/alert';
+import { toastSuccess, toastInfo, toastError } from '../../apis/posts/alert';
 import { toggleLike } from '../../apis/posts/posts';
 
 // /api 프록시 환경에서 이미지 경로 정규화

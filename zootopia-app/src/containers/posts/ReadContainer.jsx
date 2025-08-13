@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Read from '../../components/posts/Read';
-import { toastSuccess, toastError } from '../../apis/alert';
+import { toastSuccess, toastError } from '../../apis/posts/alert';
 import { read as readPost, remove as removePost } from '../../apis/posts/posts';
 import { LoginContext } from '../../context/LoginContextProvider'; // ✅ 컨텍스트 사용
 
