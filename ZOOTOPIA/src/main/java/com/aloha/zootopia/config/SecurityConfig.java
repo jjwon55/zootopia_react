@@ -112,6 +112,8 @@ public class SecurityConfig {
             .requestMatchers("/posts/**").permitAll()
             .requestMatchers("/lost/**").permitAll()
             .requestMatchers("/showoff/**").permitAll()
+            .requestMatchers("/insurance/**").permitAll()
+
             .requestMatchers("/service/**").permitAll()
             .requestMatchers( "/comments/**").authenticated()
             .requestMatchers("/upload/**").permitAll()
@@ -134,4 +136,4 @@ public class SecurityConfig {
   }
 
 
-}
+
