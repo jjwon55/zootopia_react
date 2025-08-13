@@ -174,7 +174,7 @@ const HospitalDetail = ({
           {animalIcons.map((icon, idx) => (
             <span
               key={idx}
-              className={`tw:animate-bounce-twice ${icon === "병원 소개" ? "tw:font-bold" : ""}`}
+              className={`animate-bounce-twice ${icon === "병원 소개" ? "tw:font-bold" : ""}`}
               style={{
                 animationDelay: `${idx * 0.2}s`,
                 display: "inline-block"
@@ -226,7 +226,7 @@ const HospitalDetail = ({
                   <td className="info-label tw:bg-[#f8f9fa] tw:font-semibold tw:p-2">홈페이지</td>
                   <td className="info-value tw:p-2">
                     {hospital.homepage ? (
-                      <a href={hospital.homepage} target="_blank" rel="noopener noreferrer" className="tw:text-blue-500">
+                      <a href={hospital.homepage} target="_blank" rel="noopener noreferrer" className="tw:underline">
                         {hospital.homepage}
                       </a>
                     ) : "-"}

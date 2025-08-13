@@ -1,6 +1,7 @@
 package com.aloha.zootopia.service.hospital;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -94,15 +95,32 @@ public HospitalServiceImpl(HospitalMapper hospitalMapper) {
     }
 
     @Override
-    public List<Hospital> getHospitalList(List<Integer> animalIds, int pageNum, int pageSize) {
+    public List<Hospital> getHospitalList(List<Integer> animalIds, List<Integer> specialtyIds, int pageNum, int pageSize) {
 
         int offset = (pageNum - 1) * pageSize;
-        return hospitalMapper.selectHospitals(offset, pageSize, animalIds);
+        List<Hospital> hospitalList = hospitalMapper.selectHospitals(offset, pageSize, animalIds, specialtyIds);
+
+        for (Hospital hospital : hospitalList) {
+            List<String> tags = new ArrayList<>();
+            if (hospital.getAnimals() != null) {
+                for (Animal animal : hospital.getAnimals()) {
+                    tags.add(animal.getSpecies());
+                }
+            }
+            if (hospital.getSpecialties() != null) {
+                for (Specialty specialty : hospital.getSpecialties()) {
+                    tags.add(specialty.getCategory());
+                }
+            }
+            hospital.setTags(tags);
+        }
+
+        return hospitalList;
     }
 
     @Override
-    public int getHospitalCount(List<Integer> animalIds) {
-        return hospitalMapper.countHospitals(animalIds);
+    public int getHospitalCount(List<Integer> animalIds, List<Integer> specialtyIds) {
+        return hospitalMapper.countHospitals(animalIds, specialtyIds);
     }
 
 

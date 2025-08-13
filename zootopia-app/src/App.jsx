@@ -15,9 +15,9 @@ const App = () => {
       <LoginContextProvider>
         <Header />
           <SysRoutes />
-          {/* <JjwRoutes /> */}
-          {/* <HsmRoutes /> */}
-          {/* <LytRoutes /> */}
+          <JjwRoutes />
+          <HsmRoutes />
+          <LytRoutes />
       </LoginContextProvider>
     </BrowserRouter>
   );

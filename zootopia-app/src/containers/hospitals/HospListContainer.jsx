@@ -7,21 +7,24 @@ const HospListContainer = () => {
         hospitalList: [],
         pageInfo: {},
         animalList: [],
+        specialtyList: [],
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedAnimalIds, setSelectedAnimalIds] = useState([]);
+    const [selectedSpecialtyIds, setSelectedSpecialtyIds] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
 
-    const fetchHospitalData = async (page, animalIds) => {
+    const fetchHospitalData = async (page, animalIds, specialtyIds) => {
         setLoading(true);
         try {
-            const response = await listHospitals(animalIds, page);
+            const response = await listHospitals(animalIds, specialtyIds, page);
             const data = response.data || {};
             setHospitalData({
                 hospitalList: data.hospitalList || [],
                 pageInfo: data.pageInfo || {},
                 animalList: data.animalList || [],
+                specialtyList: data.specialtyList || [],
             });
         } catch (e) {
             setError(e);
@@ -30,14 +33,15 @@ const HospListContainer = () => {
                 hospitalList: [],
                 pageInfo: {},
                 animalList: [],
+                specialtyList: [],
             });
         }
         setLoading(false);
     };
 
     useEffect(() => {
-        fetchHospitalData(currentPage, selectedAnimalIds);
-    }, [currentPage, selectedAnimalIds]);
+        fetchHospitalData(currentPage, selectedAnimalIds, selectedSpecialtyIds);
+    }, [currentPage, selectedAnimalIds, selectedSpecialtyIds]);
 
     const handleAnimalFilterChange = (animalId) => {
         const newSelectedAnimalIds = selectedAnimalIds.includes(animalId)
@@ -45,6 +49,15 @@ const HospListContainer = () => {
             : [...selectedAnimalIds, animalId];
 
         setSelectedAnimalIds(newSelectedAnimalIds);
+        setCurrentPage(1);
+    };
+
+    const handleSpecialtyFilterChange = (specialtyId) => {
+        const newSelectedSpecialtyIds = selectedSpecialtyIds.includes(specialtyId)
+            ? selectedSpecialtyIds.filter(id => id !== specialtyId)
+            : [...selectedSpecialtyIds, specialtyId];
+
+        setSelectedSpecialtyIds(newSelectedSpecialtyIds);
         setCurrentPage(1);
     };
 
@@ -60,8 +73,11 @@ const HospListContainer = () => {
             hospitalList={hospitalData.hospitalList}
             pageInfo={hospitalData.pageInfo}
             animalList={hospitalData.animalList}
+            specialtyList={hospitalData.specialtyList}
             selectedAnimals={selectedAnimalIds}
+            selectedSpecialties={selectedSpecialtyIds}
             onAnimalFilterChange={handleAnimalFilterChange}
+            onSpecialtyFilterChange={handleSpecialtyFilterChange}
             onPageChange={handlePageChange}
         />
     );

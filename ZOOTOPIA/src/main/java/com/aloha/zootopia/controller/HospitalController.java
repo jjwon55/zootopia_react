@@ -52,13 +52,15 @@ public class HospitalController {
     @GetMapping
     public ResponseEntity<Map<String, Object>> list(
             @RequestParam(value = "animal", required = false) List<Integer> animal,
+            @RequestParam(value = "specialty", required = false) List<Integer> specialty,
             @RequestParam(value = "pageNum", defaultValue = "1") int pageNum) {
 
         List<Integer> animalListParam = (animal != null) ? new ArrayList<>(animal) : null;
+        List<Integer> specialtyListParam = (specialty != null) ? new ArrayList<>(specialty) : null;
 
         int pageSize = 6;
-        int total = hospitalService.getHospitalCount(animalListParam);
-        List<Hospital> hospitalList = hospitalService.getHospitalList(animalListParam, pageNum, pageSize);
+        int total = hospitalService.getHospitalCount(animalListParam, specialtyListParam);
+        List<Hospital> hospitalList = hospitalService.getHospitalList(animalListParam, specialtyListParam, pageNum, pageSize);
 
         PageInfo pageInfo = new PageInfo();
         pageInfo.setPageNum(pageNum);
@@ -83,6 +85,7 @@ public class HospitalController {
         response.put("animalList", hospitalService.getAllAnimals());
         response.put("specialtyList", hospitalService.getAllSpecialties());
         response.put("selectedAnimals", animal == null ? new ArrayList<>() : animal);
+        response.put("selectedSpecialties", specialty == null ? new ArrayList<>() : specialty);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

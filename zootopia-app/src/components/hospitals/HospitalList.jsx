@@ -8,8 +8,11 @@ const HospitalList = ({
   hospitalList,
   pageInfo,
   animalList,
+  specialtyList,
   selectedAnimals,
+  selectedSpecialties,
   onAnimalFilterChange,
+  onSpecialtyFilterChange,
   onPageChange,
 }) => {
   const navigate = useNavigate();
@@ -70,6 +73,25 @@ const HospitalList = ({
                 onChange={() => onAnimalFilterChange(animal.animalId)}
               />
               {animal.species}
+            </label>
+          ))}
+          {specialtyList.map((specialty) => (
+            <label
+              key={specialty.specialtyId}
+              className={`tw:px-[20px] tw:py-[8px] tw:rounded-full tw:font-medium tw:cursor-pointer tw:transition-all ${
+                selectedSpecialties.includes(specialty.specialtyId)
+                  ? "tw:bg-[#74b9ff] tw:text-white tw:-translate-y-[2px]"
+                  : "tw:bg-[#e8f4f8] tw:text-[#2d3436]"
+              }`}
+            >
+              <input
+                type="checkbox"
+                className="tw:hidden"
+                value={specialty.specialtyId}
+                checked={selectedSpecialties.includes(specialty.specialtyId)}
+                onChange={() => onSpecialtyFilterChange(specialty.specialtyId)}
+              />
+              {specialty.name}
             </label>
           ))}
         </div>
