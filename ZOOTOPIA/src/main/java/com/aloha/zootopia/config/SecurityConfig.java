@@ -150,6 +150,9 @@ public class SecurityConfig {
             .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**", "/img/**").permitAll()
             
             .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
+                        // 개발 편의를 위해 제품/장바구니 API 임시 허용 (운영 전 삭제 필요)
+                        .requestMatchers("/products/api/**").permitAll()
+                        .requestMatchers("/api/cart/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/hospitals/{hospitalId}/reviews").permitAll()
 
             .requestMatchers("/admin/**").hasRole("ADMIN")
