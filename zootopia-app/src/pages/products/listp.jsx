@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // products.js와 디렉터리 모두 존재하므로, 55개 Mock을 포함한 index.js를 명시적으로 사용
-import { fetchProducts, fetchCategories } from '../../apis/products/index.js';
+import { fetchProducts, fetchCategories } from '../../apis/products/products.js';
 
 import SearchSection from '../../components/products/search/SearchSection';
 import ProductCard from '../../components/products/ProductCard';
@@ -205,7 +205,7 @@ export default function ProductList() {
 
   return (
 
-    <div className="min-h-screen" style={{ backgroundColor: '#f8f9fa' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#FFF6F6' }}>
       {/* 검색 섹션 */}
       <SearchSection
         onSearch={handleSearch}
@@ -220,7 +220,7 @@ export default function ProductList() {
         {/* 로딩 상태 */}
         {loading ? (
           <div className="text-center py-16">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-400 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF9999] mx-auto mb-4"></div>
             <p className="text-gray-600">상품을 불러오는 중...</p>
           </div>
         ) : (
@@ -247,14 +247,14 @@ export default function ProductList() {
             {/* 페이지네이션 */}
             {totalPages > 1 && (
 
-              <div className="flex justify-center mt-8">
+      <div className="flex justify-center mt-8">
 
                 <div className="flex gap-2">
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
 
-                    className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
+        className="px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors border-[#FFC2C2] hover:bg-[#FFE5E5] text-[#A04545]"
                   >
                     이전
 
@@ -269,9 +269,8 @@ export default function ProductList() {
 
                         className={`px-4 py-2 rounded-lg transition-colors ${
                           currentPage === pageNum
-                            ? 'bg-pink-400 text-white'
-
-                            : 'border border-gray-300 hover:bg-gray-100'
+                            ? 'bg-[#FF9999] text-white hover:bg-[#FF8C8C]'
+                            : 'border border-[#FFC2C2] text-[#A04545] hover:bg-[#FFE5E5]'
                         }`}
                       >
                         {pageNum}
@@ -283,7 +282,7 @@ export default function ProductList() {
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
 
-                    className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
+                    className="px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors border-[#FFC2C2] hover:bg-[#FFE5E5] text-[#A04545]"
                   >
                     다음
 

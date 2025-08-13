@@ -3,7 +3,7 @@
 // - DEMO 모드: 실제 외부 호출 없이 ready/approve 결과를 비동기로 모사
 // - REAL 모드: 백엔드 프록시 API(/api/payments/kakao/*)로 호출 위임 (백엔드가 카카오 서버와 통신)
 
-import api from '../api';
+import api from '../../api';
 
 const isDemo = (import.meta?.env?.VITE_PAY_DEMO ?? 'true') === 'true';
 
