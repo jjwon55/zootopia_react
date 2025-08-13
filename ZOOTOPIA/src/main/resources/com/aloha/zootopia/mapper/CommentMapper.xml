@@ -25,7 +25,6 @@
     FROM post_comments c
     LEFT JOIN users u ON c.user_id = u.user_id
     WHERE c.post_id = #{postId}
-      AND c.is_deleted = FALSE
     ORDER BY  COALESCE(parent_id, comment_id),  
               parent_id IS NOT NULL,            
               created_at ASC

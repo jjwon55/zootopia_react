@@ -24,3 +24,5 @@ export const read = (id) => api.get(`${base}/${id}`);
 export const create = (data) => api.post(base, data);
 export const update = (id, data) => api.put(`${base}/${id}`, data);
 export const remove = (id) => api.delete(`${base}/${id}`);
+export const toggleLike = (postId) =>
+  api.post(`/posts/${postId}/like`, null, { withCredentials: true });

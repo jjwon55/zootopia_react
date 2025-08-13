@@ -1,11 +1,26 @@
 package com.aloha.zootopia.controller;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.aloha.zootopia.domain.Comment;
@@ -16,8 +31,9 @@ import com.aloha.zootopia.service.CommentService;
 import com.aloha.zootopia.service.PostLikeService;
 import com.aloha.zootopia.service.PostService;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -68,43 +84,48 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-
-    
-    @GetMapping("/{id}")
+   @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> read(
             @PathVariable("id") int id,
             HttpServletRequest request,
+            HttpServletResponse response,
             @AuthenticationPrincipal CustomUser user
     ) throws Exception {
         Posts post = postService.selectById(id);
-        if (post == null) {
-            return ResponseEntity.notFound().build();
-        }
+        if (post == null) return ResponseEntity.notFound().build();
 
         int postId = post.getPostId();
+        String viewCookieName = "viewed_post_" + postId;
+        boolean viewedRecently = false;
 
-        // 🕓 조회수 중복 방지 (1시간 내 동일 세션 조회 방지)
-        HttpSession session = request.getSession();
-        String viewKey = "viewed_post_" + postId;
-        Long lastViewTime = (Long) session.getAttribute(viewKey);
-        long now = System.currentTimeMillis();
-        long expireTime = 60 * 60 * 1000L;
-
-        if (lastViewTime == null || now - lastViewTime > expireTime) {
-            postService.increaseViewCount(postId);
-            session.setAttribute(viewKey, now);
+        // 쿠키 확인
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (viewCookieName.equals(cookie.getName())) {
+                    viewedRecently = true;
+                    break;
+                }
+            }
         }
 
-        // 🔒 로그인 여부 및 권한 확인
-        boolean isOwner = user != null && post.getUserId().equals(user.getUserId());
-        boolean liked = user != null && postLikeService.isLiked(postId, user.getUserId());
-        Long loginUserId = user != null ? user.getUser().getUserId() : null;
+        // 1시간 내에 조회한 적 없으면 조회수 증가 + 쿠키 설정
+        if (!viewedRecently) {
+            postService.increaseViewCount(postId);
+            Cookie newCookie = new Cookie(viewCookieName, "true");
+            newCookie.setMaxAge(60 * 60); // 1시간
+            newCookie.setPath("/");
+            response.addCookie(newCookie);
+        }
 
-        // 💬 댓글 트리 포함
+        // 로그인/권한
+        Long loginUserId = (user != null && user.getUser() != null) ? user.getUser().getUserId() : null;
+        boolean isOwner = loginUserId != null && Objects.equals(post.getUserId(), loginUserId);
+        boolean liked = loginUserId != null && postLikeService.isLiked(postId, loginUserId);
+
+        // 댓글 트리
         List<Comment> comments = commentService.getCommentsByPostIdAsTree(postId);
         post.setComments(comments);
 
-        // 🧾 응답 데이터 구성
         Map<String, Object> result = new HashMap<>();
         result.put("post", post);
         result.put("isOwner", isOwner);
@@ -122,7 +143,7 @@ public class PostController {
         if (user == null) return ResponseEntity.status(401).body("로그인 필요");
 
         if (post.getTitle() == null || post.getTitle().trim().isEmpty())
-            return ResponseEntity.badRequest().body("제목은 필수입니다.");
+            return ResponseEntity.badRequest().body("제목은 1자 이상 입력해주세요.");
 
         if (post.getContent() == null || post.getContent().trim().length() < 5)
             return ResponseEntity.badRequest().body("본문은 5자 이상 입력해주세요.");
@@ -139,15 +160,12 @@ public class PostController {
             @RequestBody Posts post,
             @AuthenticationPrincipal CustomUser user
     ) throws Exception {
-
-        // ✅ 현재 로그인한 사용자의 ID를 가져옵니다.
         if (user == null || user.getUser() == null) {
             return ResponseEntity.status(401).body("로그인이 필요합니다");
         }
 
-        long userId = user.getUser().getUserId(); // <-- 여기서 실제 userId 추출
+        long userId = user.getUser().getUserId();
 
-        // ✅ 작성자만 수정 가능
         if (!postService.isOwner(id, userId)) {
             return ResponseEntity.status(403).body("수정 권한 없음");
         }
@@ -156,26 +174,21 @@ public class PostController {
         post.setUserId(userId);
 
         boolean success = postService.updateById(post);
-        return success
-                ? ResponseEntity.ok("수정 완료")
-                : ResponseEntity.status(500).body("수정 실패");
+        return success ? ResponseEntity.ok("수정 완료")
+                       : ResponseEntity.status(500).body("수정 실패");
     }
-
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(
             @PathVariable("id") int id,
             @AuthenticationPrincipal CustomUser user
     ) throws Exception {
-
-        // ✅ 로그인 여부 확인
         if (user == null || user.getUser() == null) {
             return ResponseEntity.status(401).body("로그인이 필요합니다");
         }
 
         long userId = user.getUser().getUserId();
 
-        // ✅ 본인만 삭제 가능
         if (!postService.isOwner(id, userId)) {
             return ResponseEntity.status(403).body("삭제 권한 없음");
         }
@@ -185,17 +198,27 @@ public class PostController {
                 : ResponseEntity.status(500).body("삭제 실패");
     }
 
-
     @PostMapping("/{id}/like")
     public ResponseEntity<?> toggleLike(
-            @PathVariable int id,
+            @PathVariable("id") int id,
             @AuthenticationPrincipal CustomUser user
-    ) {
-        if (user == null)
+    ) throws Exception {
+        
+        if (user == null || user.getUser() == null) {
             return ResponseEntity.status(401).body("로그인 필요");
+        }
 
-        boolean liked = postLikeService.toggleLike(id, user.getUserId());
-        return ResponseEntity.ok(Map.of("liked", liked));
+        boolean liked = postLikeService.toggleLike(id, user.getUser().getUserId());
+
+        // ✅ 토글 후 최신 likeCount 재조회
+        int likeCount = Optional.ofNullable(postService.selectById(id))
+                                .map(Posts::getLikeCount)
+                                .orElse(0);
+
+        return ResponseEntity.ok(Map.of(
+            "liked", liked,
+            "likeCount", likeCount
+        ));
     }
 
     @PostMapping("/upload/image")

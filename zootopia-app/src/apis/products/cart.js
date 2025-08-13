@@ -1,5 +1,27 @@
 // cart.js - 장바구니 관련 API 호출
 const API_BASE_URL = 'http://localhost:8080';
+// 제품 목 데이터베이스를 사용해 이미지/가격/카테고리를 동기화
+import { mockProductsDatabase } from '../../utils/products/mockDatabase.js';
+
+// 로컬 스토리지 유틸리티 (userId에 따라 동적 키)
+const cartKey = (userId) => `cart:user:${userId}`;
+const readLocalCart = (userId) => {
+  try {
+    const raw = localStorage.getItem(cartKey(userId));
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+const writeLocalCart = (userId, items) => {
+  try {
+    localStorage.setItem(cartKey(userId), JSON.stringify(items));
+  } catch {}
+};
+const calcTotals = (items) => ({
+  totalAmount: items.reduce((s, it) => s + (it.price || 0) * (it.quantity || 0), 0),
+  totalItems: items.reduce((s, it) => s + (it.quantity || 0), 0)
+});
 
 // 장바구니 아이템 조회
 export async function fetchCartItems(userId = 1) {
@@ -13,42 +35,10 @@ export async function fetchCartItems(userId = 1) {
     return data;
   } catch (error) {
     console.error('Failed to fetch cart items:', error);
-    
-    // API 호출 실패 시 임시 Mock 데이터 반환
-    return {
-      success: true,
-      cartItems: [
-        {
-          id: 1,
-          productId: 1,
-          productName: '강아지 사료',
-          price: 25000,
-          quantity: 2,
-          imageUrl: '/assets/dist/img/products/dogfood.jpg',
-          category: '사료'
-        },
-        {
-          id: 2,
-          productId: 2,
-          productName: '고양이 장난감',
-          price: 12000,
-          quantity: 1,
-          imageUrl: '/assets/dist/img/products/cattoy.jpg',
-          category: '장난감'
-        },
-        {
-          id: 3,
-          productId: 3,
-          productName: '애완용품 세트',
-          price: 35000,
-          quantity: 1,
-          imageUrl: '/assets/dist/img/products/petset.jpg',
-          category: '용품'
-        }
-      ],
-      totalAmount: 87000,
-      totalItems: 4
-    };
+  // API 실패 시: 로컬 스토리지 장바구니 사용
+  const cartItems = readLocalCart(userId);
+  const { totalAmount, totalItems } = calcTotals(cartItems);
+  return { success: true, cartItems, totalAmount, totalItems };
   }
 }
 
@@ -75,10 +65,26 @@ export async function addToCart(userId = 1, productId, quantity = 1) {
     return data;
   } catch (error) {
     console.error('Failed to add item to cart:', error);
-    return {
-      success: false,
-      message: '장바구니 추가에 실패했습니다.'
-    };
+    // 로컬 스토리지 폴백: 제품 정보를 DB에서 찾아 장바구니 갱신
+    const product = mockProductsDatabase.find(p => String(p.no) === String(productId));
+    const prev = readLocalCart(userId);
+    const idx = prev.findIndex(it => String(it.productId) === String(productId));
+    if (idx >= 0) {
+      prev[idx] = { ...prev[idx], quantity: (prev[idx].quantity || 0) + quantity };
+    } else if (product) {
+      prev.push({
+        id: product.no, // 폴백에선 cartItemId = productId로 사용
+        productId: product.no,
+        productName: product.name,
+        price: product.price,
+        quantity,
+        imageUrl: product.imageUrl,
+        category: product.category
+      });
+    }
+    writeLocalCart(userId, prev);
+    const { totalAmount, totalItems } = calcTotals(prev);
+    return { success: true, cartItems: prev, totalAmount, totalItems };
   }
 }
 
@@ -103,10 +109,13 @@ export async function updateCartItem(cartItemId, quantity) {
     return data;
   } catch (error) {
     console.error('Failed to update cart item:', error);
-    return {
-      success: false,
-      message: '수량 변경에 실패했습니다.'
-    };
+  // 로컬 스토리지 폴백: cartItemId(=productId)로 항목 찾기
+  const userId = 1; // 현재 프로젝트에선 하드코딩된 사용자 사용
+  const prev = readLocalCart(userId);
+  const next = prev.map(it => String(it.id) === String(cartItemId) ? { ...it, quantity } : it);
+  writeLocalCart(userId, next);
+  const { totalAmount, totalItems } = calcTotals(next);
+  return { success: true, cartItems: next, totalAmount, totalItems };
   }
 }
 
@@ -125,10 +134,13 @@ export async function removeCartItem(cartItemId) {
     return data;
   } catch (error) {
     console.error('Failed to remove cart item:', error);
-    return {
-      success: false,
-      message: '삭제에 실패했습니다.'
-    };
+  // 로컬 스토리지 폴백
+  const userId = 1;
+  const prev = readLocalCart(userId);
+  const next = prev.filter(it => String(it.id) !== String(cartItemId));
+  writeLocalCart(userId, next);
+  const { totalAmount, totalItems } = calcTotals(next);
+  return { success: true, cartItems: next, totalAmount, totalItems };
   }
 }
 
@@ -147,9 +159,8 @@ export async function clearCart(userId = 1) {
     return data;
   } catch (error) {
     console.error('Failed to clear cart:', error);
-    return {
-      success: false,
-      message: '장바구니 비우기에 실패했습니다.'
-    };
+  // 로컬 스토리지 폴백
+  writeLocalCart(userId, []);
+  return { success: true, cartItems: [], totalAmount: 0, totalItems: 0 };
   }
 }

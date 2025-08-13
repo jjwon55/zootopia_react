@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProducts, fetchCategories } from '../../apis/products';
+// products.js와 디렉터리 모두 존재하므로, 55개 Mock을 포함한 index.js를 명시적으로 사용
+import { fetchProducts, fetchCategories } from '../../apis/products/index.js';
 
 import SearchSection from '../../components/products/search/SearchSection';
 import ProductCard from '../../components/products/ProductCard';

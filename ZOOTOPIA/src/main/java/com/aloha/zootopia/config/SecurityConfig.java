@@ -25,6 +25,7 @@ import com.aloha.zootopia.service.UserDetailServiceImpl;
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig {
 
+
     @Autowired
     private UserDetailServiceImpl userDetailServiceImpl;
     @Autowired

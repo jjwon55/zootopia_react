@@ -104,7 +104,7 @@
       u.profile_img
     FROM posts p
     LEFT JOIN users u ON p.user_id = u.user_id
-    WHERE p.post_id = #{post_id}
+    WHERE p.post_id = #{id}
   </select>
 
   <!-- 등록 -->

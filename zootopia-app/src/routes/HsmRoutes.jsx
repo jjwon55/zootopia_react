@@ -5,10 +5,14 @@ import ProductDetail from '../pages/products/detail.jsx';
 import Cart from '../pages/cart/cart.jsx';
 import Checkout from '../pages/cart/checkout.jsx';
 import NotFound from '../pages/products/NotFound.jsx';
+import KakaoPayMock from '../pages/cart/KakaoPayMock.jsx';
 
 export default function HsmRoutes() {
   return (
     <Routes>
+      {/* 기본 페이지 */}
+      {/* <Route path="/" element={<Home />} /> */}
+
       {/* / → /products/listp 로 리다이렉트 */}
       {/* <Route path="/" element={<Navigate to="/products/listp" replace />} /> */}
 
@@ -23,6 +27,9 @@ export default function HsmRoutes() {
 
       {/* 장바구니/결제 */}
       <Route path="/checkout" element={<Checkout />} />
+
+  {/* 카카오페이 데모 결제 페이지 */}
+  <Route path="/kakao-pay-mock" element={<KakaoPayMock />} />
 
       {/* 라우팅되지 않는 경로 */}
       {/* <Route path="*" element={<NotFound />} /> */}

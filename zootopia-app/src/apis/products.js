@@ -25,38 +25,40 @@ export async function fetchProducts({
   } catch (error) {
     console.error('Failed to fetch products:', error);
     
-    // API 호출 실패 시 임시 Mock 데이터 반환
+    // API 호출 실패 시 임시 Mock 데이터 (55개) + 페이징 적용
+    const categories = ['사료', '장난감', '용품', '산책', '의류', '건강용품'];
+    const allProducts = Array.from({ length: 55 }, (_, i) => {
+      const idx = i + 1;
+      const cat = categories[i % categories.length];
+      return {
+        no: idx,
+        name: `${cat} 상품 ${idx}`,
+        price: 8000 + (idx % 12) * 3000,
+        category: cat,
+        imageUrl: `https://picsum.photos/seed/p${idx}/320/200`,
+        description: `${cat} 카테고리의 더미 상품 설명 ${idx}`,
+        views: 10 + idx,
+        likes: idx % 20,
+        stock: 5 + (idx % 30),
+        status: '판매중'
+      };
+    })
+      // 카테고리 필터
+      .filter(p => !category || category === '' || category === '전체' || p.category === category)
+      // 검색어 필터
+      .filter(p => !search || p.name.includes(search) || p.description.includes(search));
+
+    const totalProducts = allProducts.length;
+    const start = (page - 1) * size;
+    const end = Math.min(start + size, totalProducts);
+    const pageItems = allProducts.slice(start, Math.max(start, end));
+
     return {
       success: true,
-      products: [
-        {
-          no: 1,
-          name: '강아지 사료',
-          price: 25000,
-          category: '사료',
-          imageUrl: '/assets/dist/img/products/dogfood.jpg',
-          description: '영양 만점 강아지 사료'
-        },
-        {
-          no: 2,
-          name: '고양이 장난감',
-          price: 12000,
-          category: '장난감',
-          imageUrl: '/assets/dist/img/products/cattoy.jpg',
-          description: '재미있는 고양이 장난감'
-        },
-        {
-          no: 3,
-          name: '애완용품 세트',
-          price: 35000,
-          category: '용품',
-          imageUrl: '/assets/dist/img/products/petset.jpg',
-          description: '반려동물 필수 용품 세트'
-        }
-      ],
-      totalProducts: 3,
-      currentPage: 1,
-      totalPages: 1
+      products: pageItems,
+      totalProducts,
+      currentPage: page,
+      totalPages: Math.max(1, Math.ceil(totalProducts / size))
     };
   }
 }
@@ -107,7 +109,7 @@ export async function fetchCategories() {
     // API 호출 실패 시 기본 카테고리 반환
     return {
       success: true,
-      categories: ['전체', '사료', '장난감', '용품', '의류', '건강용품']
+  categories: ['전체', '사료', '장난감', '용품', '산책', '의류', '건강용품']
     };
   }
 }
