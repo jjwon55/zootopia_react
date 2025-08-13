@@ -112,7 +112,7 @@ const HospitalList = ({
             <div
               key={hospital.hospitalId}
               onClick={() => handleCardClick(hospital.hospitalId)}
-              className="tw:bg-white tw:rounded-[15px] tw:overflow-hidden tw:shadow hover:tw:-translate-y-[5px] hover:tw:shadow-lg tw:transition-all tw:cursor-pointer"
+              className="tw:bg-white tw:rounded-[15px] tw:overflow-hidden hover:tw:-translate-y-[5px] tw:shadow tw:hover:shadow-lg tw:transition-all tw:cursor-pointer tw:duration-100 tw:ease-out tw:hover:-translate-y-2"
             >
               {/* 이미지 */}
               <div className="tw:w-full tw:h-[200px] tw:overflow-hidden">

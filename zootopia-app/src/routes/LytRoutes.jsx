@@ -15,7 +15,7 @@ import Header from '../components/header/Header'
 const LytRoutes = () => {
   return (
     <>
-      <Header />
+      {/* <Header /> */}
       <Routes>
         {/* 기본 페이지 */}
         <Route path="/" element={<Home />} />

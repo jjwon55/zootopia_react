@@ -13,7 +13,7 @@ export default function HsmRoutes() {
     <Routes>
 
   {/* 기본 페이지: / 에서 홈 표시 */}
-  <Route path="/" element={<Home />} />
+  {/* <Route path="/" element={<Home />} /> */}
 
 
       {/* 목록 */}

@@ -1,4 +1,7 @@
 import React from "react";
+import fbIcon from '../../assets/img/icon_bt_fb.png'
+import istaIcon from '../../assets/img/icon_bt_ista.png'
+import ytIcon from '../../assets/img/icon_bt_yt.png'
 
 const Footer = () => {
   return (
@@ -16,14 +19,14 @@ const Footer = () => {
               <span className="tw:text-[#F27A7A] tw:font-semibold tw:text-base">소셜미디어</span>
               <div className="tw:flex tw:gap-3 tw:mt-3">
                 {/* 실제 아이콘은 React-icons 권장, 여기선 기본 예제 */}
-                <a href="#" aria-label="facebook" className="tw:bg-[#444] tw:w-9 tw:h-9 tw:rounded-full tw:flex tw:items-center tw:justify-center hover:tw:bg-[#F27A7A]">
-                  <span className="tw:text-lg tw:text-white tw:font-bold">f</span>
+                <a href="#" aria-label="facebook" className="tw:w-9 tw:h-9 tw:rounded-full tw:flex tw:items-center tw:justify-center hover:tw:bg-[#F27A7A]">
+                  <img src={fbIcon} alt="facebook" />
                 </a>
-                <a href="#" aria-label="instagram" className="tw:bg-[#444] tw:w-9 tw:h-9 tw:rounded-full tw:flex tw:items-center tw:justify-center hover:tw:bg-[#F27A7A]">
-                  <span className="tw:text-lg tw:text-white tw:font-bold">◎</span>
+                <a href="#" aria-label="instagram" className="tw:w-9 tw:h-9 tw:rounded-full tw:flex tw:items-center tw:justify-center hover:tw:bg-[#F27A7A]">
+                  <img src={istaIcon} alt="insta" />
                 </a>
-                <a href="#" aria-label="youtube" className="tw:bg-[#444] tw:w-9 tw:h-9 tw:rounded-full tw:flex tw:items-center tw:justify-center hover:tw:bg-[#F27A7A]">
-                  <span className="tw:text-lg tw:text-white tw:font-bold">▶</span>
+                <a href="#" aria-label="youtube" className="tw:w-9 tw:h-9 tw:rounded-full tw:flex tw:items-center tw:justify-center hover:tw:bg-[#F27A7A]">
+                  <img src={ytIcon} alt="youtube" />
                 </a>
               </div>
             </div>
