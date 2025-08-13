@@ -13,6 +13,7 @@
     "@tailwindcss/cli": "^4.1.11",
     "@tailwindcss/vite": "^4.1.11",
     "@toast-ui/editor": "^3.2.2",
+    "@toast-ui/react-editor": "^3.2.3",
     "@yaireo/tagify": "^4.35.3",
     "autoprefixer": "^10.4.21",
     "axios": "^1.11.0",
@@ -28,7 +29,8 @@
     "react-tagify": "^1.0.7",
     "sweetalert2": "^11.22.2",
     "sweetalert2-react-content": "^5.1.0",
-    "tailwindcss": "^4.1.11"
+    "tailwindcss": "^4.1.11",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
