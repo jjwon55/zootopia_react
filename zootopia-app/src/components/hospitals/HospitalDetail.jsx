@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   getReviews,
@@ -152,9 +152,9 @@ const HospitalDetail = ({
   return (
     <div className="hospital-main-container tw:max-w-[1140px] tw:mx-auto tw:px-4 tw:py-6">
       {/* 상단 로고 */}
-      <div className="logo-container tw:flex tw:justify-center tw:mb-6 tw:rounded-4xl tw:bg-[#61dd9910]">
+      {/* <div className="logo-container tw:flex tw:justify-center tw:mb-6 tw:rounded-4xl tw:bg-[#61dd9910]">
         <img src={previewUrl} alt="병원 아이콘" className="tw:w-[210px] tw:h-[150px] " />
-      </div>
+      </div> */}
 
       {/* 동물 배너 */}
       {/* <div className="animal-banner tw:bg-[#f8f9fa] tw:py-4 tw:rounded tw:mb-8">
@@ -169,12 +169,12 @@ const HospitalDetail = ({
       </div> */}
 
       {/* 동물 배너 (순차 bounce 애니메이션 적용) */}
-      <div className="animal-banner tw:bg-[#f8f9fa] tw:py-4 tw:rounded tw:mb-8">
+      <div className="animal-banner tw:bg-[#00c47934] tw:py-4 tw:rounded-2xl tw:mb-8">
         <div className="animal-icons tw:flex tw:justify-center tw:gap-3 tw:text-xl">
           {animalIcons.map((icon, idx) => (
             <span
               key={idx}
-              className={`animate-bounce-twice ${icon === "병원 소개" ? "tw:font-bold" : ""}`}
+              className={`tw:animate-bounce ${icon === "병원 소개" ? "tw:font-bold" : ""}`}
               style={{
                 animationDelay: `${idx * 0.2}s`,
                 display: "inline-block"
@@ -196,6 +196,10 @@ const HospitalDetail = ({
               alt={hospital.name}
               className="hospital-image tw:w-[380px] tw:h-[320px] tw:object-fit tw:p-2.5"
             />
+          </div>
+
+          <div className="return-list-container">
+            <div className="tw:text-[#ffffff]"><button className="tw:rounded-xl tw:w-[150px] tw:py-1.5 tw:cursor-pointer tw:bg-[#ff6b6b] tw:hover:bg-[#ff5151]" onClick={() => navigate("/service/hospitals/hospitallist")}>목록으로 돌아가기</button></div>
           </div>
 
           {/* 병원 정보 */}
@@ -321,6 +325,7 @@ const HospitalDetail = ({
                   </span>
                 ))}
               </div>
+            <div className="tw:flex tw:gap-1.5 tw:w-">
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
@@ -330,10 +335,11 @@ const HospitalDetail = ({
               />
               <button
                 type="submit"
-                className="review-submit-btn tw:bg-[#74b9ff] tw:text-white tw:px-4 tw:py-2 tw:rounded hover:tw:bg-[#0984e3]"
+                className="review-submit-btn tw:bg-[#ff6b6b] tw:w-20 tw:text-white tw:px-2 tw:py-2 tw:ml-3.5 tw:rounded hover:tw:bg-[#0984e3]"
               >
                 {reviewId ? "수정" : "등록"}
               </button>
+            </div>
             </form>
           </div>
         )}

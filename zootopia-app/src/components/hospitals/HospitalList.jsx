@@ -45,24 +45,16 @@ const HospitalList = ({
     <div className="tw:max-w-[1140px] tw:mx-auto tw:px-[15px] tw:py-[20px]">
       {/* 상단 영역: 관리자 버튼 + 필터 */}
       <div className="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:mb-[20px]">
-        {roles && (
-          <button
-            onClick={handleCreateHospitalClick}
-            className="tw:bg-[#74b9ff] tw:text-white tw:px-4 tw:py-2 tw:rounded hover:tw:bg-[#0984e3] tw:mb-3 md:tw:mb-0"
-          >
-            병원 등록
-          </button>
-        )}
-
         {/* 필터 */}
-        <div className="tw:flex tw:flex-wrap tw:gap-[10px] tw:justify-center md:tw:justify-start">
+        <div className="tw:flex tw:flex-col tw:gap-[22px] tw:justify-center md:tw:justify-start">
+          <div className="tw:gap-[55px]">
           {animalList.map((animal) => (
             <label
               key={animal.animalId}
-              className={`tw:px-[20px] tw:py-[8px] tw:rounded-full tw:font-medium tw:cursor-pointer tw:transition-all ${
+              className={`tw:px-[20px] tw:py-[8px] tw:m-1 tw:rounded-full tw:font-medium tw:cursor-pointer tw:transition-all ${
                 selectedAnimals.includes(animal.animalId)
-                  ? "tw:bg-[#74b9ff] tw:text-white tw:-translate-y-[2px]"
-                  : "tw:bg-[#e8f4f8] tw:text-[#2d3436]"
+                  ? " tw:bg-[#ff6b6b] tw:text-[#ffffff] tw:-translate-y-[2px]"
+                  : "tw:bg-[#faafaf9f] tw:text-white"
               }`}
             >
               <input
@@ -75,13 +67,15 @@ const HospitalList = ({
               {animal.species}
             </label>
           ))}
+          </div>
+          <div>
           {specialtyList.map((specialty) => (
             <label
               key={specialty.specialtyId}
-              className={`tw:px-[20px] tw:py-[8px] tw:rounded-full tw:font-medium tw:cursor-pointer tw:transition-all ${
+              className={`tw:px-[20px] tw:py-[8px] tw:m-1 tw:rounded-full tw:font-medium tw:cursor-pointer tw:transition-all ${
                 selectedSpecialties.includes(specialty.specialtyId)
-                  ? "tw:bg-[#74b9ff] tw:text-white tw:-translate-y-[2px]"
-                  : "tw:bg-[#e8f4f8] tw:text-[#2d3436]"
+                  ? "tw:bg-[#ff6b6b] tw:text-[#ffffff] tw:-translate-y-[2px]"
+                  : "tw:bg-[#faafaf9f] tw:text-white"
               }`}
             >
               <input
@@ -91,10 +85,20 @@ const HospitalList = ({
                 checked={selectedSpecialties.includes(specialty.specialtyId)}
                 onChange={() => onSpecialtyFilterChange(specialty.specialtyId)}
               />
-              {specialty.name}
+              {specialty.category}
             </label>
           ))}
+          </div>
         </div>
+        
+        {roles && (
+          <button
+            onClick={handleCreateHospitalClick}
+            className="tw:bg-[#74b9ff] tw:text-white tw:px-4 tw:py-2 tw:rounded hover:tw:bg-[#0984e3] tw:mb-3 md:tw:mb-0 tw:cursor-pointer tw:hover:bg-[#389bff]"
+          >
+            병원 등록
+          </button>
+        )}
       </div>
 
       {/* 병원 리스트 */}
@@ -127,7 +131,7 @@ const HospitalList = ({
                   {hospital.tags?.map((tag, idx) => (
                     <span
                       key={idx}
-                      className="tw:bg-[#e8f4f8] tw:text-[#74b9ff] tw:px-[10px] tw:py-[4px] tw:rounded-[15px] tw:text-xs tw:font-medium"
+                      className="tw:bg-[#ffc1c1c5] tw:text-[#9c1f00c5] tw:px-[10px] tw:py-[4px] tw:rounded-[15px] tw:text-xs tw:font-medium"
                     >
                       #{tag}
                     </span>
@@ -147,7 +151,7 @@ const HospitalList = ({
               <li>
                 <button
                   onClick={() => onPageChange(1)}
-                  className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 hover:tw:bg-gray-200"
+                  className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 tw:hover:bg-gray-200 tw:cursor-pointer"
                   aria-label="첫 페이지"
                 >
                   &laquo;
@@ -158,7 +162,7 @@ const HospitalList = ({
               <li>
                 <button
                   onClick={() => onPageChange(pageInfo.pageNum - 1)}
-                  className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 hover:tw:bg-gray-200"
+                  className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 tw:hover:bg-gray-200 tw:cursor-pointer"
                   aria-label="이전 페이지"
                 >
                   &lt;
@@ -169,10 +173,10 @@ const HospitalList = ({
               <li key={i}>
                 <button
                   onClick={() => onPageChange(i)}
-                  className={`tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300
+                  className={`tw:px-3 tw:py-1 tw:rounded tw:border tw:cursor-pointer tw:border-gray-300
                     ${i === pageInfo.pageNum
-                      ? 'tw:bg-blue-600 tw:text-white'
-                      : 'tw:text-gray-700 hover:tw:bg-gray-200'}`}
+                      ? 'tw:bg-[#ff6b6b] tw:text-white tw:hover:bg-[#ff3131]'
+                      : 'tw:text-gray-700 tw:hover:bg-gray-200'}`}
                   aria-current={i === pageInfo.pageNum ? 'page' : undefined}
                 >
                   {i}
@@ -183,7 +187,7 @@ const HospitalList = ({
               <li>
                 <button
                   onClick={() => onPageChange(pageInfo.pageNum + 1)}
-                  className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 hover:tw:bg-gray-200"
+                  className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 tw:hover:bg-gray-200 tw:cursor-pointer"
                   aria-label="다음 페이지"
                 >
                   &gt;
@@ -194,7 +198,7 @@ const HospitalList = ({
               <li>
                 <button
                   onClick={() => onPageChange(pageInfo.pages)}
-                  className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 hover:tw:bg-gray-200"
+                  className="tw:px-3 tw:py-1 tw:rounded tw:border tw:border-gray-300 tw:text-gray-600 tw:hover:bg-gray-200 tw:cursor-pointer"
                   aria-label="마지막 페이지"
                 >
                   &raquo;

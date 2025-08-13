@@ -2,6 +2,7 @@ package com.aloha.zootopia.service.hospital;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -114,6 +115,31 @@ public HospitalServiceImpl(HospitalMapper hospitalMapper) {
             }
             hospital.setTags(tags);
         }
+
+        // Sorting logic
+        hospitalList.sort((h1, h2) -> {
+            long h1MatchCount = 0;
+            if (animalIds != null) {
+                h1MatchCount += h1.getAnimals().stream().filter(a -> animalIds.contains(a.getAnimalId())).count();
+            }
+            if (specialtyIds != null) {
+                h1MatchCount += h1.getSpecialties().stream().filter(s -> specialtyIds.contains(s.getSpecialtyId())).count();
+            }
+
+            long h2MatchCount = 0;
+            if (animalIds != null) {
+                h2MatchCount += h2.getAnimals().stream().filter(a -> animalIds.contains(a.getAnimalId())).count();
+            }
+            if (specialtyIds != null) {
+                h2MatchCount += h2.getSpecialties().stream().filter(s -> specialtyIds.contains(s.getSpecialtyId())).count();
+            }
+
+            if (h1MatchCount != h2MatchCount) {
+                return Long.compare(h2MatchCount, h1MatchCount);
+            }
+
+            return h1.getName().compareTo(h2.getName());
+        });
 
         return hospitalList;
     }
