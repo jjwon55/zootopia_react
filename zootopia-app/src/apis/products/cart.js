@@ -1,9 +1,10 @@
 // cart.js - 장바구니 관련 API 호출
-const API_BASE_URL = 'http://localhost:8080';
-// 제품 목 데이터베이스를 사용해 이미지/가격/카테고리를 동기화
+// 서버 호출은 공용 axios 인스턴스를 사용해 JWT를 자동으로 포함시키고, Vite 프록시를 통해 CORS를 피합니다.
+import api from '../api';
+// 제품 목 데이터베이스를 사용해 이미지/가격/카테고리를 동기화 (서버 실패 시 폴백)
 import { mockProductsDatabase } from '../../utils/products/mockDatabase.js';
 
-// 로컬 스토리지 유틸리티
+// 로컬 스토리지 유틸리티 (userId에 따라 동적 키)
 const cartKey = (userId) => `cart:user:${userId}`;
 const readLocalCart = (userId) => {
   try {
@@ -26,13 +27,10 @@ const calcTotals = (items) => ({
 // 장바구니 아이템 조회
 export async function fetchCartItems(userId = 1) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/cart/${userId}`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    
-    const data = await response.json();
-    return data;
+  // 프록시 + JWT 인증
+  // baseURL('/api') + path('/api/cart/...') → 프록시가 선두 '/api'만 제거하여 서버 '/api/cart'로 전달
+  const { data } = await api.get(`/api/cart/${userId}`);
+  return data;
   } catch (error) {
     console.error('Failed to fetch cart items:', error);
   // API 실패 시: 로컬 스토리지 장바구니 사용
@@ -45,23 +43,12 @@ export async function fetchCartItems(userId = 1) {
 // 장바구니에 상품 추가
 export async function addToCart(userId = 1, productId, quantity = 1) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/cart/add`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userId: userId,
-        productId: productId,
-        quantity: quantity
-      })
+    // 서버는 JWT의 사용자 정보를 사용할 수 있으나, 현재 API는 userId도 함께 보냄
+  const { data } = await api.post('/api/cart/add', {
+      userId,
+      productId,
+      quantity,
     });
-    
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    
-    const data = await response.json();
     return data;
   } catch (error) {
     console.error('Failed to add item to cart:', error);
@@ -91,22 +78,8 @@ export async function addToCart(userId = 1, productId, quantity = 1) {
 // 장바구니 아이템 수량 업데이트
 export async function updateCartItem(cartItemId, quantity) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/cart/update/${cartItemId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        quantity: quantity
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    
-    const data = await response.json();
-    return data;
+  const { data } = await api.put(`/api/cart/update/${cartItemId}`, { quantity });
+  return data;
   } catch (error) {
     console.error('Failed to update cart item:', error);
   // 로컬 스토리지 폴백: cartItemId(=productId)로 항목 찾기
@@ -122,16 +95,8 @@ export async function updateCartItem(cartItemId, quantity) {
 // 장바구니 아이템 삭제
 export async function removeCartItem(cartItemId) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/cart/remove/${cartItemId}`, {
-      method: 'DELETE'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    
-    const data = await response.json();
-    return data;
+  const { data } = await api.delete(`/api/cart/remove/${cartItemId}`);
+  return data;
   } catch (error) {
     console.error('Failed to remove cart item:', error);
   // 로컬 스토리지 폴백
@@ -147,16 +112,8 @@ export async function removeCartItem(cartItemId) {
 // 장바구니 비우기
 export async function clearCart(userId = 1) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/cart/clear/${userId}`, {
-      method: 'DELETE'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    
-    const data = await response.json();
-    return data;
+  const { data } = await api.delete(`/api/cart/clear/${userId}`);
+  return data;
   } catch (error) {
     console.error('Failed to clear cart:', error);
   // 로컬 스토리지 폴백

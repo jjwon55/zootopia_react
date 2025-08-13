@@ -41,12 +41,14 @@ export const toast = (title, icon = 'success', opts = {}) => {
     icon,
     ...opts, // 필요 시 position/timer 등 재정의
   })
+
+  .then( callback )
+  
 }
+
 
 // 편의 함수들
 export const toastSuccess = (title, opts) => toast(title, 'success', opts)
 export const toastInfo    = (title, opts) => toast(title, 'info', opts)
 export const toastWarn    = (title, opts) => toast(title, 'warning', opts)
 export const toastError   = (title, opts) => toast(title, 'error', opts)
-
-
