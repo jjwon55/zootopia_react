@@ -41,7 +41,7 @@ const Header = () => {
               { to: '/', label: '홈' },
               { to: '/products/listp', label: '스토어' },
               { to: '/map/map', label: '내 주변 찾기' },
-              { to: '/insurance/list', label: '서비스' },
+              { to: '/parttime/list', label: '서비스' },
               { to: '/posts', label: '커뮤니티' },
             ].map((item) => (
               <li key={item.to}>
