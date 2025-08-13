@@ -108,6 +108,7 @@ public class SecurityConfig {
         .addFilterBefore(new JwtRequestFilter(authenticationManager, jwtProvider),
             UsernamePasswordAuthenticationFilter.class)
         .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/parttime", "/parttime/**").permitAll()
             .requestMatchers("/posts/**").permitAll()
             .requestMatchers("/lost/**").permitAll()
             .requestMatchers("/showoff/**").permitAll()

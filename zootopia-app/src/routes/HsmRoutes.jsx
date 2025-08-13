@@ -11,6 +11,8 @@ import KakaoPayMock from '../pages/cart/KakaoPayMock.jsx';
 export default function HsmRoutes() {
   return (
     <Routes>
+      {/* / → /products/listp 로 리다이렉트 */}
+      {/* <Route path="/" element={<Navigate to="/products/listp" replace />} /> */}
   {/* 기본 페이지: / 에서 홈 표시 */}
   <Route path="/" element={<Home />} />
 
