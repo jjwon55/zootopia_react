@@ -44,7 +44,9 @@
     DELETE FROM parttime_job WHERE job_id = #{jobId}
   </delete>
 
-  <!-- 필터 -->
+  <!-- =========================
+       필터(세부 종 우선 / 대분류 REGEXP)
+       ========================= -->
   <select id="selectFilteredJobs" parameterType="map" resultType="com.aloha.zootopia.domain.ParttimeJob">
     SELECT pj.job_id, pj.user_id, pj.title, pj.location, pj.pay,
            pj.start_date, pj.end_date, pj.pet_info, pj.memo, pj.created_at,
@@ -52,12 +54,48 @@
     FROM parttime_job pj
     LEFT JOIN users u ON pj.user_id = u.user_id
     <where>
+      <!-- 지역 -->
       <if test="location != null and location != ''">
         AND pj.location LIKE CONCAT('%', #{location}, '%')
       </if>
-      <if test="animalType != null and animalType != ''">
-        AND pj.pet_info LIKE CONCAT('%', #{animalType}, '%')
-      </if>
+
+      <!-- 동물: 세부 종 우선, 없으면 대분류 REGEXP -->
+      <choose>
+        <!-- 1) animalType(세부 종) -->
+        <when test="animalType != null and animalType != ''">
+          AND (
+            REPLACE(pj.pet_info,' ','') LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
+            OR REPLACE(pj.title,' ','')    LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
+            OR REPLACE(pj.memo,' ','')     LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
+          )
+        </when>
+
+        <!-- 2) animalGroup(대분류) -->
+        <when test="animalGroup != null and animalGroup != ''">
+          <choose>
+            <when test="animalGroup == '포유류'">
+              AND pj.pet_info REGEXP '개|고양이|토끼|햄스터|기니피그|고슴도치|페렛'
+            </when>
+            <when test="animalGroup == '파충류'">
+              AND pj.pet_info REGEXP '거북이|도마뱀|이구아나|카멜레온|뱀'
+            </when>
+            <when test="animalGroup == '절지류'">
+              AND pj.pet_info REGEXP '타란툴라|전갈|곤충'
+            </when>
+            <when test="animalGroup == '어류'">
+              AND pj.pet_info REGEXP '금붕어|구피|베타|시클리드|코이'
+            </when>
+            <when test="animalGroup == '양서류'">
+              AND pj.pet_info REGEXP '개구리|도롱뇽|살라맨더|뉴트'
+            </when>
+            <when test="animalGroup == '조류'">
+              AND pj.pet_info REGEXP '앵무새|잉꼬|카나리아|왕관앵무|문조'
+            </when>
+          </choose>
+        </when>
+      </choose>
+
+      <!-- 보수 -->
       <if test="payRange != null and payRange != ''">
         <choose>
           <when test="payRange == 'low'">
@@ -71,17 +109,23 @@
           </when>
         </choose>
       </if>
+
+      <!-- 날짜 -->
       <if test="startDate != null and startDate != ''">
         AND pj.start_date &gt;= #{startDate}
       </if>
       <if test="endDate != null and endDate != ''">
         AND pj.end_date &lt;= #{endDate}
       </if>
+
+      <!-- 키워드 -->
       <if test="keyword != null and keyword != ''">
-        AND (pj.title LIKE CONCAT('%', #{keyword}, '%')
+        AND (
+          pj.title    LIKE CONCAT('%', #{keyword}, '%')
           OR pj.memo  LIKE CONCAT('%', #{keyword}, '%')
           OR pj.pet_info LIKE CONCAT('%', #{keyword}, '%')
-          OR pj.location LIKE CONCAT('%', #{keyword}, '%'))
+          OR pj.location LIKE CONCAT('%', #{keyword}, '%')
+        )
       </if>
     </where>
     ORDER BY pj.created_at DESC
@@ -95,9 +139,39 @@
       <if test="location != null and location != ''">
         AND pj.location LIKE CONCAT('%', #{location}, '%')
       </if>
-      <if test="animalType != null and animalType != ''">
-        AND pj.pet_info LIKE CONCAT('%', #{animalType}, '%')
-      </if>
+
+      <choose>
+        <when test="animalType != null and animalType != ''">
+          AND (
+            REPLACE(pj.pet_info,' ','') LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
+            OR REPLACE(pj.title,' ','')    LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
+            OR REPLACE(pj.memo,' ','')     LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
+          )
+        </when>
+        <when test="animalGroup != null and animalGroup != ''">
+          <choose>
+            <when test="animalGroup == '포유류'">
+              AND pj.pet_info REGEXP '개|고양이|토끼|햄스터|기니피그|고슴도치|페렛'
+            </when>
+            <when test="animalGroup == '파충류'">
+              AND pj.pet_info REGEXP '거북이|도마뱀|이구아나|카멜레온|뱀'
+            </when>
+            <when test="animalGroup == '절지류'">
+              AND pj.pet_info REGEXP '타란툴라|전갈|곤충'
+            </when>
+            <when test="animalGroup == '어류'">
+              AND pj.pet_info REGEXP '금붕어|구피|베타|시클리드|코이'
+            </when>
+            <when test="animalGroup == '양서류'">
+              AND pj.pet_info REGEXP '개구리|도롱뇽|살라맨더|뉴트'
+            </when>
+            <when test="animalGroup == '조류'">
+              AND pj.pet_info REGEXP '앵무새|잉꼬|카나리아|왕관앵무|문조'
+            </when>
+          </choose>
+        </when>
+      </choose>
+
       <if test="payRange != null and payRange != ''">
         <choose>
           <when test="payRange == 'low'">
@@ -111,17 +185,21 @@
           </when>
         </choose>
       </if>
+
       <if test="startDate != null and startDate != ''">
         AND pj.start_date &gt;= #{startDate}
       </if>
       <if test="endDate != null and endDate != ''">
         AND pj.end_date &lt;= #{endDate}
       </if>
+
       <if test="keyword != null and keyword != ''">
-        AND (pj.title LIKE CONCAT('%', #{keyword}, '%')
+        AND (
+          pj.title    LIKE CONCAT('%', #{keyword}, '%')
           OR pj.memo  LIKE CONCAT('%', #{keyword}, '%')
           OR pj.pet_info LIKE CONCAT('%', #{keyword}, '%')
-          OR pj.location LIKE CONCAT('%', #{keyword}, '%'))
+          OR pj.location LIKE CONCAT('%', #{keyword}, '%')
+        )
       </if>
     </where>
   </select>
@@ -139,4 +217,5 @@
   <select id="countAllJobs" resultType="int">
     SELECT COUNT(*) FROM parttime_job
   </select>
+
 </mapper>
