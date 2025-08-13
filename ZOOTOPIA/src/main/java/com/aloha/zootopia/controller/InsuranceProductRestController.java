@@ -29,7 +29,7 @@ import com.aloha.zootopia.domain.InsuranceProduct;
 import com.aloha.zootopia.service.InsuranceProductService;
 
 @RestController
-@RequestMapping("/api/insurance")
+@RequestMapping("/insurance")
 public class InsuranceProductRestController {
 
     @Value("${file.upload.path}")

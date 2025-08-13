@@ -88,7 +88,7 @@ public class ParttimeJobApplicantRestController {
         return ResponseEntity.ok(Map.of("ok", true));
     }
 
-    // 특정 알바 지원자 목록(작성자/관리자만)
+    // 특정 알바 지원자 목록
     @GetMapping("/{jobId}/applicants")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<?> list(
@@ -97,25 +97,47 @@ public class ParttimeJobApplicantRestController {
             Authentication auth
     ) {
         ParttimeJob job = jobService.getJob(jobId);
-        if (job == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message","존재하지 않습니다."));
-
-        long userId = uid(auth);
-        boolean isAdmin = admin(auth);
-        if (job.getUserId() == null || (job.getUserId() != userId && !isAdmin)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message","작성자 또는 관리자만 조회 가능"));
+        if (job == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message","존재하지 않습니다."));
         }
 
-        int pageSize = 3;
-        int offset = (page - 1) * pageSize;
-        List<ParttimeJobApplicant> list = applicantService.getPagedApplicants(jobId, offset, pageSize);
-        int total = applicantService.countApplicantsByJobId(jobId);
-        int totalPages = Math.max(1, (int)Math.ceil((double)total / pageSize));
+        long userId = uid(auth);
+        boolean isAdmin  = admin(auth);
+        boolean isWriter = (job.getUserId() != null && job.getUserId() == userId);
 
-        Map<String,Object> body = new HashMap<>();
-        body.put("applicants", list);
-        body.put("currentPage", page);
-        body.put("totalPages", totalPages);
-        return ResponseEntity.ok(body);
+        // ✅ 작성자/관리자: 전체 목록 + 페이징
+        if (isWriter || isAdmin) {
+            int pageSize = 3;
+            int offset   = (Math.max(1, page) - 1) * pageSize;
+
+            List<ParttimeJobApplicant> list = applicantService.getPagedApplicants(jobId, offset, pageSize);
+            int total       = applicantService.countApplicantsByJobId(jobId);
+            int totalPages  = Math.max(1, (int)Math.ceil((double)total / pageSize));
+
+            Map<String,Object> body = new HashMap<>();
+            body.put("applicants", list);
+            body.put("currentPage", page);
+            body.put("totalPages", totalPages);
+            body.put("onlyMe", false); // 프론트 렌더링 분기용
+            return ResponseEntity.ok(body);
+        }
+
+        // ✅ 신청자: 본인만
+        if (userId > 0 && applicantService.hasApplied(jobId, userId)) {
+            ParttimeJobApplicant mine = applicantService.getApplicantByJobIdAndUserId(jobId, userId);
+
+            Map<String,Object> body = new HashMap<>();
+            body.put("applicants", (mine == null ? List.of() : List.of(mine)));
+            body.put("currentPage", 1);
+            body.put("totalPages", 1);
+            body.put("onlyMe", true); // 프론트가 “내 신청 카드”만 그리도록 힌트
+            return ResponseEntity.ok(body);
+        }
+
+        // 그 외: 접근 불가
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("message","작성자/관리자 또는 해당 신청자만 조회 가능합니다."));
     }
 
     // 신청 취소(본인만) 또는 관리자 강제 삭제
