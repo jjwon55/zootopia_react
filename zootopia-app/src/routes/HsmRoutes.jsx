@@ -14,7 +14,7 @@ export default function HsmRoutes() {
       {/* / → /products/listp 로 리다이렉트 */}
       {/* <Route path="/" element={<Navigate to="/products/listp" replace />} /> */}
   {/* 기본 페이지: / 에서 홈 표시 */}
-  <Route path="/" element={<Home />} />
+  {/* <Route path="/" element={<Home />} /> */}
 
       {/* 목록 */}
       <Route path="/products/listp" element={<ProductList />} />
