@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { useLoginContext } from '../../context/LoginContextProvider';
 // 상세도 55개 Mock DB를 사용하는 API 모듈을 명시적으로 사용
-import { fetchProductDetail } from '../../apis/products/index.js';
+import { fetchProductDetail } from '../../apis/products/products.js';
 
 import { addToCart } from '../../apis/products/cart';
 import './ProductDetail.css';
 
 export default function ProductDetail() {
   const { productId } = useParams();
+  const { userInfo } = useLoginContext();
+  const userId = userInfo?.userId || 1;
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -59,7 +62,7 @@ export default function ProductDetail() {
 
     setAddingToCart(true);
     try {
-      const response = await addToCart(1, product.no, quantity);
+      const response = await addToCart(userId, product.no, quantity);
       if (response && response.success) {
         const goToCart = window.confirm(`${product.name}이(가) 장바구니에 추가되었습니다.`);
         if (goToCart) {

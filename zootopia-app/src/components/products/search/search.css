@@ -1,7 +1,7 @@
 /* 검색 섹션 전체 컨테이너 */
 .search-container {
   width: 100% !important;
-  background: linear-gradient(135deg, #fef7f0 0%, #fdf4f5 50%, #fef1f5 100%) !important;
+  background: linear-gradient(135deg, #FFF6F6 0%, #FFECEC 50%, #FFF6F6 100%) !important;
   padding: 3rem 0 !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
@@ -34,12 +34,12 @@
 
 .search-input-container:hover {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-  border-color: #fbb6ce !important;
+  border-color: #FFC2C2 !important;
 }
 
 .search-input-container:focus-within {
-  box-shadow: 0 0 0 3px rgba(251, 182, 206, 0.3) !important;
-  border-color: #f472b6 !important;
+  box-shadow: 0 0 0 3px rgba(255, 153, 153, 0.3) !important;
+  border-color: #FF9999 !important;
 }
 
 .search-icon {
@@ -67,7 +67,7 @@
 .search-button {
   position: absolute !important;
   right: 0.5rem !important;
-  background: linear-gradient(135deg, #f472b6, #ec4899) !important;
+  background: linear-gradient(135deg, #FF9999, #FF8C8C) !important;
   color: white !important;
   padding: 0.625rem 2rem !important;
   border-radius: 9999px !important;
@@ -75,13 +75,13 @@
   border: none !important;
   cursor: pointer !important;
   transition: all 0.2s ease !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 1px 3px rgba(255, 153, 153, 0.3) !important;
 }
 
 .search-button:hover {
-  background: linear-gradient(135deg, #ec4899, #db2777) !important;
+  background: linear-gradient(135deg, #FF8C8C, #FF7A7A) !important;
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(255, 153, 153, 0.35) !important;
 }
 
 .search-button:active {
@@ -124,10 +124,10 @@
 }
 
 .category-button.active {
-  background: linear-gradient(135deg, #f472b6, #ec4899) !important;
+  background: linear-gradient(135deg, #FF9999, #FF8C8C) !important;
   color: white !important;
-  border-color: #ec4899 !important;
-  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4) !important;
+  border-color: #FF8C8C !important;
+  box-shadow: 0 4px 15px rgba(255, 153, 153, 0.4) !important;
   animation: pulse-pink 0.3s ease-in-out !important;
 }
 
@@ -138,9 +138,9 @@
 }
 
 .category-button:not(.active):hover {
-  background: #fef7f0 !important;
-  border-color: #fbb6ce !important;
-  color: #db2777 !important;
+  background: #FFE5E5 !important;
+  border-color: #FFC2C2 !important;
+  color: #B44444 !important;
 }
 
 .category-icon {
@@ -199,12 +199,12 @@
 
 /* 접근성 개선 */
 .search-input:focus {
-  outline: 2px solid #f472b6;
+  outline: 2px solid #FF9999;
   outline-offset: 2px;
 }
 
 .category-button:focus {
-  outline: 2px solid #f472b6;
+  outline: 2px solid #FF9999;
   outline-offset: 2px;
 }
 
@@ -223,7 +223,7 @@
   height: 1rem;
   margin: -0.5rem 0 0 -0.5rem;
   border: 2px solid #f3f4f6;
-  border-top: 2px solid #f472b6;
+  border-top: 2px solid #FF9999;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

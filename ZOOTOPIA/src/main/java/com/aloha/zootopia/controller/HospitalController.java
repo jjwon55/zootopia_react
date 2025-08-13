@@ -23,10 +23,12 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.aloha.zootopia.domain.Animal;
 import com.aloha.zootopia.domain.CustomUser;
 import com.aloha.zootopia.domain.HospReview;
 import com.aloha.zootopia.domain.Hospital;
 import com.aloha.zootopia.domain.PageInfo;
+import com.aloha.zootopia.domain.Specialty;
 import com.aloha.zootopia.dto.HospitalForm;
 import com.aloha.zootopia.service.HospReviewService;
 import com.aloha.zootopia.service.hospital.HospitalService;
@@ -36,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @RequestMapping("/service/hospitals")
 public class HospitalController {
 
@@ -49,12 +51,16 @@ public class HospitalController {
     // 병원 목록
     @GetMapping
     public ResponseEntity<Map<String, Object>> list(
-            @RequestParam(required = false) List<Integer> animal,
+            @RequestParam(value = "animal", required = false) List<Integer> animal,
+            @RequestParam(value = "specialty", required = false) List<Integer> specialty,
             @RequestParam(value = "pageNum", defaultValue = "1") int pageNum) {
 
+        List<Integer> animalListParam = (animal != null) ? new ArrayList<>(animal) : null;
+        List<Integer> specialtyListParam = (specialty != null) ? new ArrayList<>(specialty) : null;
+
         int pageSize = 6;
-        int total = hospitalService.getHospitalCount(animal);
-        List<Hospital> hospitalList = hospitalService.getHospitalList(animal, pageNum, pageSize);
+        int total = hospitalService.getHospitalCount(animalListParam, specialtyListParam);
+        List<Hospital> hospitalList = hospitalService.getHospitalList(animalListParam, specialtyListParam, pageNum, pageSize);
 
         PageInfo pageInfo = new PageInfo();
         pageInfo.setPageNum(pageNum);
@@ -77,15 +83,32 @@ public class HospitalController {
         response.put("hospitalList", hospitalList);
         response.put("pageInfo", pageInfo);
         response.put("animalList", hospitalService.getAllAnimals());
+        response.put("specialtyList", hospitalService.getAllSpecialties());
         response.put("selectedAnimals", animal == null ? new ArrayList<>() : animal);
+        response.put("selectedSpecialties", specialty == null ? new ArrayList<>() : specialty);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    // 모든 동물 목록 조회
+    @GetMapping("/animals")
+    public ResponseEntity<List<Animal>> getAllAnimals() {
+        List<Animal> animals = hospitalService.getAllAnimals();
+        return new ResponseEntity<>(animals, HttpStatus.OK);
+    }
+
+    // 모든 진료 과목 목록 조회
+    @GetMapping("/specialties")
+    public ResponseEntity<List<Specialty>> getAllSpecialties() {
+        List<Specialty> specialties = hospitalService.getAllSpecialties();
+        return new ResponseEntity<>(specialties, HttpStatus.OK);
+    }
+
     // 병원 상세 정보
     @GetMapping("/{id}")
-    public ResponseEntity<Hospital> details(@PathVariable Integer id) {
+    public ResponseEntity<Hospital> details(@PathVariable("id") Integer id) {
         Hospital hospital = hospitalService.getHospital(id);
+        log.info("HospitalController - details() 반환 hospital: {}", hospital);
         return new ResponseEntity<>(hospital, HttpStatus.OK);
     }
 
@@ -112,10 +135,14 @@ public class HospitalController {
     // 병원 수정
     @PutMapping("/{id}")
     public ResponseEntity<String> updateHospital(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @Valid @RequestPart("hospitalForm") HospitalForm hospitalForm,
             BindingResult bindingResult,
             @RequestParam(value = "thumbnailImageFile", required = false) MultipartFile thumbnailImageFile) {
+
+        log.info("HospitalController - updateHospital() 진입. id: {}", id);
+        log.info("HospitalController - updateHospital() hospitalForm: {}", hospitalForm);
+        log.info("HospitalController - updateHospital() thumbnailImageFile: {}", thumbnailImageFile != null ? thumbnailImageFile.getOriginalFilename() : "null");
 
         if (bindingResult.hasErrors()) {
             return new ResponseEntity<>("Validation failed: " + bindingResult.getFieldError().getDefaultMessage(), HttpStatus.BAD_REQUEST);
@@ -148,7 +175,7 @@ public class HospitalController {
 
     // 병원 리뷰 목록
     @GetMapping("/{hospitalId}/reviews")
-    public ResponseEntity<List<HospReview>> getReviews(@PathVariable int hospitalId) {
+    public ResponseEntity<List<HospReview>> getReviews(@PathVariable("hospitalId") int hospitalId) {
         log.info("HospitalController - getReviews() 진입. hospitalId: {}", hospitalId);
         List<HospReview> reviews = hospReviewService.listByHospital(hospitalId);
         log.info("HospitalController - getReviews() 반환 리뷰 수: {}", reviews.size());
@@ -157,7 +184,7 @@ public class HospitalController {
 
     // 리뷰 등록
     @PostMapping("/{hospitalId}/reviews")
-    public ResponseEntity<String> addReview(@PathVariable int hospitalId, @RequestBody HospReview hospReview, @AuthenticationPrincipal CustomUser customUser) {
+    public ResponseEntity<String> addReview(@PathVariable("hospitalId") int hospitalId, @RequestBody HospReview hospReview, @AuthenticationPrincipal CustomUser customUser) {
         log.info("HospitalController - addReview() 진입. hospitalId: {}, hospReview: {}", hospitalId, hospReview);
         if (customUser == null) {
             log.warn("HospitalController - addReview() : Unauthorized access - customUser is null");
@@ -167,16 +194,22 @@ public class HospitalController {
         hospReview.setUserId(userId);
         hospReview.setHospitalId(hospitalId);
         
-        hospReviewService.addReview(hospReview);
-        log.info("HospitalController - addReview() : Review added successfully");
-        return new ResponseEntity<>("Review added successfully", HttpStatus.CREATED);
+        try { // try-catch 블록 추가
+            log.info("리뷰 서비스 호출 전: {}", hospReview);
+            hospReviewService.addReview(hospReview);
+            log.info("리뷰 서비스 호출 후 성공");
+            return new ResponseEntity<>("Review added successfully", HttpStatus.CREATED);
+        } catch (Exception e) {
+            log.error("리뷰 등록 중 에러 발생: {}", e.getMessage(), e); // 에러 로그 추가
+            return new ResponseEntity<>("Failed to add review: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     // 리뷰 수정
     @PutMapping("/{hospitalId}/reviews/{reviewId}")
     public ResponseEntity<String> updateReview(
-        @PathVariable int hospitalId,
-        @PathVariable int reviewId,
+        @PathVariable("hospitalId") int hospitalId,
+        @PathVariable("reviewId") int reviewId,
         @RequestBody HospReview hospReview,
         @AuthenticationPrincipal CustomUser customUser
     ) {
@@ -206,8 +239,8 @@ public class HospitalController {
     // 리뷰 삭제
     @DeleteMapping("/{hospitalId}/reviews/{reviewId}")
     public ResponseEntity<String> deleteReview(
-        @PathVariable int hospitalId,
-        @PathVariable int reviewId,
+        @PathVariable("hospitalId") int hospitalId,
+        @PathVariable("reviewId") int reviewId,
         @AuthenticationPrincipal CustomUser customUser
     ) {
         log.info("HospitalController - deleteReview() 진입. hospitalId: {}, reviewId: {}", hospitalId, reviewId);

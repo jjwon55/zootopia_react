@@ -22,7 +22,9 @@ public class HospReviewService {
     }
 
     public void addReview(HospReview hospReview) {
-        hospReviewMapper.insert(hospReview);
+        log.info("HospReviewService - addReview() 진입. hospReview: {}", hospReview);
+        int result = hospReviewMapper.insert(hospReview); // 반환값 확인
+        log.info("HospReviewMapper.insert 결과: {}", result);
     }
 
     public void updateReview(HospReview hospReview) {
