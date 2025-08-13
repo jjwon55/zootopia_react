@@ -5,6 +5,7 @@ import * as hospitalApi from '../../apis/hospitals/hospitalApi';
 import CreateHospitalContainer from '../../containers/hospitals/CreateHospitalContainer'; // CreateHospitalContainer를 재사용
 import { useContext } from 'react';
 import { LoginContext } from '../../context/LoginContextProvider';
+import defaultHospImg from "../../assets/img/default-hospital.png";
 
 const HospitalEditPage = () => {
   const { hospitalId } = useParams();
@@ -50,8 +51,19 @@ const HospitalEditPage = () => {
   }
 
   return (
-    <CreateHospitalContainer hospitalData={hospitalData} isAdmin={isAdmin} />
-  );
+    <>
+      <div className="hospital-main-container">
+          <div className="logo-container tw:flex tw:items-center tw:justify-center ">
+              <div className="logo tw:w-full tw:h-full tw:bg-[#61dd9910] tw:flex tw:items-center tw:justify-center">
+                  <img src={defaultHospImg} alt="병원 아이콘" className="logo-icon tw:w-[150px] tw:h-[120px] " />
+              </div>
+          </div>
+          <div className="hosplist-main-content">
+              <CreateHospitalContainer hospitalData={hospitalData} isAdmin={isAdmin} />
+          </div>
+      </div>
+    </>
+  )
 };
 
 export default HospitalEditPage;

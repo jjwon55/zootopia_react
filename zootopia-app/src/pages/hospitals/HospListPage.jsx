@@ -11,7 +11,7 @@ const HospListPage = () => {
                         <img src={defaultHospImg} alt="병원 아이콘" className="logo-icon tw:w-[150px] tw:h-[120px] " />
                     </div>
                 </div>
-                <div className="main-content">
+                <div className="hosplist-main-content">
                     <HospListContainer />
                 </div>
             </div>

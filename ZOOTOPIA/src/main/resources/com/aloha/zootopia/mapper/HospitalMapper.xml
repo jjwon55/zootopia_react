@@ -117,39 +117,54 @@
     WHERE hospital_id = #{hospitalId}
   </delete>
 
-  <select id="selectHospitals" resultMap="HospitalListResultMap">
+  <select id="selectHospitals" resultMap="HospitalDetailResultMap">
     SELECT DISTINCT h.*, (SELECT AVG(rating) FROM hospital_review r WHERE r.hospital_id = h.hospital_id) AS avg_rating
     FROM hospital_info h
-    <if test="animalIds != null and animalIds.size() > 0">
-      JOIN hospital_animal ha ON h.hospital_id = ha.hospital_id
-      WHERE ha.animal_id IN
-      <foreach collection="animalIds" item="id" open="(" separator="," close=")">
-        #{id}
-      </foreach>
-      GROUP BY h.hospital_id
-      HAVING COUNT(DISTINCT ha.animal_id) = #{animalIds.size}
-    </if>
+    LEFT JOIN hospital_animal ha ON h.hospital_id = ha.hospital_id
+    LEFT JOIN hospital_specialty hs ON h.hospital_id = hs.hospital_id
+    <where>
+        <if test="animalIds != null and animalIds.size() > 0">
+            ha.animal_id IN
+            <foreach collection="animalIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test="specialtyIds != null and specialtyIds.size() > 0">
+            <if test="animalIds != null and animalIds.size() > 0">
+                OR
+            </if>
+            hs.specialty_id IN
+            <foreach collection="specialtyIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+    </where>
     ORDER BY h.hospital_id DESC
     LIMIT #{limit} OFFSET #{offset}
   </select>
 
   <select id="countHospitals" resultType="int">
-    <if test="animalIds != null and animalIds.size() > 0">
-      SELECT COUNT(DISTINCT hospital_id) FROM (
-        SELECT h.hospital_id
-        FROM hospital_info h
-        JOIN hospital_animal ha ON h.hospital_id = ha.hospital_id
-        WHERE ha.animal_id IN
-        <foreach collection="animalIds" item="id" open="(" separator="," close=")">
-          #{id}
-        </foreach>
-        GROUP BY h.hospital_id
-        HAVING COUNT(DISTINCT ha.animal_id) = #{animalIds.size}
-      ) AS T
-    </if>
-    <if test="animalIds == null or animalIds.size() == 0">
-      SELECT COUNT(*) FROM hospital_info
-    </if>
+    SELECT COUNT(DISTINCT h.hospital_id)
+    FROM hospital_info h
+    LEFT JOIN hospital_animal ha ON h.hospital_id = ha.hospital_id
+    LEFT JOIN hospital_specialty hs ON h.hospital_id = hs.hospital_id
+    <where>
+        <if test="animalIds != null and animalIds.size() > 0">
+            ha.animal_id IN
+            <foreach collection="animalIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test="specialtyIds != null and specialtyIds.size() > 0">
+            <if test="animalIds != null and animalIds.size() > 0">
+                OR
+            </if>
+            hs.specialty_id IN
+            <foreach collection="specialtyIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+    </where>
   </select>
 
   <!-- 병원 삭제 -->

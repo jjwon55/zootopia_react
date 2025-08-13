@@ -28,6 +28,7 @@ import com.aloha.zootopia.service.UserDetailServiceImpl;
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig {
 
+
   @Autowired
   private UserDetailServiceImpl userDetailServiceImpl;
   @Autowired
@@ -111,11 +112,13 @@ public class SecurityConfig {
             .requestMatchers("/posts/**").permitAll()
             .requestMatchers("/lost/**").permitAll()
             .requestMatchers("/showoff/**").permitAll()
+            .requestMatchers("/service/**").permitAll()
             .requestMatchers( "/comments/**").authenticated()
             .requestMatchers("/upload/**").permitAll()
             .requestMatchers("/login").permitAll()
             .requestMatchers("/auth/**").permitAll()
             .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**", "/img/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/parttime", "/parttime/**").permitAll()
             .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/hospitals/{hospitalId}/reviews").permitAll()
 
@@ -129,5 +132,6 @@ public class SecurityConfig {
 
     return http.build();
   }
+
 
 }

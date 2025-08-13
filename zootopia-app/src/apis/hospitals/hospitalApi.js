@@ -22,10 +22,11 @@ api.interceptors.request.use((config) => {
  * @param {Array<number>} animal - 필터링할 동물 ID 배열
  * @param {number} pageNum - 페이지 번호
  */
-export const list = (animal = [], pageNum = 1) =>
+export const list = (animal = [], specialty = [], pageNum = 1) =>
   api.get(BASE_URL, {
     params: {
       animal: animal?.length ? animal.join(',') : undefined,
+      specialty: specialty?.length ? specialty.join(',') : undefined,
       pageNum
     }
   });

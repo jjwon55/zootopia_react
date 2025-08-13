@@ -15,8 +15,8 @@ public interface HospitalService {
     void createHospital(HospitalForm form, MultipartFile thumbnailImageFile) throws Exception;
     List<Animal> getAllAnimals();
     List<Specialty> getAllSpecialties();
-    List<Hospital> getHospitalList(List<Integer> animalIds, int pageNum, int pageSize);
-    int getHospitalCount(List<Integer> animalIds);
+    List<Hospital> getHospitalList(List<Integer> animalIds, List<Integer> specialtyIds, int pageNum, int pageSize);
+    int getHospitalCount(List<Integer> animalIds, List<Integer> specialtyIds);
     void updateHospital(HospitalForm form, MultipartFile thumbnailImageFile) throws Exception;
     void deleteHospital(Integer id);
     Hospital getHospital(Integer id);

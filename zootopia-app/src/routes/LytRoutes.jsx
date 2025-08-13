@@ -10,10 +10,12 @@ import InsuranceInsert from '../pages/insurance/Insert'
 import InsuranceRead from '../pages/insurance/Read'
 import InsuranceUpdate from '../pages/insurance/Update'
 import { Route, Routes } from 'react-router-dom'
+import Header from '../components/header/Header'
 
 const LytRoutes = () => {
   return (
     <>
+      {/* <Header /> */}
       <Routes>
         {/* 기본 페이지 */}
         <Route path="/" element={<Home />} />

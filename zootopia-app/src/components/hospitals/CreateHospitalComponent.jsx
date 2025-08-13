@@ -161,6 +161,21 @@ const HospitalForm = ({ hospitalData, isAdmin }) => {
       });
     }
   };
+  // 🔹 취소 기능 추가
+  const handleCancel = async () => {
+    const result = await Swal.fire({
+      icon: "warning",
+      title: "상세 페이지로 돌아가시겠습니까?",
+      text: "",
+      showCancelButton: true,
+      confirmButtonColor: "#e63946",
+      cancelButtonColor: "#74b9ff",
+      confirmButtonText: "돌아가기",
+      cancelButtonText: "취소"
+    });
+    if (result.isConfirmed) 
+      return navigate(-1);
+  };
 
   if (loading) return <div className="tw:text-center tw:mt-6">로딩중...</div>;
 
@@ -217,14 +232,18 @@ const HospitalForm = ({ hospitalData, isAdmin }) => {
           {/* 진료 과목 */}
           <div className="tw:mb-5">
             <label className="tw:block tw:mb-2 tw:font-semibold">진료 과목</label>
-            <div className="tw:grid tw:grid-cols-[repeat(auto-fit,minmax(150px,1fr))] tw:gap-2">
+            <div className="tw:grid tw:grid-cols-[repeat(auto-fit,minmax(80px,1fr))] tw:gap-2">
               {specialtyList.map((s) => (
-                <label key={s.specialtyId} className="tw:flex tw:items-center tw:gap-2 tw:p-2 tw:bg-gray-100 tw:rounded-full tw:cursor-pointer hover:tw:bg-blue-50">
+                <label
+                  key={s.specialtyId}
+                  className="tw:flex tw:items-center tw:justify-center tw:p-2 tw:bg-[#fafafa] tw:rounded-full tw:cursor-pointer tw:has-[input:checked]:bg-[#bdffd8] tw:transition-colors tw:duration-300 tw:ease-in-out"
+                >
                   <input
                     type="checkbox"
                     value={s.specialtyId}
                     checked={hospitalForm.specialtyIds.includes(s.specialtyId)}
                     onChange={(e) => handleCheckbox(e, "specialtyIds")}
+                    className="tw:hidden"
                   />
                   {s.category}
                 </label>
@@ -235,14 +254,15 @@ const HospitalForm = ({ hospitalData, isAdmin }) => {
           {/* 진료 가능 동물 */}
           <div className="tw:mb-5">
             <label className="tw:block tw:mb-2 tw:font-semibold">진료 가능 동물</label>
-            <div className="tw:grid tw:grid-cols-[repeat(auto-fit,minmax(150px,1fr))] tw:gap-2">
+            <div className="tw:grid tw:grid-cols-[repeat(auto-fit,minmax(120px,1fr))] tw:gap-2">
               {animalList.map((a) => (
-                <label key={a.animalId} className="tw:flex tw:items-center tw:gap-2 tw:p-2 tw:bg-gray-100 tw:rounded-full tw:cursor-pointer hover:tw:bg-blue-50">
+                <label key={a.animalId} className="tw:flex tw:items-center tw:justify-center tw:p-2 tw:bg-[#fafafa] tw:rounded-full tw:cursor-pointer tw:has-[input:checked]:bg-[#bdffd8] tw:transition-colors tw:duration-300 tw:ease-in-out">
                   <input
                     type="checkbox"
                     value={a.animalId}
                     checked={hospitalForm.animalIds.includes(a.animalId)}
                     onChange={(e) => handleCheckbox(e, "animalIds")}
+                    className="tw:hidden"
                   />
                   {a.species}
                 </label>
@@ -252,7 +272,7 @@ const HospitalForm = ({ hospitalData, isAdmin }) => {
 
           {/* 버튼 영역 */}
           <div className="tw:flex tw:justify-center tw:gap-4 tw:mt-6">
-            <button type="button" onClick={() => navigate(-1)} className="tw:px-6 tw:py-2 tw:bg-gray-200 tw:rounded-full hover:tw:bg-gray-300">취소</button>
+            <button type="button" onClick={handleCancel} className="tw:px-6 tw:py-2 tw:bg-gray-200 tw:rounded-full hover:tw:bg-gray-300">취소</button>
             <button type="submit" className="tw:px-6 tw:py-2 tw:bg-[#74b9ff] tw:text-white tw:rounded-full hover:tw:bg-[#0984e3]">
               {hospitalForm.hospitalId ? "수정" : "등록"}
             </button>

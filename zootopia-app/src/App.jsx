@@ -8,6 +8,7 @@ import LytRoutes from './routes/LytRoutes';
 import HsmRoutes from './routes/HsmRoutes';
 import SysRoutes from './routes/SysRoutes';
 import Header from './components/header/Header';
+import Footer from './components/footer/Footer';
 
 const App = () => {
   return (
@@ -15,9 +16,10 @@ const App = () => {
       <LoginContextProvider>
         <Header />
           <SysRoutes />
-          {/* <JjwRoutes /> */}
-          {/* <HsmRoutes /> */}
-          {/* <LytRoutes /> */}
+          <JjwRoutes />
+          <HsmRoutes />
+          <LytRoutes />
+        <Footer />
       </LoginContextProvider>
     </BrowserRouter>
   );
