@@ -4,9 +4,9 @@ import { formatDate } from '../../utils/format';
 import defaultProfile from '../../assets/img/default-profile.png';
 import pinkArrow from '../../assets/img/pinkarrow.png';
 import Share from '../../assets/img/share.png';
-import CommentSection from '../posts/CommentSection'; // ✅ 경로 확인: posts 폴더의 공용 CommentSection 사용
-import { toastSuccess, toastInfo, toastError } from '../../apis/alert';
-import { toggleLike } from '../../apis/posts/showoff'; // ✅ showoff 전용 API
+import CommentSection from '../posts/CommentSection'; 
+import { toastSuccess, toastInfo, toastError } from '../../apis/posts/alert';
+import { toggleLike } from '../../apis/posts/showoff'; 
 
 // /api 프록시 환경에서 이미지 경로 정규화
 const resolveImg = (src) => {

@@ -5,7 +5,8 @@ import pinkArrow from '../../assets/img/pinkarrow.png';
 import shareIcon from '../../assets/img/share.png';
 import lostMain from '../../assets/img/lostmain.png';
 import CommentSection from '../../components/lost/CommentSection';
-import { toastSuccess, toastError } from '../../apis/alert';
+import { toastSuccess, toastError } from '../../apis/posts/alert';
+import { formatDateOnly } from '../../utils/format';
 
 // /api 프록시 환경에서 이미지 경로 정규화
 const resolveImg = (src) => {
@@ -15,7 +16,7 @@ const resolveImg = (src) => {
   if (src.startsWith('/')) return `/api${src}`;
   return `/api/${src}`;
 };
-
+  
 // 본문 HTML 내 이미지 src를 /api 기준으로 변환
 const normalizeContentImgSrc = (html) =>
   (html || '').replace(/src="\/(?!api\/)/g, 'src="/api/');
@@ -102,42 +103,59 @@ const LostRead = ({
         </div>
       </div>
 
-      {/* 정보 박스 */}
-      <div className="tw:border tw:border-gray-200 tw:rounded-[10px] tw:p-4 tw:mb-6 tw:bg-[#fffefb]">
-        <div className="tw:flex tw:justify-between tw:mb-2 tw:text-sm md:tw:text-base">
-          <div>
-            <span className="tw-font-bold">잃어버린 장소: </span>
-            {post.lostLocation}
-          </div>
-          <div>
-            <span className="tw-font-bold">유실 날짜: </span>
-            {post.lostTime?.substring(0, 10)}
-          </div>
+{/* 정보 박스 (v2) */}
+<div className="tw:mb-6">
+  <div className="tw:rounded-[12px] tw:border tw:border-zinc-200 tw:bg-[#fffefb] tw:p-4">
+    <div className="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-3">
+      {post.lostLocation && (
+        <div className="tw:flex tw:items-start tw:gap-2">
+          <span className="tw-w-24 tw-shrink-0 tw-text-sm tw-font-semibold tw-text-zinc-500">목격 장소  : </span>
+          <span className="tw-text-[15px] tw-text-zinc-800">{post.lostLocation}</span>
         </div>
-        <div className="tw:flex tw:justify-between tw:text-sm md:tw:text-base">
-          <div>
-            <span className="tw-font-bold">글 제목: </span>
-            {post.title}
-          </div>
-          <div>
-            <span className="tw-font-bold">연락처: </span>
-            {post.contactPhone}
-          </div>
-        </div>
+      )}
 
-        {post.tagList?.length > 0 && (
-          <div className="tw:mt-3 tw:flex tw:flex-wrap tw:gap-2">
-            {post.tagList.map((tag) => (
-              <span
-                key={tag.name}
-                className="tw:bg-gray-200 tw:px-2 tw:py-1 tw:rounded tw:text-sm"
-              >
-                #{tag.name}
-              </span>
-            ))}
-          </div>
-        )}
+      {post.lostTime && (
+        <div className="tw:flex tw:items-start tw:gap-2">
+          <span className="tw-w-24 tw-shrink-0 tw-text-sm tw-font-semibold tw-text-zinc-500">유실 날짜 : </span>
+          <time className="tw-text-[15px] tw-text-zinc-800">{formatDateOnly(post.lostTime)}</time>
+        </div>
+      )}
+
+      {post.title && (
+        <div className="tw:flex tw:items-start tw:gap-2">
+          <span className="tw-w-24 tw-shrink-0 tw-text-sm tw-font-semibold tw-text-zinc-500">글 제목 : </span>
+          <span className="tw-text-[15px] tw-text-zinc-800">{post.title}</span>
+        </div>
+      )}
+
+      {post.contactPhone && (
+        <div className="tw:flex tw:items-start tw:gap-2">
+          <span className="tw-w-24 tw-shrink-0 tw-text-sm tw-font-semibold tw-text-zinc-500">연락처 : </span>
+          <a
+            href={`tel:${post.contactPhone}`}
+            className="tw-text-[15px] tw-text-rose-600 tw-underline hover:tw:no-underline"
+          >
+            {post.contactPhone}
+          </a>
+        </div>
+      )}
+    </div>
+
+    {post.tagList?.length > 0 && (
+      <div className="tw:mt-4 tw:flex tw:flex-wrap tw:gap-2">
+        {post.tagList.map((tag) => (
+          <span
+            key={tag.name}
+            className="tw-inline-flex tw-items-center tw-gap-1 tw-bg-zinc-100 tw-border tw-border-zinc-200 tw-rounded-full tw-px-3 tw-py-[6px] tw-text-[13px]"
+          >
+            #{tag.name}
+          </span>
+        ))}
       </div>
+    )}
+  </div>
+</div>
+
 
       {/* 댓글 섹션 */}
       <div className="tw:pt-4 tw:border-t tw:border-gray-200">

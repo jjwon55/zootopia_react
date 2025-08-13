@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { toastSuccess, toastError } from '../../apis/alert';
+import { toastSuccess, toastError } from '../../apis/posts/alert';
 import { read as readShowoff, remove as removeShowoff } from '../../apis/posts/showoff'; // ✅ showoff 전용 API
 import ShowoffRead from '../../components/showoff/ShowoffRead';
 import { LoginContext } from '../../context/LoginContextProvider'; // ✅ 로그인 컨텍스트
