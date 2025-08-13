@@ -1,6 +1,7 @@
 package com.aloha.zootopia.mapper;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -21,7 +22,7 @@ public interface HospitalMapper {
     void updateHospital(Hospital hospital);
     void deleteHospitalAnimals(@Param("hospitalId") Integer hospitalId);
     void deleteHospitalSpecialties(@Param("hospitalId") Integer hospitalId);
-    List<Hospital> selectHospitals(@Param("offset") int offset, @Param("limit") int limit, @Param("animalIds") List<Integer> animalIds);
-    int countHospitals(@Param("animalIds") List<Integer> animalIds);
+    List<Hospital> selectHospitals(@Param("offset") int offset, @Param("limit") int limit, @Param("animalIds") List<Integer> animalIds, @Param("specialtyIds") List<Integer> specialtyIds);
+    int countHospitals(@Param("animalIds") List<Integer> animalIds, @Param("specialtyIds") List<Integer> specialtyIds);
     void deleteHospital(@Param("hospitalId") Integer hospitalId);
 }

@@ -1,15 +1,14 @@
-@import "tailwindcss" prefix(tw);
-@plugin "daisyui"{
-  themes: all;
-  root: ":root";
-  include: all;
-  exclude: ;
-  prefix: ds-;
-  logs: true;
-}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import "tailwindcss" prefix(tw);
+@plugin "daisyui" {
+  themes: ;
+  include: all;
+  exclude: ;
+  prefix: 'da-';
+  logs: true;
+}
 
 body {
   background-color: #f5f5f5;
@@ -51,3 +50,49 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
+
+
+/* Tailwind v4.x 기본 애니메이션 목록 */
+/* 사용방법 */
+/* var안에 있는 영문 가져다 클래스명으로 사용하면 됨. */
+/* ex) var(--animate-bounce) ➡ className="animate-bounce" */
+/* 접두사가 있다면 접두사 붙여줘야 동작함. ex) className="tw:animate-bounce" */
+
+animation: var(--animate-bounce); /* bounce 1s infinite */
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: none;
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+animation: var(--animate-spin); /* spin 1s linear infinite */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+animation: var(--animate-ping); /* ping 1s cubic-bezier(0, 0, 0.2, 1) infinite */
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+animation: var(--animate-pulse); /* pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite */
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+

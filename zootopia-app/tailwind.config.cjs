@@ -1,11 +1,10 @@
+import daisyui from 'daisyui';
+
 // tailwind.config.js
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
-      backgroundImage: {
-        'funeral-bg': "url('src/assets/img/background/funeral_background1.jpg')",
-      },
       keyframes: {
         likePop: {
           '0%': { transform: 'scale(1)' },
@@ -21,9 +20,10 @@ export default {
       animation: {
         likePop: 'likePop 0.4s ease-out',
         burst: 'burst 0.5s ease-out',
-      },
+      }
     },
   },
+  plugins: [daisyui],
   corePlugins: {
     preflight: true, // 강제로 다시 활성화
   },

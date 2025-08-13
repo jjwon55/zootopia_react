@@ -21,5 +21,8 @@ public class Hospital {
     private List<Animal> animals;
     private List<Specialty> specialties;
     private Double avgRating;
+
+    // 화면에 표시될 태그 정보 (DB에 안들어가도 되는 내용)
+    private List<String> tags;
 }
 
