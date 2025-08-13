@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { KakaoPay } from '../../apis/products/payments/kakao';
+import { clearCart as clearLocalOrApiCart } from '../../apis/products/cart';
 import { useLoginContext } from '../../context/LoginContextProvider';
 import fallbackImg from '../../assets/react.svg';
 
@@ -180,7 +181,11 @@ export default function Checkout() {
         bank: '결제가 완료 되었습니다.',
         phone: '결제가 완료 되었습니다.',
       };
-      alert(methodMsgMap[paymentMethod] || '결제가 완료 되었습니다.');
+  alert(methodMsgMap[paymentMethod] || '결제가 완료 되었습니다.');
+  // 결제 완료: 장바구니 및 바로구매 임시 데이터 비우기
+  try { await clearLocalOrApiCart(userId); } catch {}
+  try { localStorage.removeItem(`cart:user:${userId}`); } catch {}
+  try { localStorage.removeItem('tempOrder'); } catch {}
       // 결제 완료 후 스토어 목록으로 이동
       window.location.href = '/products/listp';
     } finally {

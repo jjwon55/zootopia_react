@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import defaultBanner from '../../assets/img/insurancelogo2.png' // ← src/assets 경로
+import defaultBanner from '../../assets/img/insurancelogo2.png'
 
 const items = [
   { q: '펫보험이란 무엇인가요?', a: '반려동물의 치료비를 보장해 주는 보험입니다.' },
@@ -10,47 +10,63 @@ const items = [
 
 export default function FaqSection({ bannerSrc }) {
   const [open, setOpen] = useState(null)
-  const src = bannerSrc || defaultBanner // props 없으면 기본 배너 사용
+  const src = bannerSrc || defaultBanner
+
+  // 공통 사이즈/여백
+  const SIZE = 'w-full px-5 py-4 text-base min-h-[56px] border transition-colors'
 
   return (
     <div className="mt-10">
-      {/* FAQ 카드 */}
       <div className="max-w-3xl mx-auto mb-5">
-        <div className="rounded-lg border border-gray-100 shadow-sm overflow-hidden">
-          <div className="bg-rose-100 px-4 py-3 text-gray-900 font-semibold border-b border-gray-100">
+        <div className="rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+          <div className="bg-rose-100 px-4 py-3 text-gray-900 font-semibold border-b border-gray-200">
             <span className="mr-2">🐾</span> 펫보험 자주 묻는 질문 (FAQ)
           </div>
 
-        <div className="divide-y divide-gray-100">
-            {items.map((it, i) => (
-            <div key={i}>
-                <button
-                type="button"
-                className="w-full text-left px-4 py-3 hover:bg-rose-50 flex items-center justify-between"
-                onClick={() => setOpen(open === i ? null : i)}
-                aria-expanded={open === i}
-                >
-                <span className="text-sm sm:text-base">Q. {it.q}</span>
-                <svg
-                    className={`h-4 w-4 transition-transform ${open === i ? 'rotate-180' : ''}`}
-                    viewBox="0 0 20 20" fill="currentColor"
-                >
-                    <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clipRule="evenodd" />
-                </svg>
-                </button>
+          <div className="p-3">
+            {items.map((it, i) => {
+              const isOpen = open === i
+              return (
+                <div key={i} className="mb-3 last:mb-0">
+                  {/* 질문 = 회색 */}
+                  <button
+                    type="button"
+                    onClick={() => setOpen(isOpen ? null : i)}
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-panel-${i}`}
+                    className={`${SIZE} bg-gray-100 border-gray-200 text-gray-900 flex items-center justify-between
+                                ${isOpen ? 'rounded-t-lg rounded-b-none' : 'rounded-lg'} hover:bg-gray-200`}
+                  >
+                    <span>Q. {it.q}</span>
+                    <svg
+                      className={`h-4 w-4 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
 
-                {open === i && (
-                <div className="px-4 pb-4 text-sm text-gray-700 bg-white">
-                    {it.a}
+                  {/* 답변 = 하얀색 */}
+                  <div
+                    id={`faq-panel-${i}`}
+                    hidden={!isOpen}
+                    className={`${SIZE} bg-white border-gray-200 text-gray-700 border-t-0 rounded-b-lg`}
+                  >
+                    A. {it.a}
+                  </div>
                 </div>
-                )}
-            </div>
-            ))}
-        </div>
+              )
+            })}
+          </div>
         </div>
       </div>
 
-      {/* 하단 배너 1개 */}
+      {/* 하단 배너 */}
       <div className="mt-10 flex justify-center">
         <img
           src={src}

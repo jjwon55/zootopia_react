@@ -34,9 +34,13 @@ const Read = ({
     user?.role === 'ADMIN' ||
     user?.role === 'ROLE_ADMIN'
 
+  const isSelfMyApplication =
+      !!(user && myApplication &&
+      user.userId === (myApplication.userId ?? myApplication.user_id));
+
   // 🎨 주토피아 톤(Primary)
   const BTN_BASE =
-    'inline-flex items-center justify-center h-10 w-24 md:w-28 text-sm font-medium rounded transition-colors focus:outline-none focus:ring-2 focus:ring-[#F27A7A]/30 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap'
+     'inline-flex items-center justify-center h-10 px-4 text-sm font-medium rounded transition-colors focus:outline-none focus:ring-2 focus:ring-[#F27A7A]/30 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap'
 
   const BTN_PRIMARY =
     `${BTN_BASE} border bg-[#F27A7A] text-white shadow-sm hover:bg-[#e86e6e] active:bg-[#d86464]`
@@ -87,7 +91,7 @@ const Read = ({
         </div>
 
         {/* 버튼 그룹: 주토피아 컬러로 통일 */}
-      <div className="flex justify-end gap-3 mt-8">
+      <div className="flex justify-end gap-3 mt-10">
         {(isOwner || isAdmin) && (
           <>
             <Link to={`/parttime/update/${job.jobId}`} className={BTN_PRIMARY}>
@@ -165,10 +169,13 @@ const Read = ({
           <h5 className="font-bold mb-4">📋 지원자 목록</h5>
           <div className="border rounded bg-gray-50 p-4 leading-7">
             <div><strong>🧑‍💼 나 :</strong> {myApplication.introduction}</div>
-            <div className="mt-2">
-              <strong>📧 이메일:</strong> {myApplication.email ?? myApplication.user_email ?? myApplication.userEmail}<br />
-              <strong>📱 전화번호:</strong> {myApplication.phone ?? myApplication.user_phone ?? myApplication.userPhone}
-            </div>
+             {/* 자기 자신이면 연락처 숨김 */}
+             {!isSelfMyApplication && (
+               <div className="mt-2">
+                 <strong>📧 이메일:</strong> {myApplication.email ?? myApplication.user_email ?? myApplication.userEmail}<br />
+                 <strong>📱 전화번호:</strong> {myApplication.phone ?? myApplication.user_phone ?? myApplication.userPhone}
+               </div>
+             )}
             <div className="text-end mt-3">
             <button
               onClick={() => onCancel(myApplication.applicantId)}   // ✅ id 넘기기
@@ -208,7 +215,7 @@ const Read = ({
 
                     <button
                       className={`${BTN_PRIMARY} gap-2 leading-none whitespace-nowrap
-                                  h-11 min-w-[140px] px-5 py-2.5 text-base`}
+                                  h-9 min-w-[140px] px-5 py-2.5 text-base mt-4`}
                       onClick={() => onToggleContact(app.applicantId)}
                     >
                       <span className="inline-block align-middle">📞</span>

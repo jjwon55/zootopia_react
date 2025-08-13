@@ -139,7 +139,7 @@ useEffect(() => {
       const id = Number(applicantIdParam ?? myApplication?.applicantId)
       if (!id) throw new Error('신청 ID를 찾을 수 없습니다.')
 
-      await parttimeApi.deleteApplication(id, job.jobId) // ← API 시그니처에 맞게
+      await parttimeApi.deleteApplication(id) // ← API 시그니처에 맞게
       await fetchJobDetail()
     } catch (err) {
       alert(err?.response?.data?.message || '신청 취소 실패')

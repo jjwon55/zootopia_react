@@ -1,6 +1,23 @@
 // 상품 관련 API 호출 함수들 (통합)
 import api from '../api';
 import { mockProductsDatabase, simulateApiCall } from '../../utils/products/mockDatabase.js';
+import { imagesByFilename } from '../../utils/products/images.js';
+
+// 서버에서 내려온 imageUrl이 '/assets/dist/img/products/파일명' 형태면
+// 파일명만 뽑아 번들된 로컬 에셋 URL로 치환
+function mapImageUrl(url) {
+  if (!url) return url;
+  try {
+    const m = url.match(/\/assets\/dist\/img\/products\/(.+)$/);
+    if (m && m[1]) {
+      const filename = m[1];
+      return imagesByFilename[filename] || url;
+    }
+    return url;
+  } catch {
+    return url;
+  }
+}
 
 // 상품 목록 조회
 export async function fetchProducts({ category = '', search = '', page = 1, size = 12 } = {}) {
@@ -13,6 +30,12 @@ export async function fetchProducts({ category = '', search = '', page = 1, size
         size,
       },
     });
+    if (data?.products) {
+      data.products = data.products.map(p => ({
+        ...p,
+        imageUrl: mapImageUrl(p.imageUrl)
+      }));
+    }
     return data;
   } catch (error) {
     console.error('API 호출 실패, Mock 데이터 사용:', error);
@@ -50,6 +73,12 @@ export async function fetchProducts({ category = '', search = '', page = 1, size
 export async function fetchProductDetail(productId) {
   try {
   const { data } = await api.get(`/products/api/detail/${productId}`);
+  if (data?.product) {
+    data.product = {
+      ...data.product,
+      imageUrl: mapImageUrl(data.product.imageUrl)
+    };
+  }
   return data;
   } catch (error) {
     console.error('API 호출 실패, Mock 데이터 사용:', error);
