@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "tailwindcss" prefix(tw);
 @plugin "daisyui"{
   themes: all;
   root: ":root";

@@ -10,7 +10,7 @@ export default function HsmRoutes() {
   return (
     <Routes>
       {/* / → /products/listp 로 리다이렉트 */}
-      <Route path="/" element={<Navigate to="/products/listp" replace />} />
+      {/* <Route path="/" element={<Navigate to="/products/listp" replace />} /> */}
 
       {/* 목록 */}
       <Route path="/products/listp" element={<ProductList />} />
@@ -25,7 +25,7 @@ export default function HsmRoutes() {
       <Route path="/checkout" element={<Checkout />} />
 
       {/* 라우팅되지 않는 경로 */}
-      <Route path="*" element={<NotFound />} />
+      {/* <Route path="*" element={<NotFound />} /> */}
     </Routes>
   );
 }

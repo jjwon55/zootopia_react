@@ -176,7 +176,7 @@ public class ParttimeJobRestController {
     // 수정
     @PostMapping("/{jobId}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> update(@PathVariable Long jobId, @RequestBody ParttimeJob job, Authentication auth) {
+    public ResponseEntity<?> update(@PathVariable("jobId") Long jobId, @RequestBody ParttimeJob job, Authentication auth) {
         ParttimeJob origin = jobService.getJob(jobId);
         if (origin == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "존재하지 않습니다."));
@@ -198,7 +198,7 @@ public class ParttimeJobRestController {
     // 삭제
     @DeleteMapping("/{jobId}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> delete(@PathVariable Long jobId, Authentication auth) {
+    public ResponseEntity<?> delete(@PathVariable("jobId") Long jobId, Authentication auth) {
         ParttimeJob origin = jobService.getJob(jobId);
         if (origin == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "존재하지 않습니다."));

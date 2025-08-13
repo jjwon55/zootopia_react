@@ -106,6 +106,7 @@ public class SecurityConfig {
                         UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/parttime", "/parttime/**").permitAll()
                         .requestMatchers("/posts/**").permitAll()
                         .requestMatchers("/upload/**").permitAll()
                         .requestMatchers("/login").permitAll()

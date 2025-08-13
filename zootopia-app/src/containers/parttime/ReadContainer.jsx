@@ -92,18 +92,32 @@ useEffect(() => {
 
 
   const onApply = async (e) => {
-    e.preventDefault()
-    const form = new FormData(e.target)
-    const introduction = form.get('introduction')
-    try {
-      const result = await parttimeApi.applyToJob({ jobId: job.jobId, introduction })
-      setSuccessMessage(result?.data?.message || result?.message || '신청이 완료되었습니다.')
-      await fetchJobDetail()
-    } catch (error) {
-      setErrorMessage(error?.response?.data?.message || '신청 중 오류 발생')
-    }
-  }
+    e.preventDefault();
+    setSuccessMessage('');
+    setErrorMessage('');
 
+    const introduction = e.target.introduction.value.trim();
+    if (!introduction) {
+      setErrorMessage('자기소개를 입력하세요.');
+      return;
+    }
+
+    try {
+      // 백엔드가 email/phone 채우도록 intro만 보냄
+      await parttimeApi.applyApplicants(job.jobId, { introduction });
+
+      setSuccessMessage('신청이 완료되었습니다.');
+      e.target.reset();
+
+      // 상세 재조회해서 hasApplied / myApplication 갱신
+      await fetchJobDetail();
+    } catch (err) {
+      console.error(err);
+      const msg = err?.response?.data?.message || '신청 중 오류가 발생했습니다.';
+      setErrorMessage(msg);
+    }
+  };
+  
     const onDelete = async () => {
       if (deleting) return
       if (!window.confirm('정말 삭제하시겠습니까?')) return
@@ -119,21 +133,23 @@ useEffect(() => {
       }
     }
 
-  const onCancel = async (applicantId) => {
+  const onCancel = async (applicantIdParam) => {
     if (!window.confirm('신청을 취소하시겠습니까?')) return
     try {
-      // ✅ 함수명 일치 (cancelApplication X)
-      await parttimeApi.deleteApplication(applicantId || myApplication?.applicantId, job.jobId)
+      const id = Number(applicantIdParam ?? myApplication?.applicantId)
+      if (!id) throw new Error('신청 ID를 찾을 수 없습니다.')
+
+      await parttimeApi.deleteApplication(id, job.jobId) // ← API 시그니처에 맞게
       await fetchJobDetail()
     } catch (err) {
       alert(err?.response?.data?.message || '신청 취소 실패')
     }
   }
 
-  const onToggleContact = (id) => {
-    const el = document.querySelector(`#contact-${id}`)
-    if (el) el.classList.toggle('d-none')
-  }
+const onToggleContact = (id) => {
+  const el = document.querySelector(`#contact-${id}`)
+  if (el) el.classList.toggle('hidden')  //  ✅ hidden
+}
 
   const onPageChange = (newPage) => {
     const next = new URLSearchParams(searchParams)

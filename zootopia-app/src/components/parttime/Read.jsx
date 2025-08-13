@@ -36,17 +36,20 @@ const Read = ({
 
   // 🎨 주토피아 톤(Primary)
   const BTN_BASE =
-    'inline-flex items-center justify-center rounded text-sm font-semibold transition'
+    'inline-flex items-center justify-center h-10 w-24 md:w-28 text-sm font-medium rounded transition-colors focus:outline-none focus:ring-2 focus:ring-[#F27A7A]/30 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap'
+
   const BTN_PRIMARY =
-    `${BTN_BASE} bg-[#F27A7A] text-white px-4 py-2 shadow hover:bg-[#e86e6e] active:bg-[#d86464]`
+    `${BTN_BASE} border bg-[#F27A7A] text-white shadow-sm hover:bg-[#e86e6e] active:bg-[#d86464]`
+
   const BTN_OUTLINE_PRIMARY =
-    `${BTN_BASE} border border-[#F27A7A] text-[#F27A7A] bg-white hover:bg-[#F27A7A]/10 active:bg-[#F27A7A]/20 px-4 py-2`
+    `${BTN_BASE} border border-[#F27A7A] text-[#F27A7A] bg-white hover:bg-[#F27A7A]/10 active:bg-[#F27A7A]/20`
+
   const BTN_NEUTRAL =
-    `${BTN_BASE} bg-gray-200 text-gray-700 hover:bg-gray-300 px-4 py-2`
+    `${BTN_BASE} border bg-gray-200 text-gray-700 hover:bg-gray-300`
 
 
   return (
-    <div className="mx-auto w-full max-w-[720px] px-4 py-8 min-h-screen">
+    <div className="mx-auto w-full max-w-[800px] px-4 py-8 min-h-screen">
       <h3 className="text-center mb-10 text-2xl font-bold">상세 내용</h3>
 
       {/* 본문 카드: 세로 여유 크게 */}
@@ -84,25 +87,21 @@ const Read = ({
         </div>
 
         {/* 버튼 그룹: 주토피아 컬러로 통일 */}
-        <div className="flex justify-end gap-2 mt-8">
-          {(isOwner || isAdmin) && (
-            <>
-              <Link to={`/parttime/update/${job.jobId}`} className={BTN_PRIMARY}>
-                수정
-              </Link>
-              <button
-                onClick={onDelete}
-                className={BTN_PRIMARY}
-                disabled={deleting}
-              >
-                {deleting ? '삭제중…' : '삭제'}
-              </button>
-            </>
-          )}
-          <Link to="/parttime/list" className={BTN_OUTLINE_PRIMARY}>
-            목록
-          </Link>
-        </div>
+      <div className="flex justify-end gap-3 mt-8">
+        {(isOwner || isAdmin) && (
+          <>
+            <Link to={`/parttime/update/${job.jobId}`} className={BTN_PRIMARY}>
+              수정
+            </Link>
+            <button onClick={onDelete} className={BTN_PRIMARY} disabled={deleting}>
+              {deleting ? '삭제중…' : '삭제'}
+            </button>
+          </>
+        )}
+        <Link to="/parttime/list" className={BTN_OUTLINE_PRIMARY}>
+          목록
+        </Link>
+      </div>
       </div>
 
       {(successMessage || errorMessage) && (
@@ -125,7 +124,7 @@ const Read = ({
 
       {/* 비로그인 */}
       {!user && (
-        <div className="text-center mt-6">
+        <div className="text-center mt-10">
           <Link to="/login" className={BTN_PRIMARY}>
             🔐 로그인 후 신청하기
           </Link>
@@ -167,13 +166,16 @@ const Read = ({
           <div className="border rounded bg-gray-50 p-4 leading-7">
             <div><strong>🧑‍💼 나 :</strong> {myApplication.introduction}</div>
             <div className="mt-2">
-              <strong>📧 이메일:</strong> {myApplication.email}<br />
-              <strong>📱 전화번호:</strong> {myApplication.phone}
+              <strong>📧 이메일:</strong> {myApplication.email ?? myApplication.user_email ?? myApplication.userEmail}<br />
+              <strong>📱 전화번호:</strong> {myApplication.phone ?? myApplication.user_phone ?? myApplication.userPhone}
             </div>
             <div className="text-end mt-3">
-              <button onClick={onCancel} className={BTN_OUTLINE_PRIMARY}>
-                신청 취소
-              </button>
+            <button
+              onClick={() => onCancel(myApplication.applicantId)}   // ✅ id 넘기기
+              className={BTN_OUTLINE_PRIMARY}
+            >
+              신청 취소
+            </button>
             </div>
           </div>
         </div>
@@ -190,21 +192,41 @@ const Read = ({
               <div key={app.applicantId} className="mb-3 border p-4 rounded bg-gray-50">
                 <div className="flex justify-between items-start gap-4">
                   <div className="leading-7">
-                    <div><strong>🧑‍💼 ID:</strong> {app.userId}</div>
+                    <div>
+                      <strong>🧑‍💼 닉네임:</strong>{' '}
+                      {app.user?.nickname
+                        ?? app.user_nickname
+                        ?? app.userNickname
+                        ?? app.nickname
+                        ?? `(ID: ${app.userId})`}
+                    </div>
                     <div><strong>✍</strong> {app.introduction}</div>
                   </div>
+
                   <div className="text-end">
                     <p className="text-gray-400 mb-1 text-xs">{app.createdAt}</p>
+
                     <button
-                      className={BTN_PRIMARY}
+                      className={`${BTN_PRIMARY} gap-2 leading-none whitespace-nowrap
+                                  h-11 min-w-[140px] px-5 py-2.5 text-base`}
                       onClick={() => onToggleContact(app.applicantId)}
                     >
-                      📞 연락처 보기
+                      <span className="inline-block align-middle">📞</span>
+                      <span className="align-middle">연락처 보기</span>
                     </button>
-                    <div className="mt-2 leading-7">
-                      <div><strong>📧 이메일:</strong> {app.email}</div>
-                      <div><strong>📱 전화번호:</strong> {app.phone}</div>
-                    </div>
+
+                    {/* ✅ 처음엔 숨김, 토글 시 표시 */}
+                     <div id={`contact-${app.applicantId}`} className="mt-2 leading-7 hidden">
+                       <div>
+                         <strong>📧 이메일:</strong>{' '}
+                         {app.email ?? app.user_email ?? app.userEmail ?? app.user?.email ?? '없음'}
+                       </div>
+                       <div>
+                         <strong>📱 전화번호:</strong>{' '}
+                         {app.phone ?? app.user_phone ?? app.userPhone ?? app.user?.phone ?? '없음'}
+                       </div>
+                     </div>
+
                     {user.userId === app.userId && (
                       <button
                         className={`${BTN_OUTLINE_PRIMARY} mt-2`}
