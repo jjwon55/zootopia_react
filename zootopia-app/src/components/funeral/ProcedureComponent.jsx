@@ -16,7 +16,7 @@ const ProcedureComponent = () => {
               <a href="/procedure" className="tw:link tw:link-hover">장례 절차</a>
             </span>
             <span className={`s3 ${styles.s3} tw:text-sm sm:tw:text-base tw:text-blue-700`}>
-              <a href="/" className="tw:link tw:link-hover">장례 및 기타비용</a>
+              <a href="/cost" className="tw:link tw:link-hover">장례 및 기타비용</a>
             </span>
           </div>
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react'
+import React, { useEffect, useState, useContext, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { LoginContext } from '../../context/LoginContextProvider'
 import insuranceLogo from "../../assets/img/insurancelogo.png"
@@ -27,11 +27,32 @@ export default function InsuranceList() {
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
-  const { roles } = useContext(LoginContext) || { roles: [] }
-
+  
   const page = Number(searchParams.get('page')) || 1
   const species = searchParams.get('species') || ''
   const company = searchParams.get('company') || ''
+  
+  const ctx = useContext(LoginContext) || {};
+  // roles가 어디에 있든 모아서 평탄화
+  const roleSources = [
+    ctx.roles,            // ['ROLE_ADMIN'] or ['ADMIN']
+    ctx.authList,         // [{auth:'ROLE_ADMIN'}]
+    ctx.authorities,      // [{authority:'ROLE_ADMIN'}]
+    ctx.userInfo?.roles,
+    ctx.userInfo?.authList,
+    ctx.userInfo?.authorities,
+  ].filter(Boolean);
+
+  const flatRoles = roleSources.flatMap(v => Array.isArray(v) ? v : [v]);
+
+  const roleToString = (r) =>
+    typeof r === 'string'
+      ? r
+      : (r?.auth || r?.role || r?.authority || r?.name || '');
+
+  const isAdmin = flatRoles.some(r =>
+    /(^|_)ADMIN$/i.test(roleToString(r).toUpperCase())
+  );
 
   useEffect(() => {
     (async () => {
@@ -55,22 +76,21 @@ export default function InsuranceList() {
     <div className="max-w-5xl mx-auto px-4 py-8">
       <h2 className="text-2xl !font-bold text-center mb-8">펫 보험</h2>
 
-      {/* 상단: 로고 + 필터 카드 */}
-      <div className="mt-5 flex flex-col md:flex-row items-center justify-center gap-12">
-        {/* 왼쪽 로고 이미지 */}
-        <div className="shrink-0 text-center">
+      <div className="mt-5 flex flex-col md:flex-row justify-center md:items-stretch items-center gap-12">
+        {/* 왼쪽: 고정 규격 카드 */}
+        <div className="w-[360px] h-[360px] bg-amber-100 rounded-xl shadow flex items-center justify-center overflow-hidden">
           <img
-            src={insuranceLogo}  // ← 프로젝트 경로에 맞게 수정
+            src={insuranceLogo}
             alt="보험 로고"
-            className="w-[360px] max-w-full rounded-lg shadow"
+            className="w-full h-full object-contain"  // 가로세로 꽉 채우되 비율 유지
           />
         </div>
 
         {/* 오른쪽 필터 */}
-        <div className="w-full max-w-[360px] bg-rose-50 rounded-xl p-5 shadow">
-          <p className="text-center font-semibold mb-4">🐶 원하는 보험 찾기 🐱</p>
+        <div className="w-[360px] min-h-[360px] bg-rose-50 rounded-xl p-5 shadow flex flex-col">
+          <p className="text-center font-semibold mb-8 mt-5">🐶 원하는 보험 찾기 🐱</p>
 
-          <div className="flex justify-center gap-2 mb-6">
+          <div className="flex justify-center gap-2 mb-10">
             <button
               className={`border rounded px-3 py-1 ${species==='dog'?'bg-white border-rose-300':''}`}
               onClick={()=> setFilter({ species:'dog' })}
@@ -157,9 +177,9 @@ export default function InsuranceList() {
       </div>
 
       {/* 관리자만 등록 */}
-      {roles?.includes?.('ADMIN') && (
+      {isAdmin && (
         <div className="mt-6 text-right">
-          <Link to="/insurance/create" className={btn}>상품등록</Link>
+          <Link to="/insurance/insert" className={btn}>상품등록</Link>
         </div>
       )}
 

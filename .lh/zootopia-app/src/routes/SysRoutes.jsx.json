@@ -1,0 +1,26 @@
+{
+    "sourceFile": "zootopia-app/src/routes/SysRoutes.jsx",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 2,
+            "patches": [
+                {
+                    "date": 1754783265519,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1754783316274,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,15 +1,17 @@\n import React from 'react'\r\n import { Route, Routes } from 'react-router-dom'\r\n import Cost from '../pages/funeral/Cost'\r\n import Procedure from '../pages/funeral/Procedure'\r\n+import CreateHospitalContainer from '../pages/hospitals/CreateHospitalPage'\r\n \r\n \r\n const SysRoutes = () => {\r\n   return (\r\n     <Routes>\r\n       <Route path=\"/cost\" element={<Cost />} />\r\n       <Route path=\"/procedure\" element={<Procedure />} />\r\n+      <Route path=\"/createhospital\" element={<CreateHospitalContainer />} />\r\n     </Routes>\r\n   )\r\n }\r\n \r\n"
+                },
+                {
+                    "date": 1754830359517,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -2,16 +2,18 @@\n import { Route, Routes } from 'react-router-dom'\r\n import Cost from '../pages/funeral/Cost'\r\n import Procedure from '../pages/funeral/Procedure'\r\n import CreateHospitalContainer from '../pages/hospitals/CreateHospitalPage'\r\n+import HospListPage from '../pages/hospitals/HospListPage'\r\n \r\n \r\n const SysRoutes = () => {\r\n   return (\r\n     <Routes>\r\n       <Route path=\"/cost\" element={<Cost />} />\r\n       <Route path=\"/procedure\" element={<Procedure />} />\r\n       <Route path=\"/createhospital\" element={<CreateHospitalContainer />} />\r\n+      <Route path=\"/hospitallist\" element={<HospListPage/>} />\r\n     </Routes>\r\n   )\r\n }\r\n \r\n"
+                }
+            ],
+            "date": 1754783265519,
+            "name": "Commit-0",
+            "content": "import React from 'react'\r\nimport { Route, Routes } from 'react-router-dom'\r\nimport Cost from '../pages/funeral/Cost'\r\nimport Procedure from '../pages/funeral/Procedure'\r\n\r\n\r\nconst SysRoutes = () => {\r\n  return (\r\n    <Routes>\r\n      <Route path=\"/cost\" element={<Cost />} />\r\n      <Route path=\"/procedure\" element={<Procedure />} />\r\n    </Routes>\r\n  )\r\n}\r\n\r\nexport default SysRoutes"
+        }
+    ]
+}

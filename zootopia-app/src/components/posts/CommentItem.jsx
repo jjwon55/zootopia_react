@@ -3,12 +3,19 @@ import defaultProfile from '../../assets/img/default-profile.png';
 import { updateComment, deleteComment, replyToComment } from '../../apis/posts/comments';
 import { Link } from 'react-router-dom';
 
-const API_URL = 'http://localhost:8080';
 const RECENT_REPLIES = 2;
+
+const resolveImg = (src) => {
+  if (!src) return null;
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith('/api/')) return src;
+  if (src.startsWith('/')) return `/api${src}`;
+  return `/api/${src}`;
+};
 
 const timeAgo = (iso) => {
   const d = new Date(iso);
-  const diff = (Date.now() - d.getTime()) / 1000; 
+  const diff = (Date.now() - d.getTime()) / 1000;
   if (diff < 60) return '방금 전';
   const m = Math.floor(diff / 60);
   if (m < 60) return `${m}분 전`;
@@ -23,10 +30,22 @@ const timeAgo = (iso) => {
   return `${yyyy}.${mm}.${dd}`;
 };
 
+const fullDate = (iso) => {
+  const d = new Date(iso);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const HH = String(d.getHours()).padStart(2, '0');
+  const MM = String(d.getMinutes()).padStart(2, '0');
+  return `${yyyy}.${mm}.${dd} ${HH}:${MM}`;
+};
+
 export default function CommentItem({
   node,
-  postId,
+  postId, // (삭제 API가 postId 불필요해도 prop은 유지 OK)
   loginUserId,
+  loginNickname,
+  loginProfileImg,
   onLocalUpdate,
   onLocalDelete,
   onLocalReply,
@@ -41,7 +60,8 @@ export default function CommentItem({
   const [likeCount, setLikeCount] = useState(node.likeCount || 0);
   const [liked, setLiked] = useState(false);
 
-  const isOwner = loginUserId === node.userId;
+  const ownerId = node.userId ?? node.user?.userId; // 서버가 user.userId로 줄 수도 있음
+  const isOwner = ownerId != null && String(loginUserId) === String(ownerId);
   const isDeleted = !!node.isDeleted;
   const isPending = String(node.commentId).startsWith('temp-');
   const contentTooLong = (node.content || '').length > 180;
@@ -74,22 +94,22 @@ export default function CommentItem({
     }
   }, [draft, node.commentId, node.content, onLocalUpdate, postId]);
 
-  /** 삭제 */
+  /** 삭제 (서버 성공 시 소프트 딜리트로 즉시 표시) */
   const onRemove = useCallback(async () => {
     if (!confirm('댓글을 삭제할까요?')) return;
     setBusy(true);
     try {
-      await deleteComment(node.commentId, postId);
-      onLocalDelete(node.commentId);
+      await deleteComment(node.commentId);
+      onLocalDelete(node.commentId); // soft delete: 즉시 “삭제된 댓글입니다.”
     } catch (err) {
-      console.error(err);
+      console.error('DELETE error:', err?.response?.status, err?.response?.data);
       alert('삭제 중 오류가 발생했어요.');
     } finally {
       setBusy(false);
     }
-  }, [node.commentId, onLocalDelete, postId]);
+  }, [node.commentId, onLocalDelete]);
 
-  /** 답글 등록 (서버가 ID 안 주어도 임시 유지) */
+  /** 답글 등록 (낙관적) */
   const onReply = useCallback(async (e) => {
     e.preventDefault();
     const content = replyText.trim();
@@ -102,8 +122,8 @@ export default function CommentItem({
       parentId: node.commentId,
       content,
       userId: loginUserId,
-      nickname: '나',
-      profileImg: null,
+      nickname: loginNickname,
+      profileImg: loginProfileImg,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       isDeleted: false,
@@ -113,24 +133,47 @@ export default function CommentItem({
     onLocalReply(node.commentId, optimistic);
     setReplyText('');
     setReplyOpen(false);
+    setShowReplies(true); // ✅ 방금 단 답글이 바로 보이도록 펼치기
 
     try {
       const res = await replyToComment(postId, node.commentId, content);
       const saved = res?.data?.comment || res?.data || null;
-      if (saved?.commentId) {
-        onLocalUpdate(tempId, saved);
+      if (saved) {
+        // ✅ 서버가 다양한 키로 id를 줄 수 있으니 안전 추출
+        const savedId =
+          saved.commentId ??
+          saved.id ??
+          saved.comment_id ??
+          saved.commentID ??
+          saved?.comment?.commentId ??
+          saved?.comment?.id;
+
+        const fixed = {
+          ...saved,
+          // 서버가 user 필드 안에 줄 수도 있으니 안전하게 평탄화
+          userId: saved?.userId ?? saved?.user?.userId ?? loginUserId,
+          nickname: saved?.nickname ?? saved?.user?.nickname ?? loginNickname,
+          profileImg: saved?.profileImg ?? saved?.user?.profileImg ?? loginProfileImg,
+          createdAt: saved?.createdAt ?? new Date().toISOString(),
+          updatedAt: saved?.updatedAt ?? saved?.createdAt ?? new Date().toISOString(),
+        };
+
+        if (savedId) {
+          // ✅ 핵심: temp-id → real-id로 교체 (isPending 해제 → 버튼 즉시 표시)
+          onLocalUpdate(tempId, { ...fixed, commentId: savedId });
+        } else {
+          // id가 정말 안 오면 내용만 최신화
+          console.warn('reply saved but no id in response:', saved);
+          onLocalUpdate(tempId, fixed);
+        }
       }
-      // 부모가 재조회하면 최신 반영
-      // (부모에서 onChange를 받아 연결했다면 여기서 호출 가능)
     } catch (err) {
       console.error(err);
       alert('답글 등록 중 오류가 발생했어요.');
-      // 실패해도 UX를 위해 임시 답글을 잠시 유지 — 원하면 제거
-      // onLocalDelete(tempId);
     } finally {
       setBusy(false);
     }
-  }, [replyText, node.commentId, loginUserId, onLocalReply, onLocalUpdate, postId]);
+  }, [replyText, node.commentId, loginUserId, loginNickname, loginProfileImg, onLocalReply, onLocalUpdate, postId]);
 
   /** 좋아요(프론트 데모) */
   const toggleLike = () => {
@@ -141,9 +184,10 @@ export default function CommentItem({
   return (
     <div className="tw:border-b tw:border-[#eee] tw:py-4">
       <div className="tw:flex tw:items-start tw:gap-3">
-        <Link to={`/mypage/${node.userId}`}>
+        {/* 링크는 ownerId 기준으로 */}
+        <Link to={`/mypage/${ownerId ?? ''}`}>
           <img
-            src={node.profileImg ? `${API_URL}${node.profileImg}` : defaultProfile}
+            src={resolveImg(node.profileImg) || defaultProfile}
             alt="프로필"
             className="tw:w-10 tw:h-10 tw:rounded-full tw:object-cover"
           />
@@ -153,7 +197,7 @@ export default function CommentItem({
           {/* 이름 · 시간 */}
           <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
             <Link
-              to={`/mypage/${node.userId}`}
+              to={`/mypage/${ownerId ?? ''}`}
               className={[
                 'tw:text-sm tw:font-semibold',
                 isDeleted ? 'tw:text-zinc-400' : 'tw:text-zinc-900 dark:tw:text-zinc-100',
@@ -161,10 +205,14 @@ export default function CommentItem({
             >
               {node.nickname}
             </Link>
-            <span className="tw:text-xs tw:text-zinc-500">{timeAgo(node.createdAt)}</span>
+            <span className="tw:text-xs tw:text-zinc-500" title={fullDate(node.createdAt)}>
+              {timeAgo(node.createdAt)} · {fullDate(node.createdAt)}
+            </span>
             {isPending && <span className="tw:text-[10px] tw:text-zinc-400">· 전송 중…</span>}
             {!isDeleted && node.updatedAt !== node.createdAt && (
-              <span className="tw:text-xs tw:text-zinc-400">· 수정됨</span>
+              <span className="tw:text-xs tw:text-zinc-400" title={fullDate(node.updatedAt)}>
+                · 수정됨 {timeAgo(node.updatedAt)}
+              </span>
             )}
           </div>
 
@@ -192,50 +240,44 @@ export default function CommentItem({
 
           {/* 액션 */}
           {!isDeleted && (
-            <div className="tw:flex tw:items-center tw:gap-2 tw:mt-1">
-              <button
-                type="button"
-                onClick={toggleLike}
-                className={[
-                  'tw:inline-flex tw:items-center tw:gap-1 tw:px-2 tw:py-1 tw:rounded-full tw:hover:bg-zinc-100',
-                  liked ? 'tw:text-zinc-900' : 'tw:text-zinc-600',
-                ].join(' ')}
-              >
-                <span className="tw:text-base">👍</span>
-                <span className="tw:text-sm">{likeCount || 0}</span>
-              </button>
-
+            <div className="tw:flex tw:justify-between tw:items-center tw:gap-2 tw:mt-1">
               <button
                 type="button"
                 onClick={() => setReplyOpen((v) => !v)}
-                className="tw:ml-1 tw:text-sm tw:text-zinc-700 tw:hover:underline"
+                className="tw:ml-1 tw:px-2 tw:py-0.5 tw:text-xs tw:rounded-full tw:bg-zinc-100 tw:text-zinc-700 
+                           hover:tw:bg-pink-100 hover:tw:text-pink-600 tw:transition-colors"
                 aria-expanded={replyOpen}
                 disabled={isPending}
               >
                 답글
               </button>
 
-              {isOwner && !isPending && (
-                <>
-                  {!editing && (
+              <div className="tw:flex tw:items-center tw:gap-1">
+                {isOwner && !isPending && (
+                  <>
+                    {!editing && (
+                      <button
+                        type="button"
+                        onClick={() => { setEditing(true); setDraft(node.content || ''); }}
+                        className="tw:px-2 tw:py-0.5 tw:text-xs tw:border tw:border-zinc-300 tw:rounded-full 
+                                   hover:tw:bg-zinc-100 tw:transition-colors"
+                      >
+                        수정
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => { setEditing(true); setDraft(node.content || ''); }}
-                      className="tw:text-sm tw:text-zinc-500 tw:hover:underline"
+                      onClick={onRemove}
+                      className="tw:flex tw:items-center tw:gap-1 tw:text-xs tw:px-2 tw:py-0.5 tw:rounded-full 
+                                 tw:bg-red-50 tw:text-red-600 hover:tw:bg-red-100 tw:transition-colors"
+                      disabled={busy}
                     >
-                      수정
+                      <i className="bi bi-trash3" />
+                      삭제
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={onRemove}
-                    className="tw:text-sm tw:text-zinc-500 tw:hover:underline"
-                    disabled={busy}
-                  >
-                    삭제
-                  </button>
-                </>
-              )}
+                  </>
+                )}
+              </div>
             </div>
           )}
 
@@ -252,7 +294,7 @@ export default function CommentItem({
                 <button
                   type="button"
                   onClick={() => setEditing(false)}
-                  className="tw:px-3 tw:py-1.5 tw:text-sm tw:rounded-full tw:bg-zinc-200 tw:hover:bg-zinc-300 tw:text-zinc-800"
+                  className="tw:px-3 tw:py-1.5 tw:text-sm tw:rounded-full tw:bg-zinc-200 hover:tw:bg-zinc-300 tw:text-zinc-800"
                 >
                   취소
                 </button>
@@ -270,19 +312,23 @@ export default function CommentItem({
           {/* 답글 입력 */}
           {replyOpen && !isDeleted && (
             <form onSubmit={onReply} className="tw:flex tw:items-start tw:gap-3 tw:mt-3">
-              <div className="tw:w-8 tw:h-8 tw:rounded-full tw:bg-zinc-200" />
+              <img
+                src={resolveImg(loginProfileImg) || defaultProfile}
+                alt="내 프로필"
+                className="tw:w-8 tw:h-8 tw:rounded-full tw:object-cover"
+              />
               <div className="tw:flex-1">
                 <input
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="답글 추가..."
+                  placeholder={loginNickname ? `${loginNickname}님, 답글 추가...` : '답글 추가...'}
                   className="tw:w-full tw:bg-transparent tw:border-b tw:border-[#eee] focus:tw:border-zinc-500 focus:tw:outline-none tw:py-2"
                 />
                 <div className="tw:flex tw:justify-end tw:gap-2 tw:mt-2">
                   <button
                     type="button"
                     onClick={() => { setReplyOpen(false); setReplyText(''); }}
-                    className="tw:px-3 tw:py-1.5 tw:text-sm tw:rounded-full tw:bg-zinc-200 tw:hover:bg-zinc-300 tw:text-zinc-800"
+                    className="tw:px-3 tw:py-1.5 tw:text-sm tw:rounded-full tw:bg-zinc-200 hover:tw:bg-zinc-300 tw:text-zinc-800"
                   >
                     취소
                   </button>
@@ -329,6 +375,8 @@ export default function CommentItem({
                         node={child}
                         postId={postId}
                         loginUserId={loginUserId}
+                        loginNickname={loginNickname}
+                        loginProfileImg={loginProfileImg}
                         onLocalUpdate={onLocalUpdate}
                         onLocalDelete={onLocalDelete}
                         onLocalReply={onLocalReply}

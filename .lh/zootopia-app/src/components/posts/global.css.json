@@ -1,0 +1,18 @@
+{
+    "sourceFile": "zootopia-app/src/components/posts/global.css",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1754824459324,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1754824459324,
+            "name": "Commit-0",
+            "content": "a {\r\n  /* color: inherit !important; */\r\n  text-decoration: none !important;\r\n}"
+        }
+    ]
+}
