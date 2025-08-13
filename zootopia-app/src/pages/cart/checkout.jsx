@@ -1,9 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { KakaoPay } from '../../apis/products/payments/kakao';
+import { useLoginContext } from '../../context/LoginContextProvider';
 import fallbackImg from '../../assets/react.svg';
 
 export default function Checkout() {
+  const { userInfo } = useLoginContext();
+  const userId = userInfo?.userId || 1;
   const [orderItems, setOrderItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const [isProcessing, setIsProcessing] = useState(false);
   const [shippingInfo, setShippingInfo] = useState({
     name: '',
     phone: '',
@@ -44,9 +49,9 @@ export default function Checkout() {
       }
     } catch {}
 
-    // 2) 장바구니(localStorage)에서 불러오기 (userId=1 고정)
+    // 2) 장바구니(localStorage)에서 불러오기 (로그인 사용자 기반 키)
     try {
-      const raw = localStorage.getItem('cart:user:1');
+      const raw = localStorage.getItem(`cart:user:${userId}`);
       const cart = raw ? JSON.parse(raw) : [];
       const items = cart.map((it) => ({
         id: it.productId || it.id,
@@ -133,29 +138,74 @@ export default function Checkout() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     // 양식 제출/버튼 클릭 모두 대응
     if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
     }
-    // 결제 처리 로직 (모의)
-  alert('주문이 완료되었습니다!');
+
+    if (!canPay) {
+      alert('필수 약관 동의와 주문 정보 확인 후 결제할 수 있습니다.');
+      return;
+    }
+
+    if (paymentMethod === 'kakao') {
+      // 카카오페이 플로우 (데모 모드에서 실제 결제 없음)
+      const amount = getTotalPrice();
+      const orderId = 'ORDER_' + Date.now();
+      const orderName = orderItems.map((i) => i.name).slice(0, 1).join(', ');
+      try {
+        setIsProcessing(true);
+        const readyRes = await KakaoPay.ready({ amount, orderId, orderName, items: orderItems });
+        sessionStorage.setItem('kakao:tid', readyRes.tid);
+        sessionStorage.setItem('kakao:orderId', orderId);
+  sessionStorage.setItem('kakao:returnUrl', window.location.origin + '/kakao-pay-mock');
+  sessionStorage.setItem('kakao:userId', String(userId));
+        window.location.href = readyRes.next_redirect_pc_url; // 데모: 내부 모의 결제 페이지로 이동
+      } catch (err) {
+        console.error(err);
+        alert('결제 준비 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      } finally {
+        setIsProcessing(false);
+      }
+      return;
+    }
+
+    // 그 외 결제수단: 처리 로딩 모사 후, 수단별 메시지
     try {
-      localStorage.removeItem('tempOrder');
-    } catch {}
-    // 결제 완료 후 상품 리스트로 이동
-    window.location.href = '/products/listp';
+      setIsProcessing(true);
+      await new Promise((res) => setTimeout(res, 800));
+      const methodMsgMap = {
+        card: '결제가 완료 되었습니다.',
+        bank: '결제가 완료 되었습니다.',
+        phone: '결제가 완료 되었습니다.',
+      };
+      alert(methodMsgMap[paymentMethod] || '결제가 완료 되었습니다.');
+      // 결제 완료 후 스토어 목록으로 이동
+      window.location.href = '/products/listp';
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10">
+    <div className="min-h-screen py-10 relative" style={{ backgroundColor: '#FFF6F6' }}>
+      {/* 결제 처리 로딩 오버레이 */}
+      {isProcessing && (
+        <div className="fixed inset-0 z-[1200] bg-black/30 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-4 border-[#FFC2C2] border-t-transparent rounded-full animate-spin" />
+            <div className="text-gray-700 text-sm">결제 처리 중입니다...</div>
+          </div>
+        </div>
+      )}
       <div className="max-w-6xl mx-auto px-4">
         {/* 브레드크럼 */}
         <nav className="mb-8">
           <div className="flex items-center space-x-2 text-sm">
-            <a href="/" className="text-pink-400 hover:text-pink-500">홈</a>
+            <a href="/" className="text-[#FF9999] hover:text-[#FF7A7A]">홈</a>
             <span className="text-gray-400">&gt;</span>
-            <a href="/products/listp" className="text-pink-400 hover:text-pink-500">스토어</a>
+            <a href="/products/listp" className="text-[#FF9999] hover:text-[#FF7A7A]">스토어</a>
             <span className="text-gray-400">&gt;</span>
             <a href="/cart" className="text-pink-400 hover:text-pink-500">장바구니</a>
             <span className="text-gray-400">&gt;</span>
@@ -165,7 +215,7 @@ export default function Checkout() {
 
         {/* 페이지 제목 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-pink-400 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-[#FF9999] flex items-center gap-2">
             <span>🧾</span>
             주문/결제
           </h1>
@@ -176,7 +226,7 @@ export default function Checkout() {
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* 주문 상품 확인 */}
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-pink-100">
+              <div className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#FFE5E5' }}>
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-700">
                   <span>👜</span> 주문 상품 확인
                 </h2>
@@ -204,7 +254,7 @@ export default function Checkout() {
               </div>
 
               {/* 배송 정보 */}
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-pink-100">
+              <div className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#FFE5E5' }}>
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-700">
                   <span>🚚</span> 배송 정보
                 </h2>
@@ -215,7 +265,7 @@ export default function Checkout() {
                       type="text"
                       value={shippingInfo.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9999]"
                       required
                     />
                   </div>
@@ -225,7 +275,7 @@ export default function Checkout() {
                       type="tel"
                       value={shippingInfo.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9999]"
                       required
                     />
                   </div>
@@ -243,7 +293,10 @@ export default function Checkout() {
                     <div className="flex items-end">
                       <button
                         type="button"
-                        className="h-[42px] px-4 rounded-lg bg-pink-400 text-white hover:bg-pink-500"
+                        className="h-[42px] px-4 rounded-lg text-white"
+        style={{ backgroundColor: '#FF9999' }}
+        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#FF8C8C')}
+        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#FF9999')}
         onClick={handleSearchAddress}
                       >
                         검색
@@ -256,7 +309,7 @@ export default function Checkout() {
                       type="text"
                       value={shippingInfo.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400 mb-2"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9999] mb-2"
                       placeholder="기본 주소"
                       required
                     />
@@ -264,7 +317,7 @@ export default function Checkout() {
                       type="text"
                       value={shippingInfo.detailAddress}
                       onChange={(e) => handleInputChange('detailAddress', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9999]"
                       placeholder="상세 주소"
                       ref={detailAddressRef}
                     />
@@ -274,7 +327,7 @@ export default function Checkout() {
                     <select
                       value={shippingInfo.message}
                       onChange={(e) => handleInputChange('message', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF9999]"
                     >
                       <option value="">배송 메모를 선택하세요</option>
                       <option value="부재 시 경비실에 맡겨주세요">부재 시 경비실에 맡겨주세요</option>
@@ -287,7 +340,7 @@ export default function Checkout() {
               </div>
 
               {/* 결제 방법 */}
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-pink-100">
+              <div className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#FFE5E5' }}>
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-700">
                   <span>💳</span> 결제 방법
                 </h2>
@@ -303,9 +356,10 @@ export default function Checkout() {
                       onClick={() => setPaymentMethod(method.id)}
                       className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                         paymentMethod === method.id
-                          ? 'border-pink-400 bg-pink-50'
-                          : 'border-gray-200 hover:border-pink-300 hover:bg-pink-25'
+                          ? 'bg-[#FFF0F0]'
+                          : 'border-gray-200 hover:bg-[#FFECEC]'
                       }`}
+                      style={paymentMethod === method.id ? { borderColor: '#FF9999' } : {}}
                     >
                       <div className="flex items-center gap-3">
                         <input
@@ -314,9 +368,10 @@ export default function Checkout() {
                           value={method.id}
                           checked={paymentMethod === method.id}
                           onChange={() => setPaymentMethod(method.id)}
-                          className="text-pink-400 focus:ring-pink-400"
+                          className="focus:ring-[#FF9999]"
+                          style={{ accentColor: '#FF9999' }}
                         />
-                        <i className={`${method.icon} text-pink-400`}></i>
+                        <i className={`${method.icon}`} style={{ color: '#FF9999' }}></i>
                         <span className="font-medium">{method.name}</span>
                       </div>
                     </div>
@@ -333,7 +388,8 @@ export default function Checkout() {
                   <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
-                      className="text-pink-400 focus:ring-pink-400"
+                      className="focus:ring-[#FF9999]"
+                      style={{ accentColor: '#FF9999' }}
                       checked={agreements.all}
                       onChange={toggleAllAgreements}
                     />
@@ -343,7 +399,8 @@ export default function Checkout() {
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
-                        className="text-pink-400 focus:ring-pink-400"
+                        className="focus:ring-[#FF9999]"
+                        style={{ accentColor: '#FF9999' }}
                         checked={agreements.terms}
                         onChange={() => toggleAgreement('terms')}
                       />
@@ -352,7 +409,8 @@ export default function Checkout() {
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
-                        className="text-pink-400 focus:ring-pink-400"
+                        className="focus:ring-[#FF9999]"
+                        style={{ accentColor: '#FF9999' }}
                         checked={agreements.privacy}
                         onChange={() => toggleAgreement('privacy')}
                       />
@@ -361,7 +419,8 @@ export default function Checkout() {
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
-                        className="text-pink-400 focus:ring-pink-400"
+                        className="focus:ring-[#FF9999]"
+                        style={{ accentColor: '#FF9999' }}
                         checked={agreements.pg}
                         onChange={() => toggleAgreement('pg')}
                       />
@@ -370,7 +429,8 @@ export default function Checkout() {
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
-                        className="text-pink-400 focus:ring-pink-400"
+                        className="focus:ring-[#FF9999]"
+                        style={{ accentColor: '#FF9999' }}
                         checked={agreements.marketing}
                         onChange={() => toggleAgreement('marketing')}
                       />
@@ -384,7 +444,7 @@ export default function Checkout() {
 
           {/* 주문 요약 */}
           <div className="lg:col-span-1">
-            <div className="bg-gradient-to-br from-pink-400 to-pink-500 text-white rounded-lg p-6 sticky top-20">
+            <div className="text-white rounded-lg p-6 sticky top-20 bg-gradient-to-br" style={{ backgroundImage: 'linear-gradient(135deg, #FF9999, #FF8C8C)' }}>
               <h2 className="text-xl font-bold mb-6">주문 요약</h2>
               
               <div className="space-y-3 mb-6">
@@ -412,8 +472,9 @@ export default function Checkout() {
                 onClick={handleSubmit}
                 disabled={!canPay}
                 className={`w-full font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                  canPay ? 'bg-white text-pink-500 hover:bg-gray-100' : 'bg-white/50 text-white/80 cursor-not-allowed'
+                  canPay ? 'bg-white hover:bg-gray-100' : 'bg-white/50 text-white/80 cursor-not-allowed'
                 }`}
+                style={canPay ? { color: '#B44444' } : {}}
               >
                 <span>💳</span>
                 <span>{getTotalPrice().toLocaleString()}원 결제하기</span>

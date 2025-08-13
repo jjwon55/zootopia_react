@@ -1,0 +1,22 @@
+{
+    "sourceFile": "zootopia-app/vite.config.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1754747764873,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1754747798003,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -14,12 +14,9 @@\n       '/api' : {\r\n         target: 'http://localhost:8080',  // (port) 서버 주소\r\n         changeOrigin: true,               // 요청헤더의 Host 도 변경\r\n         secure: false,                    // https 지원 여부\r\n-\r\n         rewrite: (path) => path.replace(/^\\/api/, '')\r\n       }\r\n     }\r\n   }\r\n-\r\n-\r\n })\r\n"
+                }
+            ],
+            "date": 1754747764873,
+            "name": "Commit-0",
+            "content": "import { defineConfig } from 'vite'\r\nimport react from '@vitejs/plugin-react'\r\nimport tailwindcss from '@tailwindcss/vite'\r\n\r\n// https://vite.dev/config/\r\nexport default defineConfig({\r\n  plugins: [\r\n    react(),\r\n    tailwindcss()\r\n  ],\r\n  server: {\r\n    // 프록시 설정\r\n    proxy: {\r\n      '/api' : {\r\n        target: 'http://localhost:8080',  // (port) 서버 주소\r\n        changeOrigin: true,               // 요청헤더의 Host 도 변경\r\n        secure: false,                    // https 지원 여부\r\n\r\n        rewrite: (path) => path.replace(/^\\/api/, '')\r\n      }\r\n    }\r\n  }\r\n\r\n\r\n})\r\n"
+        }
+    ]
+}

@@ -14,6 +14,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.aloha.zootopia.security.filter.JwtAuthenticationFilter;
 import com.aloha.zootopia.security.filter.JwtRequestFilter;
@@ -24,6 +27,7 @@ import com.aloha.zootopia.service.UserDetailServiceImpl;
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig {
+
 
   @Autowired
   private UserDetailServiceImpl userDetailServiceImpl;
@@ -108,11 +112,13 @@ public class SecurityConfig {
             .requestMatchers("/posts/**").permitAll()
             .requestMatchers("/lost/**").permitAll()
             .requestMatchers("/showoff/**").permitAll()
+            .requestMatchers("/service/**").permitAll()
             .requestMatchers( "/comments/**").authenticated()
             .requestMatchers("/upload/**").permitAll()
             .requestMatchers("/login").permitAll()
             .requestMatchers("/auth/**").permitAll()
             .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**", "/img/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/parttime", "/parttime/**").permitAll()
             .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/hospitals/{hospitalId}/reviews").permitAll()
 
@@ -126,5 +132,6 @@ public class SecurityConfig {
 
     return http.build();
   }
+
 
 }

@@ -55,15 +55,15 @@ public class WebConfig implements WebMvcConfigurer {
   }
 
     // ✅ CORS 허용 설정 추가
-  @Override
-  public void addCorsMappings(CorsRegistry registry) {
-    registry.addMapping("/**")
-        .allowedOrigins("http://localhost:5173") // React 개발 서버 주소
-        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-        .allowedHeaders("*")
-        .exposedHeaders("Authorization")
-        .allowCredentials(true);
-  }
+  // @Override
+  // public void addCorsMappings(CorsRegistry registry) {
+  //   registry.addMapping("/**")
+  //       .allowedOrigins("http://localhost:5173") // React 개발 서버 주소
+  //       .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+  //       .allowedHeaders("*")
+  //       .exposedHeaders("Authorization")
+  //       .allowCredentials(true);
+  // }
 
 
 }
