@@ -1,6 +1,16 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import CommentItem from './CommentItem';
 import { addComment } from '../../apis/posts/comments';
+import defaultProfile from '../../assets/img/default-profile.png';
+
+/** 서버에서 온 경로를 안전하게 이미지 URL로 변환 */
+const resolveImg = (src) => {
+  if (!src) return null;
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith('/api/')) return src;
+  if (src.startsWith('/')) return `/api${src}`;
+  return `/api/${src}`;
+};
 
 /** 평면 → 트리 */
 function buildTreeFromProps(comments = []) {
@@ -46,27 +56,43 @@ const updateLocal = (nodes, id, patch) =>
 
 const replaceIdLocal = (nodes, tempId, real) =>
   nodes.map((n) => {
-    if (n.commentId === tempId) return { ...real, replies: n.replies || [] }; // 기존 replies 유지
+    if (String(n.commentId) === String(tempId)) return { ...real, replies: n.replies || [] };
     return { ...n, replies: replaceIdLocal(n.replies || [], tempId, real) };
   });
 
+// 완전 제거 유틸(현재는 사용 안 함)
 const removeLocal = (nodes, id) =>
   nodes
-    .filter((n) => n.commentId !== id)
+    .filter((n) => String(n.commentId) !== String(id))
     .map((n) => ({ ...n, replies: removeLocal(n.replies || [], id) }));
+
+// ✅ 소프트 딜리트: 노드는 유지하고 표시만 바꾼다
+const softDeleteLocal = (nodes, id) =>
+  nodes.map((n) =>
+    String(n.commentId) === String(id)
+      ? { ...n, isDeleted: true, content: '', likeCount: 0 }
+      : { ...n, replies: softDeleteLocal(n.replies || [], id) }
+  );
 
 const hashComments = (comments = []) =>
   JSON.stringify(
     comments.map((c) => ({ id: c.commentId, p: c.parentId ?? null, u: c.updatedAt ?? c.createdAt }))
   );
 
-export default function CommentSection({ postId, comments = [], loginUserId, onChange }) {
+export default function CommentSection({
+  postId,
+  comments = [],
+  loginUserId,
+  loginNickname,
+  loginProfileImg,
+  onChange
+}) {
   const [tree, setTree] = useState(() => buildTreeFromProps(comments));
   const [sort, setSort] = useState('top'); // 'top' | 'new'
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
 
-  // ✅ props 변경 감지 해시: 실제 데이터가 바뀌었을 때만 재빌드
+  // props 변경 시에만 재빌드
   const lastPropsHash = useRef(hashComments(comments));
   useEffect(() => {
     const nextHash = hashComments(comments);
@@ -76,7 +102,7 @@ export default function CommentSection({ postId, comments = [], loginUserId, onC
     }
   }, [comments]);
 
-  /** 정렬 (유튜브 느낌: 인기/최신) */
+  /** 정렬 */
   const sortedRoots = useMemo(() => {
     const likeScore = (n) => Number(n.likeCount || 0);
     let arr = [...tree];
@@ -88,9 +114,14 @@ export default function CommentSection({ postId, comments = [], loginUserId, onC
     return arr.map((n) => ({ ...n, replies: n.replies || [] }));
   }, [tree, sort]);
 
-  /** 루트 댓글 등록 (Optimistic)
-   * 서버가 ID를 안 돌려줘도 임시 아이디로 화면에 유지 → 부모가 refetch하면 useEffect가 교체
-   */
+  const mergeSavedWithAuthor = (saved) => ({
+    ...saved,
+    userId: saved?.userId ?? saved?.user?.userId ?? loginUserId,
+    nickname: saved?.nickname ?? saved?.user?.nickname ?? loginNickname ?? '',
+    profileImg: saved?.profileImg ?? saved?.user?.profileImg ?? loginProfileImg ?? null,
+  });
+
+  /** 루트 댓글 등록 (낙관적 업데이트) */
   const onSubmit = useCallback(async (e) => {
     e.preventDefault();
     const content = draft.trim();
@@ -103,8 +134,8 @@ export default function CommentSection({ postId, comments = [], loginUserId, onC
       parentId: null,
       content,
       userId: loginUserId,
-      nickname: '나',
-      profileImg: null,
+      nickname: loginNickname,
+      profileImg: loginProfileImg,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       isDeleted: false,
@@ -117,67 +148,56 @@ export default function CommentSection({ postId, comments = [], loginUserId, onC
     try {
       const res = await addComment(postId, content);
       const saved = res?.data?.comment || res?.data || null;
-      if (saved?.commentId) {
-        setTree((prev) => replaceIdLocal(prev, tempId, saved));
+      const next = saved?.commentId ? mergeSavedWithAuthor(saved) : null;
+      if (next?.commentId) {
+        setTree((prev) => replaceIdLocal(prev, tempId, next));
       }
-      // 어쨌든 부모에 알림 → 부모가 재조회하면 useEffect로 최신 반영
-      onChange?.('created', saved || optimistic);
+      onChange?.('created', next || optimistic);
     } catch (err) {
       console.error(err);
-      // 실패해도 임시댓글을 잠시 유지 → 사용자 경험 보존
-      // 원하면 여기서 setTree(prev => removeLocal(prev, tempId))로 롤백 가능
-      alert('댓글 등록 중 오류가 발생했어요. 잠시 후 갱신될 수 있습니다.');
+      alert('댓글 등록 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.');
     } finally {
       setBusy(false);
     }
-  }, [draft, loginUserId, postId, onChange]);
+  }, [draft, loginUserId, loginNickname, loginProfileImg, postId, onChange]);
 
   return (
     <section className="tw:mt-10">
-      {/* 상단: 총 개수 + 정렬 */}
+      {/* 헤더 */}
       <div className="tw:flex tw:items-center tw:justify-between tw:mb-4">
         <div className="tw:flex tw:items-center tw:gap-2">
           <span className="tw:text-lg tw:font-bold tw:text-zinc-900 dark:tw:text-zinc-100">댓글</span>
           <span className="tw:text-sm tw:text-zinc-500">{tree.length}개</span>
-        </div>
-        <div className="tw:flex tw:items-center tw:gap-2">
-          <svg className="tw:w-4 tw:h-4 tw:text-zinc-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path d="M3 7h14M5 12h10M7 16h6" />
-          </svg>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="tw:text-sm tw:bg-transparent tw:text-zinc-700 dark:tw:text-zinc-200 focus:tw:outline-none"
-          >
-            <option value="top">인기 댓글</option>
-            <option value="new">최신순</option>
-          </select>
         </div>
       </div>
 
       {/* 작성 인풋 */}
       {loginUserId && (
         <form onSubmit={onSubmit} className="tw:flex tw:items-start tw:gap-3 tw:py-3 tw:border-b tw:border-[#eee]">
-          <div className="tw:w-10 tw:h-10 tw:rounded-full tw:bg-zinc-200" />
+          <img
+            src={resolveImg(loginProfileImg) || defaultProfile}
+            alt="내 프로필"
+            className="tw:w-10 tw:h-10 tw:rounded-full tw:object-cover"
+          />
           <div className="tw:flex-1">
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="댓글 추가..."
+              placeholder={loginNickname ? `${loginNickname}님, 댓글 추가...` : '댓글 추가...'}
               className="tw:w-full tw:bg-transparent tw:border-b tw:border-[#eee] focus:tw:border-zinc-500 focus:tw:outline-none tw:py-2"
             />
             <div className="tw:flex tw:justify-end tw:gap-2 tw:mt-2">
               <button
                 type="button"
                 onClick={() => setDraft('')}
-                className="tw:px-3 tw:py-1.5 tw:text-sm tw:rounded-full tw:bg-zinc-200 tw:hover:bg-zinc-300 tw:text-zinc-800"
+                className="tw:px-3 tw:py-1.5 tw:text-sm tw:rounded-full tw:bg-zinc-200 hover:tw:bg-zinc-300 tw:text-zinc-800 tw:cursor-pointer"
               >
                 취소
               </button>
               <button
                 type="submit"
                 disabled={busy || !draft.trim()}
-                className="tw:px-4 tw:py-1.5 tw:text-sm tw:rounded-full tw:bg-zinc-900 tw:text-white disabled:tw:opacity-40"
+                className="tw:px-4 tw:py-1.5 tw:text-sm tw:rounded-full tw:text-white disabled:tw:opacity-40 tw:bg-[#ff9999] hover:tw:bg-[#ff7f7f] tw:cursor-pointer"
               >
                 댓글
               </button>
@@ -197,8 +217,11 @@ export default function CommentSection({ postId, comments = [], loginUserId, onC
               node={node}
               postId={postId}
               loginUserId={loginUserId}
+              loginNickname={loginNickname}
+              loginProfileImg={loginProfileImg}
               onLocalUpdate={(id, patch) => setTree((prev) => updateLocal(prev, id, patch))}
-              onLocalDelete={(id) => setTree((prev) => removeLocal(prev, id))}
+              // ✅ 소프트 딜리트로 즉시 “삭제된 댓글입니다.” 표시
+              onLocalDelete={(id) => setTree((prev) => softDeleteLocal(prev, id))}
               onLocalReply={(parentId, newReply) => setTree((prev) => addReplyLocal(prev, parentId, newReply))}
             />
           ))

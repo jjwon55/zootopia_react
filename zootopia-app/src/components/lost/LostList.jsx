@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import defaultThumbnail from '../../assets/img/default-thumbnail.png';
 import defaultProfile from '../../assets/img/default-profile.png';
 import writeIcon from '../../assets/img/write.png';
+import lostMain from '../../assets/img/lostmain.png';
 
 const LostList = ({ posts, pagination, keyword, type }) => {
   const location = useLocation();
@@ -20,16 +21,18 @@ const LostList = ({ posts, pagination, keyword, type }) => {
   };
 
   return (
-    <section className="tw:max-w-[900px] tw:mx-auto tw:my-8">
+    <section className="tw:max-w-[900px] tw:mx-auto tw:bg-white tw:p-6 tw:rounded-[10px] tw:shadow-[0_2px_5px_rgba(0,0,0,0.05)]">
       {/* 상단 헤더 */}
-      <div className="tw:flex tw:justify-between tw:items-center tw:mb-4">
-        <h2 className="tw:text-xl tw:font-semibold">유실동물 게시판</h2>
-        <Link
-          to="/lost/create"
-          className="tw:flex tw:items-center tw:gap-[6px] tw:border tw:rounded-[20px] tw:px-[13px] tw:py-[6px] tw:text-[14px] tw:bg-white tw:text-inherit tw:no-underline"
-        >
-          <img src={writeIcon} className="tw:w-[18px] tw:h-[18px]" alt="글쓰기" /> 글쓰기
-        </Link>
+      <div className="tw:items-center tw:mb-4">
+        <img src={lostMain} alt="유실동물" />
+        <div className='tw:flex tw:justify-end'>
+          <Link
+            to="/lost/create"
+            className="tw:flex  tw:max-w-[95px] tw:items-center tw:gap-[6px] tw:border tw:border-[#ccc] tw:rounded-[20px] tw:px-[13px] tw:py-[6px] tw:text-[14px] tw:bg-white tw:text-inherit tw:no-underline"
+            >
+            <img src={writeIcon} className="tw:w-[18px] tw:h-[18px]" alt="글쓰기" /> 글쓰기
+          </Link>
+        </div>
       </div>
 
       {/* 게시글 목록 */}

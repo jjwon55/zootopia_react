@@ -1,5 +1,6 @@
 // src/routes/HsmRoutes.jsx - Updated
 import { Routes, Route, Navigate } from 'react-router-dom';
+import Home from '../pages/Home.jsx';
 import ProductList from '../pages/products/listp.jsx';
 import ProductDetail from '../pages/products/detail.jsx';
 import Cart from '../pages/cart/cart.jsx';
@@ -10,11 +11,10 @@ import KakaoPayMock from '../pages/cart/KakaoPayMock.jsx';
 export default function HsmRoutes() {
   return (
     <Routes>
-      {/* 기본 페이지 */}
-      {/* <Route path="/" element={<Home />} /> */}
 
-      {/* / → /products/listp 로 리다이렉트 */}
-      {/* <Route path="/" element={<Navigate to="/products/listp" replace />} /> */}
+  {/* 기본 페이지: / 에서 홈 표시 */}
+  <Route path="/" element={<Home />} />
+
 
       {/* 목록 */}
       <Route path="/products/listp" element={<ProductList />} />
@@ -28,8 +28,8 @@ export default function HsmRoutes() {
       {/* 장바구니/결제 */}
       <Route path="/checkout" element={<Checkout />} />
 
-  {/* 카카오페이 데모 결제 페이지 */}
-  <Route path="/kakao-pay-mock" element={<KakaoPayMock />} />
+      {/* 카카오페이 데모 결제 페이지 */}
+      <Route path="/kakao-pay-mock" element={<KakaoPayMock />} />
 
       {/* 라우팅되지 않는 경로 */}
       {/* <Route path="*" element={<NotFound />} /> */}

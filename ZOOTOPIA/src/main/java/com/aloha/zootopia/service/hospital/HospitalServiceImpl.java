@@ -1,7 +1,10 @@
 package com.aloha.zootopia.service.hospital;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,15 +96,57 @@ public HospitalServiceImpl(HospitalMapper hospitalMapper) {
     }
 
     @Override
-    public List<Hospital> getHospitalList(List<Integer> animalIds, int pageNum, int pageSize) {
+    public List<Hospital> getHospitalList(List<Integer> animalIds, List<Integer> specialtyIds, int pageNum, int pageSize) {
 
         int offset = (pageNum - 1) * pageSize;
-        return hospitalMapper.selectHospitals(offset, pageSize, animalIds);
+        List<Hospital> hospitalList = hospitalMapper.selectHospitals(offset, pageSize, animalIds, specialtyIds);
+
+        for (Hospital hospital : hospitalList) {
+            List<String> tags = new ArrayList<>();
+            if (hospital.getAnimals() != null) {
+                for (Animal animal : hospital.getAnimals()) {
+                    tags.add(animal.getSpecies());
+                }
+            }
+            if (hospital.getSpecialties() != null) {
+                for (Specialty specialty : hospital.getSpecialties()) {
+                    tags.add(specialty.getCategory());
+                }
+            }
+            hospital.setTags(tags);
+        }
+
+        // Sorting logic
+        hospitalList.sort((h1, h2) -> {
+            long h1MatchCount = 0;
+            if (animalIds != null) {
+                h1MatchCount += h1.getAnimals().stream().filter(a -> animalIds.contains(a.getAnimalId())).count();
+            }
+            if (specialtyIds != null) {
+                h1MatchCount += h1.getSpecialties().stream().filter(s -> specialtyIds.contains(s.getSpecialtyId())).count();
+            }
+
+            long h2MatchCount = 0;
+            if (animalIds != null) {
+                h2MatchCount += h2.getAnimals().stream().filter(a -> animalIds.contains(a.getAnimalId())).count();
+            }
+            if (specialtyIds != null) {
+                h2MatchCount += h2.getSpecialties().stream().filter(s -> specialtyIds.contains(s.getSpecialtyId())).count();
+            }
+
+            if (h1MatchCount != h2MatchCount) {
+                return Long.compare(h2MatchCount, h1MatchCount);
+            }
+
+            return h1.getName().compareTo(h2.getName());
+        });
+
+        return hospitalList;
     }
 
     @Override
-    public int getHospitalCount(List<Integer> animalIds) {
-        return hospitalMapper.countHospitals(animalIds);
+    public int getHospitalCount(List<Integer> animalIds, List<Integer> specialtyIds) {
+        return hospitalMapper.countHospitals(animalIds, specialtyIds);
     }
 
 
@@ -173,6 +218,5 @@ public HospitalServiceImpl(HospitalMapper hospitalMapper) {
     public Hospital getHospital(Integer id) {
         return hospitalMapper.findById(id);
     }
-
 
 }

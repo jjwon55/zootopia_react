@@ -40,3 +40,6 @@ out/
 .history/
 
 .gradle/
+*.zip
+
+.파일백업폴더/

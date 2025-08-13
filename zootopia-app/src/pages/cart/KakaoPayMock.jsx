@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { KakaoPay } from '../../apis/payments/kakao';
+import { KakaoPay } from '../../apis/products/payments/kakao';
 import { clearCart as clearLocalOrApiCart } from '../../apis/products/cart';
-import { toast } from '../../apis/alert';
+import { toast } from '../../apis/products/notify';
 import { useLoginContext } from '../../context/LoginContextProvider';
 
 // 결제창을 모사하는 데모 페이지
@@ -42,7 +42,7 @@ export default function KakaoPayMock() {
         // 주문번호/금액 토스트
         const amount = res?.payload?.amount || res?.amount || undefined;
         const priceText = amount ? `${Number(amount).toLocaleString()}원` : '';
-        toast('주문 완료', `주문번호: ${orderId}${priceText ? ` · 결제금액: ${priceText}` : ''}`, 'success');
+  toast('주문 완료', { text: `주문번호: ${orderId}${priceText ? ` · 결제금액: ${priceText}` : ''}`, icon: 'success' });
         // 1.2초 후 주문 완료 이동 (스토어 목록)
         setTimeout(() => {
           window.location.href = '/products/listp';
