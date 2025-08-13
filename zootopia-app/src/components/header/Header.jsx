@@ -27,9 +27,9 @@ const Header = () => {
         <Link to="/" className="tw:flex tw:items-center tw:no-underline">
           <div className="tw:w-[200px] tw:h-[100px] tw:flex tw:items-center">
             <img
-              src="/assets/dist/img/zootopialogo.png"
+              src={logo}
               alt="Zootopia Logo"
-              className="tw:w-[200px] tw:h-[50px] tw:object-contain"
+              className="tw:w-[200px] tw:h-[150px] tw:object-contain"
             />
           </div>
         </Link>
