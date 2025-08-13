@@ -2,6 +2,7 @@ package com.aloha.zootopia.domain;
 
 import java.time.LocalDateTime;
 
+
 import lombok.Data;
 
 @Data
@@ -15,4 +16,6 @@ public class ParttimeJobApplicant {
     private int reviewCount;
     private String introduction;  // 자기소개
     private LocalDateTime createdAt;
+    private Users user;
+
 }

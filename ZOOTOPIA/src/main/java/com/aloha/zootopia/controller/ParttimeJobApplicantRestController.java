@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.aloha.zootopia.domain.CustomUser;
 import com.aloha.zootopia.domain.ParttimeJob;
 import com.aloha.zootopia.domain.ParttimeJobApplicant;
+import com.aloha.zootopia.domain.Users;
 import com.aloha.zootopia.service.ParttimeJobApplicantService;
 import com.aloha.zootopia.service.ParttimeJobService;
 
@@ -50,21 +51,39 @@ public class ParttimeJobApplicantRestController {
     @PostMapping("/{jobId}/applicants")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<?> apply(
-            @PathVariable Long jobId,
-            @RequestBody ParttimeJobApplicant req,
-            Authentication auth
+        @PathVariable("jobId") Long jobId,
+        @RequestBody Map<String, String> req,   // intro만 받자
+        Authentication auth
     ) {
-        long userId = uid(auth);
-        if (userId < 0) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message","로그인 필요"));
-        if (applicantService.hasApplied(jobId, userId)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message","이미 신청한 알바입니다."));
+        // 1) 인증 체크
+        if (auth == null || !(auth.getPrincipal() instanceof CustomUser cu)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message","로그인 필요"));
         }
+
+        long userId = cu.getUserId();
+        if (applicantService.hasApplied(jobId, userId)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message","이미 신청한 알바입니다."));
+        }
+
+        // 2) 로그인 사용자 프로필에서 이메일/전화 가져오기
+        Users u = cu.getUser();
+        String email = u.getEmail();                 // NOT NULL이면 반드시 값 존재
+        String phone = u.getPhone();                 // NULL 가능하면 빈문자 대체 등
+        String introduction = (req.getOrDefault("introduction", "")).trim();
+        if (introduction.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message","자기소개를 입력하세요."));
+        }
+
+        // 3) 엔티티 만들고 저장
         ParttimeJobApplicant app = new ParttimeJobApplicant();
         app.setJobId(jobId);
         app.setUserId(userId);
-        app.setEmail(req.getEmail());
-        app.setPhone(req.getPhone());
-        app.setIntroduction(req.getIntroduction());
+        app.setEmail(email);
+        app.setPhone(phone);
+        app.setIntroduction(introduction);
+
         applicantService.registerApplicant(app);
         return ResponseEntity.ok(Map.of("ok", true));
     }
@@ -73,8 +92,8 @@ public class ParttimeJobApplicantRestController {
     @GetMapping("/{jobId}/applicants")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<?> list(
-            @PathVariable Long jobId,
-            @RequestParam(defaultValue="1") int page,
+            @PathVariable("jobId") Long jobId,
+            @RequestParam(name="page", defaultValue="1") int page,
             Authentication auth
     ) {
         ParttimeJob job = jobService.getJob(jobId);
@@ -102,7 +121,7 @@ public class ParttimeJobApplicantRestController {
     // 신청 취소(본인만) 또는 관리자 강제 삭제
     @DeleteMapping("/applicants/{applicantId}")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    public ResponseEntity<?> delete(@PathVariable int applicantId, Authentication auth) {
+    public ResponseEntity<?> delete(@PathVariable("applicantId") int applicantId, Authentication auth) {
         ParttimeJobApplicant app = applicantService.getApplicant(applicantId);
         if (app == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message","신청 내역 없음"));
         long userId = uid(auth);

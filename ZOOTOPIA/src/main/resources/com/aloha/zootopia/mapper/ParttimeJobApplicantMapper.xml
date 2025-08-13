@@ -3,26 +3,34 @@
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.aloha.zootopia.mapper.ParttimeJobApplicantMapper">
 
+  <!-- ParttimeJobApplicantMapper.xml -->
   <resultMap id="ApplicantWithUserInfo" type="com.aloha.zootopia.domain.ParttimeJobApplicant">
-    <id property="applicantId" column="applicant_id"/>
-    <result property="jobId" column="job_id"/>
-    <result property="userId" column="user_id"/>
+    <id     property="applicantId" column="applicant_id"/>
+    <result property="jobId"       column="job_id"/>
+    <result property="userId"      column="user_id"/>
     <result property="introduction" column="introduction"/>
-    <result property="createdAt" column="created_at"/>
-    <result property="email" column="email"/>
-    <result property="phone" column="phone"/>
+    <result property="createdAt"    column="created_at"/>
+
+    <!-- ✅ 중첩 프로퍼티로 직접 매핑 -->
+    <result property="user.email"    column="user_email"/>
+    <result property="user.phone"    column="user_phone"/>
+    <result property="user.nickname" column="user_nickname"/>
   </resultMap>
 
-  <insert id="insertApplicant" useGeneratedKeys="true" keyProperty="applicantId">
+  <insert id="insertApplicant" parameterType="com.aloha.zootopia.domain.ParttimeJobApplicant"
+          useGeneratedKeys="true" keyProperty="applicantId">
     INSERT INTO parttime_job_applicant
-    (job_id, user_id, introduction)
+      (job_id, user_id, email, phone, introduction, created_at)
     VALUES
-    (#{jobId}, #{userId}, #{introduction})
+      (#{jobId}, #{userId}, #{email}, #{phone}, #{introduction}, NOW())
   </insert>
 
   <select id="selectApplicantsByJobId" resultMap="ApplicantWithUserInfo">
-    SELECT a.applicant_id, a.job_id, a.user_id, a.introduction, a.created_at,
-           u.email, u.phone
+    SELECT
+      a.applicant_id, a.job_id, a.user_id, a.introduction, a.created_at,
+      u.email    AS user_email,
+      u.phone    AS user_phone,
+      u.nickname AS user_nickname
     FROM parttime_job_applicant a
     JOIN users u ON a.user_id = u.user_id
     WHERE a.job_id = #{jobId}
@@ -34,8 +42,11 @@
   </select>
 
   <select id="getApplicantByJobIdAndUserId" resultMap="ApplicantWithUserInfo">
-    SELECT a.applicant_id, a.job_id, a.user_id, a.introduction, a.created_at,
-           u.email, u.phone
+    SELECT
+      a.applicant_id, a.job_id, a.user_id, a.introduction, a.created_at,
+      u.email    AS user_email,
+      u.phone    AS user_phone,
+      u.nickname AS user_nickname
     FROM parttime_job_applicant a
     JOIN users u ON a.user_id = u.user_id
     WHERE a.job_id = #{jobId} AND a.user_id = #{userId}
@@ -46,8 +57,11 @@
   </select>
 
   <select id="getPagedApplicants" resultMap="ApplicantWithUserInfo">
-    SELECT a.applicant_id, a.job_id, a.user_id, a.introduction, a.created_at,
-           u.email, u.phone
+    SELECT
+      a.applicant_id, a.job_id, a.user_id, a.introduction, a.created_at,
+      u.email    AS user_email,
+      u.phone    AS user_phone,
+      u.nickname AS user_nickname
     FROM parttime_job_applicant a
     JOIN users u ON a.user_id = u.user_id
     WHERE a.job_id = #{jobId}

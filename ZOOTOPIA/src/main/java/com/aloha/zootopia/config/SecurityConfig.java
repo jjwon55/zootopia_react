@@ -25,106 +25,108 @@ import com.aloha.zootopia.service.UserDetailServiceImpl;
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig {
 
-  @Autowired
-  private UserDetailServiceImpl userDetailServiceImpl;
-  @Autowired
-  private JwtProvider jwtProvider;
 
-  // ✅ PasswordEncoder 등록
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-  }
+    @Autowired
+    private UserDetailServiceImpl userDetailServiceImpl;
+    @Autowired
+    private JwtProvider jwtProvider;
 
-  // ✅ AuthenticationManager 안전하게 주입
-  @Bean
-  public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-    return authConfig.getAuthenticationManager();
-  }
+    // ✅ PasswordEncoder 등록
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-  // ✅ SecurityFilterChain 구성
-  // @Bean
-  // public SecurityFilterChain securityFilterChain(HttpSecurity http,
-  // AuthenticationConfiguration authConfig) throws Exception {
+    // ✅ AuthenticationManager 안전하게 주입
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
 
-  // AuthenticationManager authenticationManager =
-  // authConfig.getAuthenticationManager();
+    // ✅ SecurityFilterChain 구성
+    // @Bean
+    // public SecurityFilterChain securityFilterChain(HttpSecurity http,
+    // AuthenticationConfiguration authConfig) throws Exception {
 
-  // http
-  // .csrf(csrf -> csrf.disable())
-  // .formLogin(form -> form.disable())
-  // .httpBasic(basic -> basic.disable())
-  // .sessionManagement(session ->
-  // session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-  // .userDetailsService(userDetailServiceImpl);
+    // AuthenticationManager authenticationManager =
+    // authConfig.getAuthenticationManager();
 
-  // // ✅ 권한 설정
-  // http.authorizeHttpRequests(auth -> auth
-  // .requestMatchers("/login").permitAll()
-  // .requestMatchers("/api/auth/**").permitAll() // 로그인/회원가입 허용
-  // .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**",
-  // "/img/**").permitAll()
-  // .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
-  // .requestMatchers(HttpMethod.GET,
-  // "/hospitals/{hospitalId}/reviews").permitAll()
+    // http
+    // .csrf(csrf -> csrf.disable())
+    // .formLogin(form -> form.disable())
+    // .httpBasic(basic -> basic.disable())
+    // .sessionManagement(session ->
+    // session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+    // .userDetailsService(userDetailServiceImpl);
 
-  // .requestMatchers("/admin/**").hasRole("ADMIN")
-  // .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
-  // .requestMatchers("/products/create/**").hasRole("ADMIN")
-  // .requestMatchers("/comments/add").authenticated()
-  // .requestMatchers("/cart/**").authenticated()
-  // .requestMatchers("/mypage/**").authenticated()
+    // // ✅ 권한 설정
+    // http.authorizeHttpRequests(auth -> auth
+    // .requestMatchers("/login").permitAll()
+    // .requestMatchers("/api/auth/**").permitAll() // 로그인/회원가입 허용
+    // .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**",
+    // "/img/**").permitAll()
+    // .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
+    // .requestMatchers(HttpMethod.GET,
+    // "/hospitals/{hospitalId}/reviews").permitAll()
 
-  // .anyRequest().authenticated()
-  // );
+    // .requestMatchers("/admin/**").hasRole("ADMIN")
+    // .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+    // .requestMatchers("/products/create/**").hasRole("ADMIN")
+    // .requestMatchers("/comments/add").authenticated()
+    // .requestMatchers("/cart/**").authenticated()
+    // .requestMatchers("/mypage/**").authenticated()
 
-  // // ✅ JWT 필터 등록 (정상적으로 주입된 authenticationManager 사용)
-  // http
-  // .addFilterAt(new JwtAuthenticationFilter(authenticationManager, jwtProvider),
-  // UsernamePasswordAuthenticationFilter.class)
-  // .addFilterBefore(new JwtRequestFilter(authenticationManager, jwtProvider),
-  // UsernamePasswordAuthenticationFilter.class);
+    // .anyRequest().authenticated()
+    // );
 
-  // return http.build();
-  // }
+    // // ✅ JWT 필터 등록 (정상적으로 주입된 authenticationManager 사용)
+    // http
+    // .addFilterAt(new JwtAuthenticationFilter(authenticationManager, jwtProvider),
+    // UsernamePasswordAuthenticationFilter.class)
+    // .addFilterBefore(new JwtRequestFilter(authenticationManager, jwtProvider),
+    // UsernamePasswordAuthenticationFilter.class);
 
-  @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationConfiguration authConfig)
-      throws Exception {
+    // return http.build();
+    // }
 
-    AuthenticationManager authenticationManager = authConfig.getAuthenticationManager();
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationConfiguration authConfig)
+            throws Exception {
 
-    http
-        .csrf(csrf -> csrf.disable())
-        .formLogin(form -> form.disable())
-        .httpBasic(basic -> basic.disable())
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .userDetailsService(userDetailServiceImpl)
-        .addFilterAt(new JwtAuthenticationFilter(authenticationManager, jwtProvider),
-            UsernamePasswordAuthenticationFilter.class)
-        .addFilterBefore(new JwtRequestFilter(authenticationManager, jwtProvider),
-            UsernamePasswordAuthenticationFilter.class)
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/posts/**").permitAll()
-            .requestMatchers("/lost/**").permitAll()
-            .requestMatchers("/showoff/**").permitAll()
-            .requestMatchers( "/comments/**").authenticated()
-            .requestMatchers("/upload/**").permitAll()
-            .requestMatchers("/login").permitAll()
-            .requestMatchers("/auth/**").permitAll()
-            .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**", "/img/**").permitAll()
-            .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
-            .requestMatchers(HttpMethod.GET, "/hospitals/{hospitalId}/reviews").permitAll()
+        AuthenticationManager authenticationManager = authConfig.getAuthenticationManager();
 
-            .requestMatchers("/admin/**").hasRole("ADMIN")
-            .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
-            .requestMatchers("/products/create/**").hasRole("ADMIN")
-            .requestMatchers("/cart/**").authenticated()
-            .requestMatchers("/mypage/**").authenticated()
-            .requestMatchers(HttpMethod.POST, "/posts/*/like").authenticated()
-            .anyRequest().authenticated());
+        http
+                .csrf(csrf -> csrf.disable())
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .userDetailsService(userDetailServiceImpl)
+                .addFilterAt(new JwtAuthenticationFilter(authenticationManager, jwtProvider),
+                        UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtRequestFilter(authenticationManager, jwtProvider),
+                        UsernamePasswordAuthenticationFilter.class)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/parttime", "/parttime/**").permitAll()
+                        .requestMatchers("/posts/**").permitAll()
+                        .requestMatchers("/upload/**").permitAll()
+                        .requestMatchers("/login").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**", "/img/**").permitAll()
+                        .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/hospitals/{hospitalId}/reviews")
+                        .permitAll()
 
-    return http.build();
-  }
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/products/create/**").hasRole("ADMIN")
+                        .requestMatchers("/comments/add").authenticated()
+                        .requestMatchers("/cart/**").authenticated()
+                        .requestMatchers("/mypage/**").authenticated()
+                        .anyRequest().authenticated());
+
+        return http.build();
+    }
 
 }
