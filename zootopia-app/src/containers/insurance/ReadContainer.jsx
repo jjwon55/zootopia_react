@@ -1,35 +1,32 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
-import Read from '../../components/insurance/read'
+import Read from '../../components/insurance/Read'
 import { LoginContext } from '../../context/LoginContextProvider'
+import { req } from '../../apis/utils/http'
 
-// ── 공통 fetch 헬퍼 (SPA-CSRF: XSRF-TOKEN 쿠키 → X-XSRF-TOKEN 헤더)
-const getCsrf = () =>
-  decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || '')
-
-async function req(url, { method = 'GET', json, formData } = {}) {
-  const headers = {}
-  const init = { method, credentials: 'include' }
-  const token = getCsrf()
-  if (token) headers['X-XSRF-TOKEN'] = token
-  if (json) { headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(json) }
-  if (formData) { init.body = formData }
-  init.headers = headers
-
-  const res = await fetch('/api' + url, init)
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`HTTP ${res.status} ${text}`)
-  }
-  return res.headers.get('content-type')?.includes('application/json')
-    ? res.json()
-    : {}
-}
+// ✅ 수정: 세션 우선 → 현재 로그인 사용자를 정확히 반영
 
 export default function ReadContainer() {
-  const { id } = useParams() // productId
-  const { roles, isLogin } = useContext(LoginContext) || { roles: [], isLogin: false }
-  const isAdmin = roles?.includes?.('ADMIN')
+  const { productId } = useParams() // productId
+  const id = productId // 이후 코드에서 id 그대로 사용해도 됨
+  const ctx = useContext(LoginContext) || {}
+  const { isLogin } = ctx
+  // 다양한 형태(문자열/객체, ROLE_ prefix 포함)에 대응
+  const roleSources = [
+    ctx.roles,
+    ctx.authList,
+    ctx.authorities,
+    ctx.userInfo?.roles,
+    ctx.userInfo?.authList,
+    ctx.userInfo?.authorities,
+  ].filter(Boolean)
+  const flatRoles = roleSources.flatMap(v => Array.isArray(v) ? v : [v])
+  const roleToString = (r) => typeof r === 'string'
+    ? r
+    : (r?.auth || r?.role || r?.authority || r?.name || '')
+  const isAdmin = flatRoles.some(r =>
+    /(^|_)ADMIN$/i.test(roleToString(r).toUpperCase())
+  )
 
   // 상품 상세
   const [product, setProduct] = useState(null)
@@ -48,6 +45,7 @@ export default function ReadContainer() {
   const loadProduct = useCallback(async () => {
     setLoading(true); setError('')
     try {
+      if (!id) { setError('잘못된 접근입니다.'); return; }
       const data = await req(`/insurance/read/${id}`)
       setProduct(data.product || null)
     } catch (e) {
@@ -61,6 +59,7 @@ export default function ReadContainer() {
   const loadQna = useCallback(async (page = 1) => {
     setQnaLoading(true); setQnaError('')
     try {
+      if (!id) { setQnaError('잘못된 접근입니다.'); return; }
       const data = await req(`/insurance/qna/list?productId=${id}&page=${page}`)
       setQna({
         list: data.qnaList || [],
@@ -80,34 +79,33 @@ export default function ReadContainer() {
 
   // QnA 액션들
   const onQnaRegister = async ({ species, question }) => {
-    await req('/insurance/qna/register-ajax', {
-      method: 'POST',
-      json: { species: species || null, question, productId: id }
-    })
-    await loadQna(1)
+    if (isAdmin) return; // 관리자면 조용히 무시
+     await req('/insurance/qna/register-ajax', {
+       method: 'POST',
+       json: { species: species || null, question, productId: id },
+       auth: true
+     })
   }
-
   const onQnaEdit = async ({ qnaId, species, question }) => {
-    await req('/insurance/qna/edit-ajax', {
-      method: 'POST',
-      json: { qnaId, species, question, productId: id }
-    })
-    await loadQna(qna.pagination.page)
-  }
-
+    if (isAdmin) return; // 관리자면 조용히 무시
+     await req('/insurance/qna/edit-ajax', {
+       method: 'POST',
+       json: { qnaId, species, question, productId: id },
+       auth: true
+     })
+    }
   const onQnaDelete = async ({ qnaId }) => {
     await req(`/insurance/qna/delete-ajax/${qnaId}?productId=${id}`, { method: 'POST' })
     await loadQna(qna.pagination.page)
   }
 
   const onQnaAnswer = async ({ qnaId, answer }) => {
-    await req('/insurance/qna/answer', {
-      method: 'POST',
-      json: { qnaId, answer, productId: id }
-    })
-    await loadQna(qna.pagination.page)
+   await req('/insurance/qna/answer', {
+     method: 'POST',
+     json: { qnaId, answer, productId: id },
+     auth: true
+   })
   }
-
   const onQnaPageChange = (page) => loadQna(page)
 
   return (

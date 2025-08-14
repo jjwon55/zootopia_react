@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Read from '../../components/parttime/Read.jsx'
-import * as parttimeApi from '../../apis/parttime'
+import * as parttimeApi from '../../apis/parttime/parttime.js'
 import { useLoginContext } from '../../context/LoginContextProvider.jsx'
 
 const ReadContainer = () => {
@@ -170,6 +170,7 @@ const onToggleContact = (id) => {
       errorMessage={errorMessage}
       hasApplied={hasApplied}
       isWriter={isWriter}
+      isAdmin={isAdmin}
       myApplication={myApplication}
       applicants={applicants}
       totalApplicantPages={totalApplicantPages}
