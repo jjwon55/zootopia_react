@@ -1,8 +1,14 @@
 import req from './request';
 
 // 목록/조회 (인증 불필요)
-export const listProducts = ({ species, company, page=1 }={}) =>
-  req(`/insurance/list?species=${species||''}&company=${company||''}&page=${page}`);
+export const listProducts = ({ species = '', company = '', page = 1 } = {}) => {
+  const qs = new URLSearchParams({
+    species,
+    company,
+    page: String(page),
+  }).toString();
+  return req(`/insurance/list?${qs}`);
+};
 
 export const readProduct = (productId) =>
   req(`/insurance/read/${productId}`);

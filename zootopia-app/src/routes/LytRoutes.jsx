@@ -25,8 +25,8 @@ const LytRoutes = () => {
         <Route path="/parttime/update/:jobId" element={<Update />} />
         <Route path="/insurance/list" element={<InsuranceList />} />
         <Route path="/insurance/insert" element={<InsuranceInsert />} />
-        <Route path="/insurance/read/:jobId" element={<InsuranceRead />} />
-        <Route path="/insurance/update/:jobId" element={<InsuranceUpdate />} />
+        <Route path="/insurance/read/:productId" element={<InsuranceRead />} />
+        <Route path="/insurance/update/:productId" element={<InsuranceUpdate />} />
       </Routes>
     </>
   )

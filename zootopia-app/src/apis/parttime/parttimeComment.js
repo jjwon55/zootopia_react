@@ -1,4 +1,4 @@
-import api from './api' // 반드시 토큰 인터셉터가 붙은 인스턴스
+import api from '../api' // 반드시 토큰 인터셉터가 붙은 인스턴스
 
 /** 1. 댓글 등록 */
 export const createComment = (commentData) =>

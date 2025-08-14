@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Insert from '../../components/parttime/Insert.jsx'
-import * as parttimeApi from '../../apis/parttime'
+import * as parttimeApi from '../../apis/parttime/parttime.js'
 import { useLoginContext } from '../../context/LoginContextProvider.jsx'
 
 const InsertContainer = () => {

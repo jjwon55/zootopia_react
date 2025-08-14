@@ -11,16 +11,16 @@ const JobFilter = ({
 }) => {
   return (
     <form
-      className="flex flex-nowrap items-center gap-3 p-4 rounded shadow bg-[#ffecec] overflow-x-auto"
+      className="tw:flex tw:flex-nowrap tw:items-center tw:gap-3 tw:p-4 tw:rounded tw:shadow tw:bg-[#ffecec] tw:overflow-x-auto"
     >
       {/* 지역 */}
-      <div className="flex items-center gap-1">
-        <span className="text-[#F27A7A]">📍</span>
+      <div className="tw:flex tw:items-center tw:gap-1">
+        <span className="tw:text-[#F27A7A]">📍</span>
         <select
           name="location"
           value={location}
           onChange={onChange}
-          className="border rounded px-2 py-1 text-sm min-w-[120px] focus:outline-[#F27A7A]"
+          className="tw:border tw:rounded tw:px-2 tw:py-1 tw:text-sm tw:min-w-[120px] focus:tw:outline-[#F27A7A]"
         >
           <option value="">지역 선택</option>
           <option value="서울">서울</option>
@@ -34,13 +34,13 @@ const JobFilter = ({
       </div>
 
       {/* 동물 종류 */}
-      <div className="flex items-center gap-1">
+      <div className="tw:flex tw:items-center tw:gap-1">
         <span>🐾</span>
         <select
           name="animalType"
           value={animalType}
           onChange={onChange}
-          className="border rounded px-2 py-1 text-sm min-w-[120px] focus:outline-[#F27A7A]"
+          className="tw:border tw:rounded tw:px-2 tw:py-1 tw:text-sm tw:min-w-[120px] focus:tw:outline-[#F27A7A]"
         >
           <option value="">동물 종류</option>
           <option value="포유류">포유류</option>
@@ -53,13 +53,13 @@ const JobFilter = ({
       </div>
 
       {/* 보수 */}
-      <div className="flex items-center gap-1">
-        <span className="text-green-600">💰</span>
+      <div className="tw:flex tw:items-center tw:gap-1">
+        <span className="tw:text-green-600">💰</span>
         <select
           name="payRange"
           value={payRange}
           onChange={onChange}
-          className="border rounded px-2 py-1 text-sm min-w-[100px] focus:outline-[#F27A7A]"
+          className="tw:border tw:rounded tw:px-2 tw:py-1 tw:text-sm tw:min-w-[100px] focus:tw:outline-[#F27A7A]"
         >
           <option value="">보수</option>
           <option value="low">1만원 미만</option>
@@ -69,14 +69,14 @@ const JobFilter = ({
       </div>
 
       {/* 날짜 */}
-      <div className="flex items-center gap-1">
-        <span className="text-blue-600">📅</span>
+      <div className="tw:flex tw:items-center tw:gap-1">
+        <span className="tw:text-blue-600">📅</span>
         <input
           type="date"
           name="startDate"
           value={startDate}
           onChange={onChange}
-          className="border rounded px-2 py-1 text-sm min-w-[130px]"
+          className="tw:border tw:rounded tw:px-2 tw:py-1 tw:text-sm tw:min-w-[130px]"
         />
         <span>~</span>
         <input
@@ -84,23 +84,23 @@ const JobFilter = ({
           name="endDate"
           value={endDate}
           onChange={onChange}
-          className="border rounded px-2 py-1 text-sm min-w-[130px]"
+          className="tw:border tw:rounded tw:px-2 tw:py-1 tw:text-sm tw:min-w-[130px]"
         />
       </div>
 
       {/* 검색 */}
-      <div className="flex items-center gap-1">
+      <div className="tw:flex tw:items-center tw:gap-1">
         <input
           type="text"
           name="keyword"
           value={keyword}
           onChange={onChange}
-          className="border rounded px-2 py-1 text-sm min-w-[160px]"
+          className="tw:border tw:rounded tw:px-2 tw:py-1 tw:text-sm tw:min-w-[160px]"
           placeholder="검색어 입력"
         />
         <button
-          className="border border-gray-400 rounded px-3 py-1 text-sm bg-white hover:bg-gray-100 transition"
           type="submit"
+          className="tw:border tw:border-gray-400 tw:rounded tw:px-3 tw:py-1 tw:text-sm tw:bg-white hover:tw:bg-gray-100 tw:transition"
         >
           🔍
         </button>
