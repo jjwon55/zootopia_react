@@ -108,6 +108,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/posts/**").permitAll()
             .requestMatchers("/lost/**").permitAll()
+            .requestMatchers("/mypage/**").permitAll()
             .requestMatchers("/showoff/**").permitAll()
             .requestMatchers("/insurance/**").permitAll()
 
