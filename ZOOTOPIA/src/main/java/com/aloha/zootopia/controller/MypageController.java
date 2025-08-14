@@ -117,8 +117,8 @@ public class MypageController {
     /* 닉네임/소개 변경 */
     @PutMapping("/edit/profile-info")
     public ResponseEntity<?> updateProfileInfo(
-            @RequestParam String nickname,
-            @RequestParam(required = false) String intro,
+            @RequestParam("nickname") String nickname,
+            @RequestParam(value = "intro", required = false) String intro,
             @AuthenticationPrincipal CustomUser loginUser) throws Exception {
 
         if (loginUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -159,9 +159,9 @@ public class MypageController {
     /* 비밀번호 변경 */
     @PutMapping("/edit/password")
     public ResponseEntity<?> updatePassword(
-            @RequestParam String currentPassword,
-            @RequestParam String newPassword,
-            @RequestParam String newPasswordCheck,
+            @RequestParam("currentPassword") String currentPassword,
+            @RequestParam("newPassword") String newPassword,
+            @RequestParam("newPasswordCheck") String newPasswordCheck,
             @AuthenticationPrincipal CustomUser loginUser) throws Exception {
 
         if (loginUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -182,7 +182,7 @@ public class MypageController {
 
     /* 다른 사용자 마이페이지 공개 정보 */
     @GetMapping("/{userId}")
-    public ResponseEntity<?> viewOtherUserMypage(@PathVariable Long userId) throws Exception {
+    public ResponseEntity<?> viewOtherUserMypage(@PathVariable("userId") Long userId) throws Exception {
         Users user = userService.findUserById(userId);
         if (user == null) return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error("사용자를 찾을 수 없습니다."));
@@ -203,7 +203,6 @@ public class MypageController {
         try {
             Long userId = user.getUser().getUserId();
             userService.deleteById(userId);
-            // 세션 무효화는 프론트에서 로그아웃 처리 or 필터에서 수행
             return ResponseEntity.ok(ApiResponse.okMsg("회원 탈퇴가 완료되었습니다."));
         } catch (Exception e) {
             log.error("탈퇴 중 오류", e);
