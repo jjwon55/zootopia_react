@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import * as parttimeApi from '../../apis/parttime'
+import * as parttimeApi from '../../apis/parttime/parttime.js'
 import UpdateForm from '../../components/parttime/Update.jsx'
 
 const toDateInput = (d) => {

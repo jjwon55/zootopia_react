@@ -26,7 +26,7 @@ import com.aloha.zootopia.domain.InsuranceQnaResponse;
 import com.aloha.zootopia.service.InsuranceQnaService;
 
 @RestController
-@RequestMapping("/api/insurance/qna")
+@RequestMapping("/insurance/qna") // 🔁 여기만 변경!
 public class InsuranceQnaRestController {
 
     @Autowired
@@ -54,20 +54,19 @@ public class InsuranceQnaRestController {
     // 목록 (페이지 단위)
     @GetMapping("/list")
     public ResponseEntity<?> listQnaPaged(
-            @RequestParam int productId,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam("productId") int productId,
+            @RequestParam(name = "page", defaultValue = "1") int page,
             Authentication authentication
     ) {
         final int pageSize = 4;
 
-        // ✅ 람다에서 쓸 값은 final 변수로 확정
         final long uid = getLoginUserId(authentication);
         final boolean admin = isAdmin(authentication);
 
         List<InsuranceQnaResponse> qnaList = qnaService
                 .getQnaListPaged(productId, page, pageSize).stream()
                 .map(q -> InsuranceQnaResponse.from(q, uid, admin))
-                .collect(Collectors.toList()); // ✅ JDK 8/11 호환
+                .collect(Collectors.toList());
 
         int totalCount = qnaService.countByProduct(productId);
 
@@ -80,22 +79,32 @@ public class InsuranceQnaRestController {
     // 질문 등록 (USER)
     @PostMapping("/register-ajax")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> registerAjax(
-            @RequestBody InsuranceQna qna,
-            Authentication authentication
-    ) {
+    public ResponseEntity<?> registerAjax(@RequestBody InsuranceQna qna, Authentication authentication) {
         final long uid = getLoginUserId(authentication);
         if (uid < 0) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "로그인이 필요합니다."));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "로그인이 필요합니다."));
         }
         if (!StringUtils.hasText(qna.getQuestion())) {
-            return ResponseEntity.badRequest().body(Map.of("message", "질문 내용을 입력하세요."));
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "질문 내용을 입력하세요."));
+        }
+
+        // 로그인 사용자 정보에서 닉네임
+        String nickname = null;
+        Object p = authentication.getPrincipal();
+        if (p instanceof CustomUser) {
+            nickname = ((CustomUser) p).getUser().getNickname();
         }
 
         qna.setUserId(uid);
+        if (!StringUtils.hasText(qna.getSpecies())) qna.setSpecies("기타");
+        if (!StringUtils.hasText(nickname)) nickname = "익명";
+        qna.setNickname(nickname);
+        qna.setAnswer(null); // 최초 등록 시 답변은 없음
+
         qnaService.registerQuestion(qna);
 
-        // 등록 후 1페이지 반환
         return okListWithPage(qna.getProductId(), 1, authentication);
     }
 
@@ -136,8 +145,8 @@ public class InsuranceQnaRestController {
     @PostMapping("/delete-ajax/{qnaId}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<?> deleteAjax(
-            @PathVariable int qnaId,
-            @RequestParam int productId,
+            @PathVariable("qnaId") int qnaId,
+            @RequestParam("productId") int productId,
             Authentication authentication
     ) {
         final long uid = getLoginUserId(authentication);
@@ -165,7 +174,7 @@ public class InsuranceQnaRestController {
         List<InsuranceQnaResponse> qnaList = qnaService
                 .getQnaListPaged(productId, page, pageSize).stream()
                 .map(q -> InsuranceQnaResponse.from(q, uid, admin))
-                .collect(Collectors.toList()); // ✅
+                .collect(Collectors.toList());
 
         int totalCount = qnaService.countByProduct(productId);
 

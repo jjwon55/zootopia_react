@@ -1,4 +1,4 @@
-import api from './api'
+import api from '../api'
 
 // 목록
 export const getJobs = (params) => api.get('/parttime', { params })
