@@ -16,7 +16,7 @@ const HospitalList = ({
   onPageChange,
 }) => {
   const navigate = useNavigate();
-  const { roles } = useContext(LoginContext); // Context에서 값 꺼내기
+  const { roles, isLogin } = useContext(LoginContext); // Context에서 값 꺼내기
   console.log(roles); 
   // 관리자용 병원 등록 버튼 클릭 → SweetAlert 확인 팝업
   const handleCreateHospitalClick = () => {
@@ -91,7 +91,7 @@ const HospitalList = ({
           </div>
         </div>
         
-        {roles && (
+        {roles.isAdmin && isLogin && (
           <button
             onClick={handleCreateHospitalClick}
             className="tw:bg-[#74b9ff] tw:text-white tw:px-4 tw:py-2 tw:rounded hover:tw:bg-[#0984e3] tw:mb-3 md:tw:mb-0 tw:cursor-pointer tw:hover:bg-[#389bff]"

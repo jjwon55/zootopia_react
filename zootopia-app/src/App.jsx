@@ -2,6 +2,7 @@ import React from 'react'
 import './App.css';
 import { BrowserRouter, Routes } from 'react-router-dom';
 
+import { Route } from 'react-router-dom';
 import LoginContextProvider from './context/LoginContextProvider';
 import JjwRoutes from './routes/JjwRoutes';
 import LytRoutes from './routes/LytRoutes';
@@ -15,10 +16,11 @@ const App = () => {
     <BrowserRouter>
       <LoginContextProvider>
         <Header />
-          <SysRoutes />
-          <JjwRoutes />
-          <HsmRoutes />
-          <LytRoutes />
+            <SysRoutes />
+            <JjwRoutes />
+            <HsmRoutes />
+            <LytRoutes />
+            
         <Footer />
       </LoginContextProvider>
     </BrowserRouter>
