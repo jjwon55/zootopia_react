@@ -1,5 +1,7 @@
 package com.aloha.zootopia.security.contants;
 
+import org.springframework.http.HttpHeaders;
+
 /**
  * 해당 클래스는 Spring Security 및 JWT 관련 상수를 정의한 상수 클래스입니다.
  * HTTP
@@ -10,7 +12,8 @@ package com.aloha.zootopia.security.contants;
 public final class SecurityConstants {
 
     // JWT 토큰을 HTTP 헤더에서 식별하는 데 사용되는 헤더 이름
-    public static final String TOKEN_HEADER = "Authorization";
+    // public static final String TOKEN_HEADER = "Authorization";
+    public static final String TOKEN_HEADER = HttpHeaders.AUTHORIZATION;
 
     // JWT 토큰의 접두사. 일반적으로 "Bearer " 다음에 실제 토큰이 옵니다.
     public static final String TOKEN_PREFIX = "Bearer ";

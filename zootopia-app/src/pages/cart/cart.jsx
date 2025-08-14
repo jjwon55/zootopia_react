@@ -22,20 +22,30 @@ export default function Cart() {
     // 로그인 사용자가 바뀌면 장바구니 다시 로드
   }, [userId]);
 
+  const syncLocal = (items) => {
+    try {
+      localStorage.setItem(`cart:user:${userId}`, JSON.stringify(items || []));
+    } catch {}
+  };
+
   const loadCartItems = async () => {
     setLoading(true);
     try {
       const response = await fetchCartItems(userId);
       if (response.success) {
-        setCartItems(response.cartItems || []);
+        const items = response.cartItems || [];
+        setCartItems(items);
+        syncLocal(items);
       } else {
         // 실패 시 더미 데이터 주입 대신 비워서 사용자 혼란 방지
         setCartItems([]);
+        syncLocal([]);
       }
     } catch (error) {
       console.error('Failed to load cart items:', error);
   // 실패 시 더미 데이터 주입 대신 비워서 사용자 혼란 방지
   setCartItems([]);
+  syncLocal([]);
 
     } finally {
       setLoading(false);
@@ -47,25 +57,28 @@ export default function Cart() {
     
     setUpdating(true);
     try {
-      const response = await updateCartItem(id, newQuantity);
+      const response = await updateCartItem(userId, id, newQuantity);
 
       if (response.success || true) { // Mock으로 항상 성공 처리
-
-        setCartItems(items =>
-          items.map(item =>
+        setCartItems(items => {
+          const next = items.map(item =>
             item.id === id ? { ...item, quantity: newQuantity } : item
-          )
-        );
+          );
+          syncLocal(next);
+          return next;
+        });
 
       }
     } catch (error) {
       console.error('Failed to update cart item:', error);
       // Mock으로 수량 변경
-      setCartItems(items =>
-        items.map(item =>
+      setCartItems(items => {
+        const next = items.map(item =>
           item.id === id ? { ...item, quantity: newQuantity } : item
-        )
-      );
+        );
+        syncLocal(next);
+        return next;
+      });
 
     } finally {
       setUpdating(false);
@@ -76,14 +89,22 @@ export default function Cart() {
 
     setUpdating(true);
     try {
-      const response = await removeCartItem(id);
+      const response = await removeCartItem(userId, id);
       if (response.success || true) { // Mock으로 항상 성공 처리
-        setCartItems(items => items.filter(item => item.id !== id));
+        setCartItems(items => {
+          const next = items.filter(item => item.id !== id);
+          syncLocal(next);
+          return next;
+        });
       }
     } catch (error) {
       console.error('Failed to remove cart item:', error);
       // Mock으로 삭제
-      setCartItems(items => items.filter(item => item.id !== id));
+      setCartItems(items => {
+        const next = items.filter(item => item.id !== id);
+        syncLocal(next);
+        return next;
+      });
 
     } finally {
       setUpdating(false);
@@ -97,6 +118,7 @@ export default function Cart() {
   const response = await clearCart(userId);
       if (response.success || true) { // Mock으로 항상 성공 처리
         setCartItems([]);
+        syncLocal([]);
       }
     } catch (error) {
       console.error('Failed to clear cart:', error);
