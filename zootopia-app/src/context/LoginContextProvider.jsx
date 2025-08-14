@@ -40,7 +40,8 @@ const LoginContextProvider = ({ children }) => {
   // JWT로 사용자 정보 조회 후 로그인 세팅
   const loginSetting = async (authorization) => {
     try {
-      api.defaults.headers.common.Authorization = authorization;
+      const jwt = authorization.replace("Bearer ", "");
+      Cookies.set("jwt", jwt);
 
       const response = await auth.info();
       const data = response.data;
@@ -111,7 +112,7 @@ const LoginContextProvider = ({ children }) => {
   }, []);
 
   return (
-    <LoginContext.Provider value={{ isLogin, login, userInfo, roles, isLoading, logout }}>
+    <LoginContext.Provider value={{ isLogin, login, userInfo, roles, isLoading, logout, loginSetting }}>
       {children}
     </LoginContext.Provider>
   );

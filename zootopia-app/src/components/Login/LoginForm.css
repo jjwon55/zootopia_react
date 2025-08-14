@@ -144,14 +144,16 @@
     text-decoration: none;
     color: white;
     font-size: 1.2rem;
-    transition: all 0.3s ease;
+    /* transition: all 0.3s ease; */
 }
 
 .social-btn.kakao {
-    /* background: #FEE500; */
-    /* color: #000; */
-    background: #0000006b;
-    color: #cfcfcfea;
+    background-image: url('../../assets/img/kakaologinbtn.png');
+    background-repeat: no-repeat;           /* 반복 안 함 */
+    background-size: contain;                 /* 화면 꽉 채우기 */
+    background-position: center;            /* 중앙 정렬 */
+    background-attachment: fixed;           /* 스크롤해도 고정 */
+    color: white;
 }
 
 .social-btn.naver {
@@ -159,14 +161,14 @@
     color: white;
 }
 
-.social-btn.facebook {
-    /* background: #4267B2; */
-    background: #0000006b;
+.social-btn.google {
+    background: #4267B2;
+    color: white;
 }
 
-.social-btn:hover {
+/* .social-btn:hover {
     transform: scale(1.1);
-}
+} */
 
 .register-link {
     text-align: center;

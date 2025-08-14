@@ -95,14 +95,14 @@ const LoginForm = () => {
             </div>
 
             <div className="social-login">
-              <a href="/oauth2/authorization/kakao" className="social-btn kakao">
+              <a href="/api/oauth2/authorization/kakao" className="social-btn kakao">
                 <i className="fas fa-comment"></i>
               </a>
-              <a href="/oauth2/authorization/naver" className="social-btn naver">
+              <a href="/api/oauth2/authorization/naver" className="social-btn naver">
                 <span style={{ fontWeight: 'bold', fontSize: '16px' }}>N</span>
               </a>
-              <a href="/oauth2/authorization/facebook" className="social-btn facebook">
-                <i className="fab fa-facebook-f"></i>
+              <a href="/api/oauth2/authorization/google" className="social-btn google">
+                <i className="fab fa-facebook-f">G</i>
               </a>
             </div>
 

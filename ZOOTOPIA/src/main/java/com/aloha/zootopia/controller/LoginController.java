@@ -48,7 +48,7 @@ public class LoginController {
    * @param authReq
    * @return
    */
-//   @PostMapping("/login")
+  //   @PostMapping("/login")
 //   public ResponseEntity<?> login(@RequestBody AuthenticationRequest authReq) {
 //       // 아이디 비밀번호
 //       String email = authReq.getEmail();
