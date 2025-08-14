@@ -1,15 +1,26 @@
 package com.aloha.zootopia.controller;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+import java.util.Map;
+
+@RestController
 @RequestMapping("/map")
 public class MapController {
 
-    @GetMapping("/map")
-    public String zooPage() {
-        return "map/map"; // templates/map.html
+    // GET /api/map  → 간단한 상태 응답
+    @GetMapping
+    public ResponseEntity<?> health() {
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "map api is alive"
+        ));
+    }
+
+    // GET /api/map/ping  → 핑/퐁
+    @GetMapping("/ping")
+    public ResponseEntity<?> ping() {
+        return ResponseEntity.ok(Map.of("pong", true));
     }
 }
