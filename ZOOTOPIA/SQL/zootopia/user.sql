@@ -31,3 +31,6 @@ CREATE TABLE `users` (
 
 INSERT INTO users (user_id, email, password, nickname, intro, phone, profile_img, created_at) VALUES
 (1, 'admin', '$2a$10$2XMPFzReUtpL32VoJznvmuD0n1eV5BNSczGb3oFGdDtd.6cqW5R5O', '관리자계정', '커뮤니티 관리 전담 운영자입니다.', '010-0000-0000', '/images/profile10.png', NOW());
+
+ALTER TABLE users ADD COLUMN provider VARCHAR(20) DEFAULT NULL,
+     ADD COLUMN provider_id VARCHAR(100) DEFAULT NULL;
