@@ -99,10 +99,10 @@ const LoginForm = () => {
                 <i className="fas fa-comment"></i>
               </a>
               <a href="/api/oauth2/authorization/naver" className="social-btn naver">
-                <span style={{ fontWeight: 'bold', fontSize: '16px' }}>N</span>
+                <span style={{ fontWeight: 'bold', fontSize: '20px' }}>N</span>
               </a>
               <a href="/api/oauth2/authorization/google" className="social-btn google">
-                <i className="fab fa-facebook-f">G</i>
+                <i className="fab fa-google-f"></i>
               </a>
             </div>
 
