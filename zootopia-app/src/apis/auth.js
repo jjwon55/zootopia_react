@@ -6,13 +6,9 @@ import axios from 'axios';
 export const join = (data) => api.post(`/users`,data)
 
 export const login = (email, password) => {
-  const params = new URLSearchParams();
-  params.append('email', email);
-  params.append('password', password);
-
-  return axios.post('/api/login', params, {
+  return axios.post('http://localhost:8080/login', { email, password }, {
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': 'application/json',
     },
     withCredentials: true
   });

@@ -4,10 +4,6 @@ import ProcedureContainer from '../../containers/funeral/ProcedureContainer'
 
 
 const Procedure = () => {
-
-  
-
-
   return (
     <>
       <ProcedureContainer />
