@@ -6,26 +6,28 @@
 <mapper namespace="com.aloha.zootopia.mapper.InsuranceProductMapper">
 
   <resultMap id="InsuranceProductMap" type="com.aloha.zootopia.domain.InsuranceProduct">
-    <id     property="productId"      column="product_id"/>
-    <result property="name"           column="name"/>
-    <result property="slogan"         column="slogan"/>
-    <result property="coveragePercent" column="coverage_percent"/>
-    <result property="monthlyFeeRange" column="monthly_fee_range"/>
-    <result property="maxCoverage"     column="max_coverage"/>
-    <result property="species"         column="species"/>
-    <result property="joinCondition"   column="join_condition"/>
-    <result property="coverageItems"   column="coverage_items"/>
-    <result property="precautions"     column="precautions"/>
-    <result property="createdAt"       column="created_at"/>
-    <result property="imagePath"       column="image_path"/>
+    <id     property="productId"        column="product_id"/>
+    <result property="name"             column="name"/>
+    <result property="company"          column="company"/>        <!-- ✅ 회사 컬럼 매핑(추가했다면) -->
+    <result property="slogan"           column="slogan"/>
+    <result property="coveragePercent"  column="coverage_percent"/>
+    <result property="monthlyFeeRange"  column="monthly_fee_range"/>
+    <result property="maxCoverage"      column="max_coverage"/>
+    <result property="species"          column="species"/>
+    <result property="joinCondition"    column="join_condition"/>
+    <result property="coverageItems"    column="coverage_items"/>
+    <result property="precautions"      column="precautions"/>
+    <result property="createdAt"        column="created_at"/>
+    <result property="imagePath"        column="image_path"/>
   </resultMap>
 
+  <!-- insert/update에 company 컬럼을 쓰고 있다면 여기도 포함 -->
   <insert id="insertProduct" parameterType="com.aloha.zootopia.domain.InsuranceProduct" useGeneratedKeys="true" keyProperty="productId">
     INSERT INTO insurance_product
-    (name, slogan, coverage_percent, monthly_fee_range, max_coverage, species,
+    (name, company, slogan, coverage_percent, monthly_fee_range, max_coverage, species,
      join_condition, coverage_items, precautions, image_path, created_at)
     VALUES
-    (#{name}, #{slogan}, #{coveragePercent}, #{monthlyFeeRange}, #{maxCoverage}, #{species},
+    (#{name}, #{company}, #{slogan}, #{coveragePercent}, #{monthlyFeeRange}, #{maxCoverage}, #{species},
      #{joinCondition}, #{coverageItems}, #{precautions}, #{imagePath}, NOW())
   </insert>
 
@@ -36,6 +38,7 @@
   <update id="updateProduct" parameterType="com.aloha.zootopia.domain.InsuranceProduct">
     UPDATE insurance_product
     SET name = #{name},
+        company = #{company},
         slogan = #{slogan},
         coverage_percent = #{coveragePercent},
         monthly_fee_range = #{monthlyFeeRange},
@@ -52,10 +55,11 @@
     DELETE FROM insurance_product WHERE product_id = #{productId}
   </delete>
 
+  <!-- ✅ 기존 페이징 쿼리도 size -> limit 로 통일 -->
   <select id="selectProductsPaged" resultMap="InsuranceProductMap">
     SELECT * FROM insurance_product
     ORDER BY product_id DESC
-    LIMIT #{size} OFFSET #{offset}
+    LIMIT #{limit} OFFSET #{offset}
   </select>
 
   <select id="countAllProducts" resultType="int">
@@ -63,16 +67,25 @@
   </select>
 
   <!-- ✅ 필터 + 페이징 -->
-  <sql id="productFilterWhere">
-    <where>
-      <if test="species != null and species != '' and species != 'all'">
-        AND species = #{species}
-      </if>
-      <if test="company != null and company != ''">
-        AND name LIKE CONCAT('%', #{company}, '%')   <!-- 회사명이 name에 포함된다고 가정 -->
-      </if>
-    </where>
-  </sql>
+<sql id="productFilterWhere">
+  <where>
+    <!-- species가 dog/cat일 때는 all도 함께 매칭 -->
+    <if test="species != null and species != '' and species != 'all'">
+      AND (species = #{species} OR species = 'all')
+    </if>
+
+    <!-- 회사 필터 (정확 일치 버전) -->
+    <if test="company != null and company != ''">
+      AND company = #{company}
+    </if>
+    <!-- 부분 일치가 필요하면 위 대신 아래 사용
+    <if test="company != null and company != ''">
+      AND (company LIKE CONCAT('%', #{company}, '%')
+           OR name    LIKE CONCAT('%', #{company}, '%'))
+    </if>
+    -->
+  </where>
+</sql>
 
   <select id="selectFilteredProducts" resultMap="InsuranceProductMap">
     SELECT * FROM insurance_product
