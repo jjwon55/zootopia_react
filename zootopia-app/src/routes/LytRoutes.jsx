@@ -15,7 +15,6 @@ import Header from '../components/header/Header'
 const LytRoutes = () => {
   return (
     <>
-      {/* <Header /> */}
       <Routes>
         {/* 기본 페이지 */}
         <Route path="/" element={<Home />} />
@@ -25,9 +24,9 @@ const LytRoutes = () => {
         <Route path="/parttime/read/:jobId" element={<Read />} />
         <Route path="/parttime/update/:jobId" element={<Update />} />
         <Route path="/insurance/list" element={<InsuranceList />} />
-        <Route path="/insurance/create" element={<InsuranceInsert />} />
-        <Route path="/insurance/read/:jobId" element={<InsuranceRead />} />
-        <Route path="/insurance/update/:jobId" element={<InsuranceUpdate />} />
+        <Route path="/insurance/insert" element={<InsuranceInsert />} />
+        <Route path="/insurance/read/:productId" element={<InsuranceRead />} />
+        <Route path="/insurance/update/:productId" element={<InsuranceUpdate />} />
       </Routes>
     </>
   )

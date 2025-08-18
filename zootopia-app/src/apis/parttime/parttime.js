@@ -1,4 +1,4 @@
-import api from './api'
+import api from '../api'
 
 // 목록
 export const getJobs = (params) => api.get('/parttime', { params })
@@ -28,8 +28,8 @@ export const getApplicantsByJob = (jobId, page = 1) =>
   api.get(`/parttime/${jobId}/applicants`, { params: { page } }).then(r => r.data)
 
 // 신청 취소 🔥 백엔드: DELETE /parttime/applicants/{applicantId} (jobId 경로에 없음)
-export const deleteApplication = (applicantId, jobId) =>
-  api.delete(`/parttime/${jobId}/applicants/${applicantId}`)
+export const deleteApplication = (applicantId) =>
+  api.delete(`/parttime/applicants/${applicantId}`)
 
 // 로그인 사용자
 export const getLoginUser = () => api.get('/auth/me')

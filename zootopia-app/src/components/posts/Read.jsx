@@ -1,33 +1,49 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatDate } from '../../utils/format';
 import defaultProfile from '../../assets/img/default-profile.png';
 import pinkArrow from '../../assets/img/pinkarrow.png';
 import Share from '../../assets/img/share.png';
 import CommentSection from './CommentSection';
-import { toastSuccess, toastInfo, toastError } from '../../apis/alert';
-import { toggleLike } from '../../apis/posts/posts'; // ✅ 추가
+import { toastSuccess, toastInfo, toastError } from '../../apis/posts/alert';
+import { toggleLike } from '../../apis/posts/posts';
+
+// /api 프록시 환경에서 이미지 경로 정규화
+const resolveImg = (src) => {
+  if (!src) return null;
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith('/api/')) return src;
+  if (src.startsWith('/')) return `/api${src}`;
+  return `/api/${src}`;
+};
+
+// 본문 HTML 내 이미지 src를 /api 기준으로 변환
+const normalizeContentImgSrc = (html) =>
+  (html || '').replace(/src="\/(?!api\/)/g, 'src="/api/');
 
 const Read = ({
   post,
   isOwner: isOwnerFromApi,
   loginUserId,
+  // ✅ 추가: 로그인 사용자 표시용
+  loginNickname,
+  loginProfileImg,
   editId,
   setEditId,
   onDelete,
+  // ✅ 추가: 댓글 변경 시 상위에서 재조회
+  onCommentsChange,
 }) => {
-  // 작성자 판단 (API 값 우선, 없으면 fallback)
   const ownerId = post?.user?.userId ?? post?.userId;
   const isOwner =
     typeof isOwnerFromApi === 'boolean'
       ? isOwnerFromApi
       : String(loginUserId ?? '') === String(ownerId ?? '');
 
-  // 좋아요 상태/카운트
-  const [liked, setLiked] = useState(!!post?.liked);
-  const [likeCount, setLikeCount] = useState(post?.likeCount ?? 0);
+  const [liked, setLiked] = React.useState(!!post?.liked);
+  const [likeCount, setLikeCount] = React.useState(post?.likeCount ?? 0);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setLiked(!!post?.liked);
     setLikeCount(post?.likeCount ?? 0);
   }, [post]);
@@ -39,52 +55,40 @@ const Read = ({
       .catch(() => toastError('복사에 실패했어요'));
   };
 
-  // 좋아요 토글(낙관적 업데이트 + 서버 동기화 + 롤백)
-  const [liking, setLiking] = useState(false);
+  const [liking, setLiking] = React.useState(false);
   const handleLike = async () => {
     if (!loginUserId) {
       toastError('로그인이 필요합니다.');
       return;
     }
-    if (liking) return; // 중복 클릭 방지
+    if (liking) return;
     setLiking(true);
 
     const prevLiked = liked;
     const prevCount = likeCount;
     const nextLiked = !prevLiked;
 
-    // 낙관적 업데이트
     setLiked(nextLiked);
     setLikeCount((c) => c + (nextLiked ? 1 : -1));
     nextLiked ? toastSuccess('좋아요 했어요 💗') : toastInfo('좋아요를 취소했어요');
 
     try {
-      const res = await toggleLike(post.postId); // ✅ 서버 반영
-      // 서버 응답으로 최종 동기화(컨트롤러가 { liked, likeCount } 반환)
+      const res = await toggleLike(post.postId);
       if (res?.data) {
         if (typeof res.data.liked !== 'undefined') setLiked(!!res.data.liked);
         if (typeof res.data.likeCount === 'number') setLikeCount(res.data.likeCount);
       }
     } catch (e) {
-      // 실패 시 롤백
       setLiked(prevLiked);
       setLikeCount(prevCount);
-      if (e?.response?.status === 401) {
-        toastError('로그인이 필요합니다.');
-      } else {
-        toastError('좋아요 처리 중 오류가 발생했어요.');
-      }
+      if (e?.response?.status === 401) toastError('로그인이 필요합니다.');
+      else toastError('좋아요 처리 중 오류가 발생했어요.');
     } finally {
       setLiking(false);
     }
   };
 
-  const API_URL = 'http://localhost:8080';
-  const convertImagePaths = (html) => {
-    if (!html) return '';
-    return html.replace(/src="\/upload\//g, `src="${API_URL}/upload/`);
-  };
-  const processedContent = convertImagePaths(post.content);
+  const processedContent = normalizeContentImgSrc(post.content);
 
   return (
     <div className="tw:max-w-[720px] tw:mx-auto tw:my-7 tw:bg-white tw:border-2 tw:border-[#ccc] tw:rounded-xl tw:p-6">
@@ -98,33 +102,31 @@ const Read = ({
           <img src={pinkArrow} alt="back" className="tw:w-[15px] tw:h-[15px] tw:ml-1" />
         </Link>
 
-      {isOwner && (
-        <div className="tw:flex tw:items-center tw:gap-2 tw:pb-2">
-          {/* 수정 버튼 */}
-          <Link
-            to={`/posts/edit/${post.postId}`}
-            className="tw:flex tw:items-center tw:gap-1 tw:px-3 tw:py-1.5 tw:text-sm
-                      tw:bg-blue-50 tw:text-blue-600 tw:rounded-lg
-                      tw:border tw:border-blue-200 tw:hover:bg-blue-100
-                      tw:shadow-sm tw:hover:shadow transition"
-          >
-            <i className="bi bi-pencil-fill" />
-            수정
-          </Link>
+        {isOwner && (
+          <div className="tw:flex tw:items-center tw:gap-2 tw:pb-2">
+            <Link
+              to={`/posts/edit/${post.postId}`}
+              className="tw:flex tw:items-center tw:gap-1 tw:px-3 tw:py-1.5 tw:text-sm
+                        tw:bg-blue-50 tw:text-blue-600 tw:rounded-lg
+                        tw:border tw:border-blue-200 tw:hover:bg-blue-100
+                        tw:shadow-sm tw:hover:shadow transition"
+            >
+              <i className="bi bi-pencil-fill" />
+              수정
+            </Link>
 
-          {/* 삭제 버튼 */}
-          <button
-            onClick={onDelete}
-            className="tw:flex tw:items-center tw:gap-1 tw:px-3 tw:py-1.5 tw:text-sm
-                      tw:bg-red-50 tw:text-red-600 tw:rounded-lg
-                      tw:border tw:border-red-200 tw:hover:bg-red-100
-                      tw:shadow-sm tw:hover:shadow transition tw:cursor-pointer"
-          >
-            <i className="bi bi-trash-fill" />
-            삭제
-          </button>
-        </div>
-      )}
+            <button
+              onClick={onDelete}
+              className="tw:flex tw:items-center tw:gap-1 tw:px-3 tw:py-1.5 tw:text-sm
+                        tw:bg-red-50 tw:text-red-600 tw:rounded-lg
+                        tw:border tw:border-red-200 tw:hover:bg-red-100
+                        tw:shadow-sm tw:hover:shadow transition tw:cursor-pointer"
+            >
+              <i className="bi bi-trash-fill" />
+              삭제
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 제목 */}
@@ -136,7 +138,7 @@ const Read = ({
         <div className="tw:flex tw:items-center">
           <Link to={`/mypage/${post.user?.userId || ''}`} className="tw:no-underline">
             <img
-              src={post.user?.profileImg ? `${API_URL}${post.user.profileImg}` : defaultProfile}
+              src={resolveImg(post.user?.profileImg) || defaultProfile}
               alt="작성자"
               className="tw:w-[50px] tw:h-[50px] tw:rounded-full tw:object-cover"
             />
@@ -186,7 +188,7 @@ const Read = ({
 
         <button
           onClick={handleLike}
-          disabled={liking} // ✅ 중복 클릭 방지
+          disabled={liking}
           className={`
             tw:inline-flex tw:items-center tw:justify-center
             tw:min-w-[150px] tw:h-10 tw:rounded tw:px-4
@@ -207,8 +209,13 @@ const Read = ({
       <div className="tw:pt-4 tw:border-t tw:border-[#ccc]">
         <CommentSection
           postId={post.postId}
-          comments={post.comments}
+          comments={post.comments || []}
           loginUserId={loginUserId}
+          // ✅ 전달: 첫 작성부터 실제 닉/프로필 사용
+          loginNickname={loginNickname}
+          loginProfileImg={loginProfileImg}
+          // ✅ 댓글 생성/수정/삭제 후 상위에서 재조회
+          onChange={() => onCommentsChange?.()}
           editId={editId}
           setEditId={setEditId}
         />

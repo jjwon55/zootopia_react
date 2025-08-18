@@ -1,29 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import Update from '../../components/insurance/update'
-
-// ── 공통 fetch 헬퍼 (SPA-CSRF: XSRF-TOKEN 쿠키 → X-XSRF-TOKEN 헤더)
-const getCsrf = () =>
-  decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || '')
-
-async function req(url, { method = 'GET', json, formData } = {}) {
-  const headers = {}
-  const init = { method, credentials: 'include' }
-  const token = getCsrf()
-  if (token) headers['X-XSRF-TOKEN'] = token
-  if (json) { headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(json) }
-  if (formData) { init.body = formData } // multipart 헤더는 브라우저가 세팅
-  init.headers = headers
-
-  const res = await fetch('/api' + url, init)
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`HTTP ${res.status} ${text}`)
-  }
-  return res.headers.get('content-type')?.includes('application/json')
-    ? res.json()
-    : {}
-}
+import Update from '../../components/insurance/Update'
+import { req } from '../../apis/utils/http'    // ✅ 공통 req만 사용
 
 const emptyForm = () => ({
   productId: '',
@@ -40,14 +18,16 @@ const emptyForm = () => ({
 })
 
 export default function UpdateContainer() {
-  const { id } = useParams()
   const navigate = useNavigate()
+  const params = useParams()
+  // 라우터가 :id 또는 :productId 어느 쪽이든 대응
+  const id = params.id ?? params.productId
 
   const [form, setForm] = useState(null)
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [removing, setRemoving] = useState(false)
+  const [deleting, setDeleting] = useState(false)   // ✅ 이름 통일
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -58,10 +38,7 @@ export default function UpdateContainer() {
       const data = await req(`/insurance/read/${id}`)
       const p = data?.product
       if (!p) throw new Error('상품을 찾을 수 없습니다.')
-      setForm({
-        ...emptyForm(),
-        ...p,
-      })
+      setForm({ ...emptyForm(), ...p })
     } catch (e) {
       setError(e.message || '상세 조회 실패')
     } finally {
@@ -101,7 +78,6 @@ export default function UpdateContainer() {
   const handleSubmit = async () => {
     if (!form) return
     setError(''); setSuccess('')
-    // 간단 검증
     if (!form.imagePath) return setError('이미지를 먼저 등록하세요.')
     if (!form.name?.trim()) return setError('상품명을 입력하세요.')
     if (!form.species) return setError('반려동물을 선택하세요.')
@@ -120,7 +96,8 @@ export default function UpdateContainer() {
 
   // 삭제
   const handleDelete = async () => {
-    setRemoving(true); setError(''); setSuccess('')
+    if (!confirm('정말 삭제하시겠습니까?')) return
+    setDeleting(true); setError(''); setSuccess('')
     try {
       await req(`/insurance/delete/${id}`, { method: 'POST' })
       setSuccess('삭제되었습니다.')
@@ -128,24 +105,25 @@ export default function UpdateContainer() {
     } catch (e) {
       setError(e.message || '삭제 실패')
     } finally {
-      setRemoving(false)
+      setDeleting(false)
     }
   }
+
+  // ✅ 로딩/초기 null 가드
+  if (loading || !form) return <div className="tw:p-4">로딩 중…</div>
 
   return (
     <Update
       form={form}
-      loading={loading}
       uploading={uploading}
       submitting={submitting}
-      removing={removing}
+      deleting={deleting}     // ✅ 이름 통일
       error={error}
       success={success}
       onChange={handleChange}
       onUploadImage={handleUploadImage}
       onSubmit={handleSubmit}
       onDelete={handleDelete}
-      reload={load}
     />
   )
 }

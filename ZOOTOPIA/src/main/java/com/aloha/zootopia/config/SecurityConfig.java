@@ -141,7 +141,10 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Add this line to permit OPTIONS requests globally
             .requestMatchers("/posts/**").permitAll()
             .requestMatchers("/lost/**").permitAll()
+            .requestMatchers("/mypage/**").permitAll()
             .requestMatchers("/showoff/**").permitAll()
+            .requestMatchers("/insurance/**").permitAll()
+
             .requestMatchers("/service/**").permitAll()
             .requestMatchers( "/comments/**").authenticated()
             .requestMatchers("/upload/**").permitAll()
@@ -162,6 +165,6 @@ public class SecurityConfig {
 
     return http.build();
   }
-
-
 }
+
+

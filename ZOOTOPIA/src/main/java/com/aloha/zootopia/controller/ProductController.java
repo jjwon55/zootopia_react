@@ -550,8 +550,22 @@ public class ProductController {
         addProduct(dummyList, 40, "펫 운동화", "산책", "반려동물 발가락 보호를 위한 운동화입니다.", 35000, "/assets/dist/img/products/walkpetshoes.png");
         addProduct(dummyList, 41, "휴대용 물병", "산책", "산책 시 사용하는 반려동물 전용 물병입니다.", 18000, "/assets/dist/img/products/walkwaterbottle.png");
         addProduct(dummyList, 42, "산책 가방", "산책", "산책 시 필요한 용품을 담을 수 있는 가방입니다.", 32000, "/assets/dist/img/products/walkpetbag.png");
-        
-        return dummyList;
+    // 추가 더미(이미지 파일명 근사치 매핑 대상 포함)
+    addProduct(dummyList, 43, "고양이 스마트 레이저", "장난감", "고양이가 좋아하는 자동 스마트 레이저.", 23000, "/assets/dist/img/products/toylaserpointer.png");
+    addProduct(dummyList, 44, "펫 로프 장난감", "장난감", "질긴 로프로 오래 놀 수 있어요.", 9000, "/assets/dist/img/products/toypetrope.png");
+    addProduct(dummyList, 45, "츄잉 본", "장난감", "치석 관리에 도움을 주는 츄잉 본.", 18000, "/assets/dist/img/products/toychewingbone.png");
+    addProduct(dummyList, 46, "고양이 낚시대", "장난감", "집사와 인터랙션 놀이 필수템.", 14000, "/assets/dist/img/products/toycatfishingrod.png");
+    addProduct(dummyList, 47, "LED 목걸이", "산책", "야간 산책 필수 LED 목걸이.", 19000, "/assets/dist/img/products/walklednecklace.png");
+    addProduct(dummyList, 48, "강아지 목줄", "산책", "튼튼한 재질의 기본 목줄.", 16000, "/assets/dist/img/products/walkdogleash.png");
+    addProduct(dummyList, 49, "펫 운동화", "산책", "발바닥 보호용 신발 2개 1세트.", 30000, "/assets/dist/img/products/walkpetshoes.png");
+    addProduct(dummyList, 50, "휴대용 물병", "산책", "한 손 급수 가능한 휴대용 물병.", 12000, "/assets/dist/img/products/walkwaterbottle.png");
+    addProduct(dummyList, 51, "펫 하우스(우드)", "용품", "원목 감성의 펫 하우스.", 155000, "/assets/dist/img/products/productpethouse.png");
+    addProduct(dummyList, 52, "펫 귀세정제", "용품", "부드럽고 안전한 귀 세정제.", 17000, "/assets/dist/img/products/productpetearcleaner.png");
+    addProduct(dummyList, 53, "펫 쿠션", "용품", "푹신한 극세사 쿠션.", 34000, "/assets/dist/img/products/productpetcousion.png");
+    addProduct(dummyList, 54, "펫 캐리어(라이트)", "산책", "가벼운 이동용 캐리어.", 72000, "/assets/dist/img/products/productpetcarriage.png");
+    addProduct(dummyList, 55, "고양이 물그릇(스테디)", "용품", "미끄럼 방지 베이스 적용.", 19000, "/assets/dist/img/products/productcatwaterbowl.png");
+
+    return dummyList;
     }
     
     // 간단한 더미 데이터 생성 메서드 (안전함)

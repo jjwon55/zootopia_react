@@ -1,31 +1,38 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import Read from '../../components/posts/Read';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { toastSuccess, toastError } from '../../apis/alert';
+import Read from '../../components/posts/Read';
+import { toastSuccess, toastError } from '../../apis/posts/alert';
 import { read as readPost, remove as removePost } from '../../apis/posts/posts';
+import { LoginContext } from '../../context/LoginContextProvider'; // ✅ 컨텍스트 사용
 
 const ReadContainer = () => {
   const { postId } = useParams();
+  const navigate = useNavigate();
+
   const [post, setPost] = useState(null);
   const [loginUserId, setLoginUserId] = useState(null);
   const [isOwner, setIsOwner] = useState(false);
   const [editId, setEditId] = useState(null);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await readPost(postId);
-        setPost({ ...data.post, liked: data.liked });
-        setLoginUserId(data.loginUserId ?? null);
-        setIsOwner(!!data.isOwner);
-      } catch (err) {
-        toastError('게시글을 불러오지 못했어요.');
-        navigate('/posts');
-      }
-    })();
+  // ✅ 로그인 유저 정보
+  const { userInfo } = useContext(LoginContext);
+  const loginNickname = userInfo?.nickname ?? null;
+  const loginProfileImg = userInfo?.profileImg ?? null;
+
+  // ✅ 다시 읽기 (댓글 변경 후 재조회 포함)
+  const refetchPost = useCallback(async () => {
+    try {
+      const { data } = await readPost(postId);
+      setPost({ ...data.post, liked: data.liked });
+      setLoginUserId(data.loginUserId ?? null);
+      setIsOwner(!!data.isOwner);
+    } catch (err) {
+      toastError('게시글을 불러오지 못했어요.');
+      navigate('/posts');
+    }
   }, [postId, navigate]);
+
+  useEffect(() => { refetchPost(); }, [refetchPost]);
 
   const handleDelete = async () => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
@@ -45,9 +52,14 @@ const ReadContainer = () => {
       post={post}
       isOwner={isOwner}
       loginUserId={loginUserId}
+      // ✅ 댓글에서 사용할 로그인 닉네임/프로필 전달
+      loginNickname={loginNickname}
+      loginProfileImg={loginProfileImg}
       editId={editId}
       setEditId={setEditId}
       onDelete={handleDelete}
+      // ✅ 댓글 변경 시 재조회
+      onCommentsChange={refetchPost}
     />
   );
 };

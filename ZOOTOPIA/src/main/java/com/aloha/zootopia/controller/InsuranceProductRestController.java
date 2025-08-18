@@ -13,6 +13,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
@@ -29,7 +30,7 @@ import com.aloha.zootopia.domain.InsuranceProduct;
 import com.aloha.zootopia.service.InsuranceProductService;
 
 @RestController
-@RequestMapping("/api/insurance")
+@RequestMapping("/insurance")
 public class InsuranceProductRestController {
 
     @Value("${file.upload.path}")
@@ -41,25 +42,37 @@ public class InsuranceProductRestController {
     // 목록 + 필터 + 페이지네이션
     @GetMapping("/list")
     public Map<String, Object> listProducts(
-            @RequestParam(required = false) String species,
-            @RequestParam(required = false) String company,
-            @RequestParam(defaultValue = "1") int page
+            @RequestParam(name = "species", required = false) String species,
+            @RequestParam(name = "company", required = false) String company,
+            @RequestParam(name = "page", defaultValue = "1") int page
     ) {
-        int pageSize = 6;
-        int offset = (page - 1) * pageSize;
+        // 페이지 보정 (프론트는 1-based)
+        page = Math.max(1, page);
+        final int pageSize = 6;
+        final int offset = (page - 1) * pageSize;
 
-        // 개별 파라미터로 서비스 호출
+        // species 정규화 (dog/cat → DOG/CAT)
+        String normalizedSpecies = null;
+        if (StringUtils.hasText(species)) {
+            String s = species.trim();
+            if ("dog".equalsIgnoreCase(s)) normalizedSpecies = "DOG";
+            else if ("cat".equalsIgnoreCase(s)) normalizedSpecies = "CAT";
+            else normalizedSpecies = s; // 서버에서 자유 문자열/ENUM 처리
+        }
+
+        String normalizedCompany = StringUtils.hasText(company) ? company.trim() : null;
+
         List<InsuranceProduct> products =
                 productService.getFilteredProducts(
-                        (org.springframework.util.StringUtils.hasText(species) ? species : null),
-                        (org.springframework.util.StringUtils.hasText(company) ? company : null),
+                        normalizedSpecies,
+                        normalizedCompany,
                         offset, pageSize
                 );
 
         int totalCount =
                 productService.countFilteredProducts(
-                        (org.springframework.util.StringUtils.hasText(species) ? species : null),
-                        (org.springframework.util.StringUtils.hasText(company) ? company : null)
+                        normalizedSpecies,
+                        normalizedCompany
                 );
 
         int totalPages = (int) Math.ceil((double) totalCount / pageSize);
@@ -73,7 +86,7 @@ public class InsuranceProductRestController {
 
     // 단건 조회
     @GetMapping("/read/{productId}")
-    public ResponseEntity<?> read(@PathVariable int productId) {
+    public ResponseEntity<?> read(@PathVariable("productId") int productId) {
         InsuranceProduct product = productService.getProductById(productId);
         if (product == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -107,28 +120,28 @@ public class InsuranceProductRestController {
     // 삭제 (ADMIN)
     @PostMapping("/delete/{productId}") // 프론트와 호환 위해 POST 유지 (원칙은 DELETE /{id})
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> delete(@PathVariable int productId) {
+    public ResponseEntity<?> delete(@PathVariable("productId") int productId) {
         productService.deleteProduct(productId);
         return ResponseEntity.ok(Map.of("ok", true));
     }
 
     // 이미지 업로드 (ADMIN)
-    @PostMapping("/upload-image")
+    @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> uploadImage(@RequestParam("imageFile") MultipartFile imageFile) {
+    public ResponseEntity<?> uploadImage(@RequestParam(name = "imageFile") MultipartFile imageFile) {
         try {
-            if (imageFile.isEmpty()) {
+            if (imageFile == null || imageFile.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "이미지 파일이 비어 있습니다."));
             }
-            String safeName = imageFile.getOriginalFilename() == null ? "img"
-                    : imageFile.getOriginalFilename().replaceAll("[^a-zA-Z0-9.]", "_");
+            String original = imageFile.getOriginalFilename();
+            String safeName = (original == null ? "img" : original).replaceAll("[^a-zA-Z0-9.]", "_");
             String fileName = UUID.randomUUID() + "_" + safeName;
 
             Path targetPath = Paths.get(uploadDir, fileName);
             Files.createDirectories(targetPath.getParent());
             Files.copy(imageFile.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
-            // 정적 제공 경로 (예: /upload/** → file:uploadDir/)
+            // 정적 제공 경로 (예: WebMvcConfigurer로 /upload/** → file:uploadDir/ 매핑)
             String imagePath = "/upload/" + fileName;
             return ResponseEntity.ok(Map.of("imagePath", imagePath));
         } catch (IOException e) {
