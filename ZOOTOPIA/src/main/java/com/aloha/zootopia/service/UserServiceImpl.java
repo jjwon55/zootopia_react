@@ -31,6 +31,11 @@ public class UserServiceImpl implements UserService {
     @Autowired 
     PasswordEncoder passwordEncoder;
 
+    public UserServiceImpl(UserMapper userMapper, PasswordEncoder passwordEncoder) {
+        this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+    }
+
 
     // @Autowired AuthenticationManager authenticationManager;
 
@@ -179,12 +184,13 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode(UUID.randomUUID().toString())) 
                 .build();
         try {
-            userMapper.join(newUser);
+            userMapper.insertSocialUser(newUser);
             UserAuth userAuth = new UserAuth();
             userAuth.setEmail(newUser.getEmail());
             userAuth.setAuth("ROLE_USER");
             userMapper.insertAuth(userAuth);
-            return userMapper.select(newUser.getEmail());
+            Users createdUser = userMapper.findByProviderAndProviderId(newUser.getProvider(), newUser.getProviderId());
+            return createdUser;
         } catch (Exception e) {
             e.printStackTrace();
             return null;

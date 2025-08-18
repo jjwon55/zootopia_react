@@ -4,7 +4,7 @@ import List from '../pages/posts/List';
 import Read from '../pages/posts/Read';
 import Create from '../pages/posts/Create';
 import Update from '../pages/posts/Update';
-import LoginForm from '../components/Login/LoginFrom';
+import LoginForm from '../components/Login/LoginForm';
 import Header from '../components/header/Header';
 import ShowoffList from '../pages/showoff/ShowoffList';
 import ShowoffRead from '../pages/showoff/ShowoffRead';
