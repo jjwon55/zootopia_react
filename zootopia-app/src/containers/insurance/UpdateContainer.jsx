@@ -1,7 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Update from '../../components/insurance/Update'
-import { req } from '../../apis/utils/http'    // ✅ 공통 req만 사용
+
+// ✅ axios 인스턴스를 쓰는 함수들만 사용
+import {
+  readProduct as apiReadProduct,
+  uploadImage as apiUploadImage,
+  updateProduct as apiUpdateProduct,
+  deleteProduct as apiDeleteProduct,
+} from '../../apis/insurance/insurance'  
 
 const emptyForm = () => ({
   productId: '',
@@ -20,22 +27,20 @@ const emptyForm = () => ({
 export default function UpdateContainer() {
   const navigate = useNavigate()
   const params = useParams()
-  // 라우터가 :id 또는 :productId 어느 쪽이든 대응
   const id = params.id ?? params.productId
 
   const [form, setForm] = useState(null)
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [deleting, setDeleting] = useState(false)   // ✅ 이름 통일
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  // 상세 로드
   const load = useCallback(async () => {
     setLoading(true); setError(''); setSuccess('')
     try {
-      const data = await req(`/insurance/read/${id}`)
+      const { data } = await apiReadProduct(id)
       const p = data?.product
       if (!p) throw new Error('상품을 찾을 수 없습니다.')
       setForm({ ...emptyForm(), ...p })
@@ -48,14 +53,11 @@ export default function UpdateContainer() {
 
   useEffect(() => { load() }, [load])
 
-  // 이미지 업로드
   const handleUploadImage = async (file) => {
     if (!file) return
     setUploading(true); setError(''); setSuccess('')
     try {
-      const fd = new FormData()
-      fd.append('imageFile', file)
-      const data = await req('/insurance/upload-image', { method: 'POST', formData: fd })
+      const data = await apiUploadImage(file) // { imagePath }
       if (!data?.imagePath) throw new Error('이미지 경로를 받지 못했습니다.')
       setForm(prev => ({ ...prev, imagePath: data.imagePath }))
       setSuccess('이미지 업로드 완료')
@@ -68,13 +70,8 @@ export default function UpdateContainer() {
     }
   }
 
-  // 입력 변경
-  const handleChange = (next) => {
-    setForm(next)
-    setError(''); setSuccess('')
-  }
+  const handleChange = (next) => { setForm(next); setError(''); setSuccess('') }
 
-  // 수정 제출
   const handleSubmit = async () => {
     if (!form) return
     setError(''); setSuccess('')
@@ -84,32 +81,30 @@ export default function UpdateContainer() {
 
     setSubmitting(true)
     try {
-      await req('/insurance/update', { method: 'POST', json: form })
+      await apiUpdateProduct(form) // ✅ axios 인스턴스 사용
       setSuccess('수정되었습니다.')
       navigate(`/insurance/read/${form.productId || id}`)
     } catch (e) {
-      setError(e.message || '수정 실패')
+      setError(e?.response?.data || e.message || '수정 실패')
     } finally {
       setSubmitting(false)
     }
   }
 
-  // 삭제
   const handleDelete = async () => {
     if (!confirm('정말 삭제하시겠습니까?')) return
     setDeleting(true); setError(''); setSuccess('')
     try {
-      await req(`/insurance/delete/${id}`, { method: 'POST' })
+      await apiDeleteProduct(id)
       setSuccess('삭제되었습니다.')
       navigate('/insurance/list')
     } catch (e) {
-      setError(e.message || '삭제 실패')
+      setError(e?.response?.data || e.message || '삭제 실패')
     } finally {
       setDeleting(false)
     }
   }
 
-  // ✅ 로딩/초기 null 가드
   if (loading || !form) return <div className="tw:p-4">로딩 중…</div>
 
   return (
@@ -117,7 +112,7 @@ export default function UpdateContainer() {
       form={form}
       uploading={uploading}
       submitting={submitting}
-      deleting={deleting}     // ✅ 이름 통일
+      deleting={deleting}
       error={error}
       success={success}
       onChange={handleChange}
