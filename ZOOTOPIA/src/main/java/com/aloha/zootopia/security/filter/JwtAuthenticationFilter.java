@@ -46,42 +46,53 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
    * : /login 경로로 (username, password) 요청하면 이 필터에서 로그인 인증을 시도합니다.
    */
   @Override
-  public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
-      throws AuthenticationException {
+public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
+        throws AuthenticationException {
 
-    if (!request.getMethod().equals("POST")) {
+    if (!"POST".equalsIgnoreCase(request.getMethod())) {
         throw new AuthenticationServiceException("Authentication method not supported: " + request.getMethod());
     }
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    AuthenticationRequest authenticationRequest = null;
+    String contentType = request.getContentType();
+    String email = null;
+    String password = null;
+
     try {
-        authenticationRequest = objectMapper.readValue(request.getInputStream(), AuthenticationRequest.class);
+        if (contentType != null && contentType.startsWith("application/json")) {
+            // JSON 요청 처리
+            ObjectMapper mapper = new ObjectMapper();
+            AuthenticationRequest dto = mapper.readValue(request.getInputStream(), AuthenticationRequest.class);
+            email = dto != null ? dto.getEmail() : null;
+            password = dto != null ? dto.getPassword() : null;
+        } else {
+            // x-www-form-urlencoded 등 파라미터 처리
+            email = request.getParameter("email");
+            password = request.getParameter("password");
+        }
     } catch (IOException e) {
         log.error("Error reading authentication request body", e);
         throw new AuthenticationServiceException("Error reading authentication request body", e);
     }
 
-    String email = authenticationRequest.getEmail();
-    String password = authenticationRequest.getPassword();
-
-    log.info("email : " + email);
-    log.info("password : " + password);
-
-    // 인증토큰 객체 생성
-    Authentication authentication = new UsernamePasswordAuthenticationToken(email, password);
-
-    // 인증 시도
-    try {
-      authentication = authenticationManager.authenticate(authentication);
-    } catch (AuthenticationException e) {
-      log.warn("인증 실패: {}", e.getMessage());
-      throw e; // ❗ 반드시 예외를 다시 던져야 Security가 실패 처리함
+    if (email == null || password == null) {
+        // 명확한 실패 사유 반환
+        throw new AuthenticationServiceException("email/password required");
     }
 
-    log.info("authentication : " + authentication);
-    return authentication;
-  }
+    log.info("email : {}", email);
+    log.info("password : {}", password);
+
+    UsernamePasswordAuthenticationToken authRequest =
+            new UsernamePasswordAuthenticationToken(email, password);
+
+    try {
+        return authenticationManager.authenticate(authRequest);
+    } catch (AuthenticationException e) {
+        log.warn("인증 실패: {}", e.getMessage());
+        throw e;
+    }
+}
+
 
   /**
    * ✅ 인증 성공 메소드
