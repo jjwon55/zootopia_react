@@ -27,6 +27,7 @@ export const info = () => api.get(`/users/info`)
 export const update = (data) => api.put(`/users`, data)
 
 // 회원 탈퇴
+
 export const remove = (username) => api.delete(`/users/${username}`)
 
 
