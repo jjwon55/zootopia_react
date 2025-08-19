@@ -16,7 +16,8 @@
     <result property="createdAt"  column="created_at"/>
   </resultMap>
 
-  <insert id="insertQna" parameterType="com.aloha.zootopia.domain.InsuranceQna" useGeneratedKeys="true" keyProperty="qnaId">
+  <insert id="insertQna" parameterType="com.aloha.zootopia.domain.InsuranceQna"
+          useGeneratedKeys="true" keyProperty="qnaId">
     INSERT INTO insurance_qna
       (product_id, user_id, species, question, answer, nickname, created_at)
     VALUES

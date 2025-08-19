@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { LoginContext } from '../../context/LoginContextProvider';
 import { useNavigate } from 'react-router-dom';
+import styles from './LoginForm.module.css';
 
 const LoginForm = () => {
   const { login } = useContext(LoginContext);
@@ -97,33 +98,15 @@ const LoginForm = () => {
               <small className="tw:text-zinc-500 tw:text-[0.85rem] tw:block tw:my-2">또는</small>
             </div>
 
-            {/* 소셜 로그인 */}
-            <div className="tw:flex tw:justify-center tw:gap-4 tw:my-6">
-              <a
-                href="/oauth2/authorization/kakao"
-                className="tw:w-[45px] tw:h-[45px] tw:rounded-full tw:flex tw:items-center tw:justify-center tw:text-white tw:text-[1.2rem] tw:transition-transform tw:hover:scale-110 tw:bg-black/40 tw:text-zinc-200"
-                aria-label="카카오 로그인"
-                title="카카오 로그인"
-              >
-                <i className="fas fa-comment" />
+            <div className={styles.socialLogin}>
+              <a href="/api/oauth2/authorization/kakao" className={`${styles.socialBtn} ${styles.kakao}`}>
+                <i className="fas fa-comment"></i>
               </a>
-
-              <a
-                href="/oauth2/authorization/naver"
-                className="tw:w-[45px] tw:h-[45px] tw:rounded-full tw:flex tw:items-center tw:justify-center tw:text-white tw:text-[1.2rem] tw:transition-transform tw:hover:scale-110 tw:bg-[#03C75A]"
-                aria-label="네이버 로그인"
-                title="네이버 로그인"
-              >
-                <span className="tw:font-bold tw:text-[16px]">N</span>
+              <a href="/api/oauth2/authorization/naver" className={`${styles.socialBtn} ${styles.naver}`}>
+                <span style={{ fontWeight: '900', fontSize: '20px', textShadow: '0 0 1px #fff, 0 0 2px #fff'}}></span>
               </a>
-
-              <a
-                href="/oauth2/authorization/facebook"
-                className="tw:w-[45px] tw:h-[45px] tw:rounded-full tw:flex tw:items-center tw:justify-center tw:text-white tw:text-[1.2rem] tw:transition-transform tw:hover:scale-110 tw:bg-black/40"
-                aria-label="페이스북 로그인"
-                title="페이스북 로그인"
-              >
-                <i className="fab fa-facebook-f" />
+              <a href="/api/oauth2/authorization/google" className={`${styles.socialBtn} ${styles.google}`}>
+                <i className="fab fa-google-f"></i>
               </a>
             </div>
 

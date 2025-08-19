@@ -4,7 +4,7 @@ import List from '../pages/posts/List';
 import Read from '../pages/posts/Read';
 import Create from '../pages/posts/Create';
 import Update from '../pages/posts/Update';
-import LoginForm from '../components/Login/LoginFrom';
+import LoginForm from '../components/Login/LoginForm';
 import Header from '../components/header/Header';
 import ShowoffList from '../pages/showoff/ShowoffList';
 import ShowoffRead from '../pages/showoff/ShowoffRead';
@@ -13,6 +13,12 @@ import ShowoffUpdate from '../pages/showoff/ShowoffUpdate';
 import LostList from '../pages/lost/LostList';
 import LostRead from '../pages/lost/LostRead';
 import LostCreate from '../pages/lost/LostCreate';
+import MyPage from '../pages/mypage/MyPage';
+import MyPageEdit from '../pages/mypage/MyPageEdit';
+import UserInfo from '../pages/mypage/UserInfo';
+import Map from '../pages/map/Map';
+import UsersPage from '../pages/admin/users/UsersPage';
+import Join from '../components/join/Join';
 
 const JjwRoutes = () => {
   return (
@@ -23,6 +29,7 @@ const JjwRoutes = () => {
       <Route path="/posts/create" element={<Create />} />
       <Route path="/posts/edit/:postId" element={<Update />} />
       <Route path="/login" element={<LoginForm />} />
+      <Route path="/join" element={<Join />} />
       <Route path="/showoff" element={<ShowoffList />} />
       <Route path="/showoff/read/:postId" element={<ShowoffRead />} />
       <Route path="/showoff/create" element={<ShowoffCreate />} />
@@ -30,6 +37,12 @@ const JjwRoutes = () => {
       <Route path="/lost" element={<LostList />} />
       <Route path="/lost/read/:postId" element={<LostRead />} />
       <Route path="/lost/create" element={<LostCreate />} />
+      <Route path="/mypage" element={<MyPage />} />
+      <Route path="/mypage/edit" element={<MyPageEdit />} />
+      <Route path="/mypage/:userId" element={<UserInfo />} />
+      <Route path="/map" element={<Map />} />
+      {/* Admin Routes */}
+      <Route path="/admin/users" element={<UsersPage />} />
     </Routes>
   </>
   );

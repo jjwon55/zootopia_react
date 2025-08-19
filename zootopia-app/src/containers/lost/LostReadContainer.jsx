@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import LostRead from '../../components/lost/LostRead';
-import { toastSuccess, toastError } from '../../apis/alert';
+import { toastSuccess, toastError } from '../../apis/posts/alert';
 import { read as readLostPost, remove as removeLostPost } from '../../apis/posts/lost';
 import { LoginContext } from '../../context/LoginContextProvider';
 

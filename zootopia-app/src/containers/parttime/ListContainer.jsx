@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import List from '../../components/parttime/List.jsx'
-import * as parttimeApi from '../../apis/parttime.js'
-import * as commentApi from '../../apis/parttimeComment.js'
+import * as parttimeApi from '../../apis/parttime/parttime.js'
+import * as commentApi from '../../apis/parttime/parttimeComment.js'
 import { useLoginContext } from '../../context/LoginContextProvider.jsx'
 
 // 시/도 → 시/군/구

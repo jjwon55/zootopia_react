@@ -30,15 +30,19 @@ import com.aloha.zootopia.service.ParttimeJobService;
 @RequestMapping("/parttime")
 public class ParttimeJobApplicantRestController {
 
-    @Autowired private ParttimeJobApplicantService applicantService;
-    @Autowired private ParttimeJobService jobService;
+    @Autowired
+    private ParttimeJobApplicantService applicantService;
+
+    @Autowired
+    private ParttimeJobService jobService;
 
     private long uid(Authentication auth) {
         if (auth == null) return -1L;
         Object p = auth.getPrincipal();
-        if (p instanceof CustomUser) return ((CustomUser)p).getUserId();
+        if (p instanceof CustomUser) return ((CustomUser) p).getUserId();
         return -1L;
     }
+
     private boolean admin(Authentication auth) {
         if (auth == null) return false;
         for (GrantedAuthority a : auth.getAuthorities()) {
@@ -52,31 +56,28 @@ public class ParttimeJobApplicantRestController {
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<?> apply(
         @PathVariable("jobId") Long jobId,
-        @RequestBody Map<String, String> req,   // intro만 받자
+        @RequestBody Map<String, String> req,   // introduction만 받음
         Authentication auth
     ) {
-        // 1) 인증 체크
         if (auth == null || !(auth.getPrincipal() instanceof CustomUser cu)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message","로그인 필요"));
+                    .body(Map.of("message", "로그인 필요"));
         }
 
         long userId = cu.getUserId();
         if (applicantService.hasApplied(jobId, userId)) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("message","이미 신청한 알바입니다."));
+                    .body(Map.of("message", "이미 신청한 알바입니다."));
         }
 
-        // 2) 로그인 사용자 프로필에서 이메일/전화 가져오기
         Users u = cu.getUser();
-        String email = u.getEmail();                 // NOT NULL이면 반드시 값 존재
-        String phone = u.getPhone();                 // NULL 가능하면 빈문자 대체 등
+        String email = u.getEmail();
+        String phone = u.getPhone();
         String introduction = (req.getOrDefault("introduction", "")).trim();
         if (introduction.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message","자기소개를 입력하세요."));
+            return ResponseEntity.badRequest().body(Map.of("message", "자기소개를 입력하세요."));
         }
 
-        // 3) 엔티티 만들고 저장
         ParttimeJobApplicant app = new ParttimeJobApplicant();
         app.setJobId(jobId);
         app.setUserId(userId);
@@ -93,51 +94,76 @@ public class ParttimeJobApplicantRestController {
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<?> list(
             @PathVariable("jobId") Long jobId,
-            @RequestParam(name="page", defaultValue="1") int page,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "onlyMe", defaultValue = "false") boolean onlyMe, // ← 이름 변경
             Authentication auth
     ) {
         ParttimeJob job = jobService.getJob(jobId);
         if (job == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message","존재하지 않습니다."));
+                    .body(Map.of("message", "존재하지 않습니다."));
         }
 
         long userId = uid(auth);
         boolean isAdmin  = admin(auth);
         boolean isWriter = (job.getUserId() != null && job.getUserId() == userId);
+        page = Math.max(1, page);
 
-        // ✅ 작성자/관리자: 전체 목록 + 페이징
-        if (isWriter || isAdmin) {
-            int pageSize = 3;
-            int offset   = (Math.max(1, page) - 1) * pageSize;
+        // 내가 신청한 건만 강제 조회 (프론트 보강용)
+        if (onlyMe && userId > 0) {
+            ParttimeJobApplicant myApp = applicantService.getApplicantByJobIdAndUserId(jobId, userId);
 
-            List<ParttimeJobApplicant> list = applicantService.getPagedApplicants(jobId, offset, pageSize);
-            int total       = applicantService.countApplicantsByJobId(jobId);
-            int totalPages  = Math.max(1, (int)Math.ceil((double)total / pageSize));
-
-            Map<String,Object> body = new HashMap<>();
-            body.put("applicants", list);
-            body.put("currentPage", page);
-            body.put("totalPages", totalPages);
-            body.put("onlyMe", false); // 프론트 렌더링 분기용
+            Map<String, Object> body = new HashMap<>();
+            body.put("applicants", myApp == null ? List.of() : List.of(myApp));
+            body.put("currentPage", 1);
+            body.put("totalPages", 1);
+            body.put("onlyMe", true);
+            body.put("hasApplied", myApp != null);
+            body.put("myApplication", myApp);
             return ResponseEntity.ok(body);
         }
 
-        // ✅ 신청자: 본인만
-        if (userId > 0 && applicantService.hasApplied(jobId, userId)) {
-            ParttimeJobApplicant mine = applicantService.getApplicantByJobIdAndUserId(jobId, userId);
+        // 작성자/관리자: 전체 목록 + 페이징 (그리고 항상 myApplication 포함)
+        if (isWriter || isAdmin) {
+            final int pageSize = 3;
+            final int offset   = (page - 1) * pageSize;
 
-            Map<String,Object> body = new HashMap<>();
-            body.put("applicants", (mine == null ? List.of() : List.of(mine)));
+            List<ParttimeJobApplicant> list = applicantService.getPagedApplicants(jobId, offset, pageSize);
+            int total       = applicantService.countApplicantsByJobId(jobId);
+            int totalPages  = Math.max(1, (int) Math.ceil((double) total / pageSize));
+
+            // 현재 페이지와 무관하게 전역에서 내 신청을 찾는다
+            ParttimeJobApplicant myApp = (userId > 0)
+                    ? applicantService.getApplicantByJobIdAndUserId(jobId, userId)
+                    : null;
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("applicants", list);
+            body.put("currentPage", page);
+            body.put("totalPages", totalPages);
+            body.put("onlyMe", false);
+            body.put("hasApplied", myApp != null);
+            body.put("myApplication", myApp);
+            return ResponseEntity.ok(body);
+        }
+
+        // 신청자: 본인만
+        if (userId > 0 && applicantService.hasApplied(jobId, userId)) {
+            ParttimeJobApplicant myApp = applicantService.getApplicantByJobIdAndUserId(jobId, userId);
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("applicants", myApp == null ? List.of() : List.of(myApp));
             body.put("currentPage", 1);
             body.put("totalPages", 1);
-            body.put("onlyMe", true); // 프론트가 “내 신청 카드”만 그리도록 힌트
+            body.put("onlyMe", true);
+            body.put("hasApplied", myApp != null);
+            body.put("myApplication", myApp);
             return ResponseEntity.ok(body);
         }
 
         // 그 외: 접근 불가
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(Map.of("message","작성자/관리자 또는 해당 신청자만 조회 가능합니다."));
+                .body(Map.of("message", "작성자/관리자 또는 해당 신청자만 조회 가능합니다."));
     }
 
     // 신청 취소(본인만) 또는 관리자 강제 삭제
@@ -145,11 +171,13 @@ public class ParttimeJobApplicantRestController {
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<?> delete(@PathVariable("applicantId") int applicantId, Authentication auth) {
         ParttimeJobApplicant app = applicantService.getApplicant(applicantId);
-        if (app == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message","신청 내역 없음"));
+        if (app == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "신청 내역 없음"));
+        }
         long userId = uid(auth);
         boolean isAdmin = admin(auth);
         if (app.getUserId() != userId && !isAdmin) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message","본인 또는 관리자만 삭제 가능"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "본인 또는 관리자만 삭제 가능"));
         }
         applicantService.deleteApplicant(applicantId);
         return ResponseEntity.ok(Map.of("ok", true));

@@ -1,135 +1,289 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import React, { useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 
-const getCsrf = () => decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || '')
-async function req(url, { method='GET', json, formData } = {}) {
-  const headers = {}
-  const init = { method, credentials: 'include' }
-  const token = getCsrf()
-  if (token) headers['X-XSRF-TOKEN'] = token
-  if (json) { headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(json) }
-  if (formData) { init.body = formData }
-  init.headers = headers
-  const r = await fetch('/api' + url, init)
-  if (!r.ok) throw new Error(`HTTP ${r.status}`)
-  return r.json().catch(()=> ({}))
-}
-
-const btn = 'inline-block rounded px-4 py-2 text-white bg-[#F27A7A] hover:opacity-90'
-
-export default function InsuranceUpdate() {
-  const { id } = useParams()
+export default function Update({
+  form,
+  onChange,
+  onUploadImage,
+  onSubmit,
+  onDelete,           // 선택: 삭제 핸들러
+  uploading = false,
+  submitting = false,
+  deleting = false,
+  error,
+  success,
+}) {
   const navigate = useNavigate()
-  const [form, setForm] = useState(null)
-  const [preview, setPreview] = useState('')
+  const fileRef = useRef(null)
 
-  useEffect(()=> {
-    (async () => {
-      const data = await req(`/insurance/read/${id}`)
-      setForm(data.product)
-      setPreview(data.product?.imagePath || '')
-    })()
-  }, [id])
+  const companies = [
+    '삼성화재',
+    'KB손해보험',
+    '메리츠화재',
+    'DB손해보험',
+    '현대해상',
+    '한화손해보험',
+  ]
 
-  if (!form) return <div className="p-4">로딩 중…</div>
-  const change = (k) => (e) => setForm({ ...form, [k]: e.target.value })
-
-  const uploadImage = async (file) => {
-    const fd = new FormData()
-    fd.append('imageFile', file)
-    const data = await req('/insurance/upload-image', { method:'POST', formData: fd })
-    if (data.imagePath) {
-      setForm(prev => ({ ...prev, imagePath: data.imagePath }))
-      setPreview(data.imagePath)
-      alert('✅ 이미지 업로드 완료')
-    } else alert('❌ 업로드 실패')
+  const change = (k) => (e) => onChange({ ...form, [k]: e.target.value })
+  const changeNum = (k) => (e) => {
+    const v = e.target.value
+    onChange({ ...form, [k]: v === '' ? '' : Number(v) })
   }
 
-  const onSubmit = async (e) => {
+  const onPickImage = async (e) => {
+    const f = e.target.files?.[0]
+    if (!f) return
+    await onUploadImage(f)
+  }
+
+  const removeImage = () => {
+    if (fileRef.current) fileRef.current.value = ''
+    onChange({ ...form, imagePath: '' })
+  }
+
+  const handleSubmit = (e) => {
     e.preventDefault()
-    if (!form.imagePath) return alert('이미지를 먼저 등록하세요.')
-    await req('/insurance/update', { method:'POST', json: form })
-    alert('수정되었습니다.')
-    navigate(`/insurance/read/${id}`)
-  }
-
-  const onDelete = async () => {
-    if (!confirm('정말 삭제하시겠습니까?')) return
-    await req(`/insurance/delete/${id}`, { method:'POST' })
-    alert('삭제되었습니다.')
-    navigate('/insurance/list')
+    onSubmit()
   }
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-10">
-      <h3 className="text-2xl font-bold text-center mb-6">보험상품 수정</h3>
+    <div className="tw:mx-auto tw:max-w-5xl tw:px-4 tw:py-10">
+      <div className="tw:mb-6 tw:flex tw:items-center tw:justify-between">
+        <h3 className="tw:text-2xl tw:font-extrabold tw:tracking-tight">보험상품 수정</h3>
+      </div>
 
-      {/* 이미지 업로더 */}
-      <form
-        className="flex items-center gap-2 mb-4"
-        onSubmit={(e)=>{ e.preventDefault(); const f=e.currentTarget.file.files[0]; if(f) uploadImage(f); else alert('📸 이미지를 선택하세요.') }}
-      >
-        <input type="file" name="file" accept="image/*" className="w-full border rounded px-3 py-2" />
-        <button className={btn}>등록</button>
-      </form>
-      {preview && <div className="text-center mb-4"><img src={preview} alt="미리보기" className="max-h-52 rounded inline-block" /></div>}
+      {error && (
+        <div className="tw:mb-4 tw:rounded tw:border tw:border-red-200 tw:bg-red-50 tw:px-3 tw:py-2 tw:text-sm tw:text-red-700">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="tw:mb-4 tw:rounded tw:border tw:border-green-200 tw:bg-green-50 tw:px-3 tw:py-2 tw:text-sm tw:text-green-700">
+          {success}
+        </div>
+      )}
 
-      {/* 폼 */}
-      <form onSubmit={onSubmit} className="space-y-4">
-        <input type="hidden" value={form.productId} readOnly />
-        <Field label="상품명" required>
-          <input className="w-full border rounded px-3 py-2" value={form.name||''} onChange={change('name')} required />
-        </Field>
-        <Field label="슬로건">
-          <input className="w-full border rounded px-3 py-2" value={form.slogan||''} onChange={change('slogan')} />
-        </Field>
-        <Field label="보장비율">
-          <input className="w-full border rounded px-3 py-2" value={form.coveragePercent||''} onChange={change('coveragePercent')} />
-        </Field>
-        <Field label="월 보험료">
-          <input className="w-full border rounded px-3 py-2" value={form.monthlyFeeRange||''} onChange={change('monthlyFeeRange')} />
-        </Field>
-        <Field label="최대 보장 한도">
-          <input className="w-full border rounded px-3 py-2" value={form.maxCoverage||''} onChange={change('maxCoverage')} />
-        </Field>
-        <Field label="반려동물" required>
-          <select className="w-full border rounded px-3 py-2 bg-white" value={form.species||''} onChange={change('species')} required>
-            <option value="">선택하세요.</option>
-            <option value="dog">강아지</option>
-            <option value="cat">고양이</option>
-            <option value="all">둘다</option>
-          </select>
-        </Field>
-        <Field label="가입조건">
-          <input className="w-full border rounded px-3 py-2" value={form.joinCondition||''} onChange={change('joinCondition')} />
-        </Field>
-        <Field label="보장항목">
-          <input className="w-full border rounded px-3 py-2" value={form.coverageItems||''} onChange={change('coverageItems')} />
-        </Field>
-        <Field label="유의사항">
-          <textarea className="w-full border rounded px-3 py-2" rows={3} value={form.precautions||''} onChange={change('precautions')} />
-        </Field>
+      <form onSubmit={handleSubmit} className="tw:rounded-2xl tw:border tw:bg-white tw:p-6 tw:shadow-sm">
+        <div className="tw:mb-8 tw:grid tw:gap-6 upd-grid tw:grid-cols-[320px_1fr]">
+          {/* 이미지 업로더 */}
+          <div className="tw:rounded-xl tw:border tw:bg-gray-50 tw:p-4">
+            <p className="tw:mb-2 tw:text-sm tw:font-semibold tw:text-gray-700">대표 이미지</p>
 
-        <div className="flex justify-center gap-3 pt-2">
-          <button type="button" onClick={()=>navigate(-1)} className="border rounded px-4 py-2 hover:bg-rose-50">취소</button>
-          <button className={btn}>수정</button>
+            <div className="tw:relative tw:flex tw:aspect-square tw:w-full tw:items-center tw:justify-center tw:overflow-hidden tw:rounded-lg tw:border tw:border-dashed tw:bg-white">
+              {form.imagePath ? (
+                <img src={form.imagePath} alt="미리보기" className="tw:h-full tw:w-full tw:object-contain" />
+              ) : (
+                <div className="tw:text-center tw:text-gray-400">
+                  <div className="tw:text-4xl">📷</div>
+                  <div className="tw:mt-1 tw:text-sm">이미지를 업로드하세요</div>
+                </div>
+              )}
+            </div>
+
+            <div className="tw:mt-3 tw:flex tw:flex-wrap tw:items-center tw:gap-2">
+              <label className="tw:inline-flex tw:cursor-pointer tw:items-center tw:justify-center tw:rounded-lg tw:bg-[#F27A7A] tw:text-white tw:px-3 tw:py-1.5 tw:text-sm hover:tw:opacity-90">
+                파일 선택
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="tw:hidden"
+                  onChange={onPickImage}
+                />
+              </label>
+              {form.imagePath && (
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="tw:inline-flex tw:items-center tw:justify-center tw:rounded-lg tw:bg-[#F27A7A] tw:text-white tw:px-3 tw:py-1.5 tw:text-sm tw:font-medium hover:tw:bg-[#e36b6b] focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#F27A7A]"
+                >
+                  삭제
+                </button>
+              )}
+              {uploading && <span className="tw:text-xs tw:text-gray-500">업로드 중…</span>}
+            </div>
+
+            <p className="tw:mt-2 tw:text-xs tw:text-gray-500">권장: 1:1 정사각형, PNG/JPG • 최대 5MB</p>
+          </div>
+
+          {/* 핵심 입력 */}
+          <div className="tw:grid tw:grid-cols-1 tw:gap-4">
+            <Field label="상품명" required>
+              <input
+                name="name"
+                value={form.name || ''}
+                onChange={change('name')}
+                placeholder="예) 펫케어 안심플랜"
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+                required
+              />
+            </Field>
+
+            {/* ✅ 보험사 */}
+            <Field label="보험사" required>
+              <select
+                name="company"
+                value={form.company || ''}
+                onChange={change('company')}
+                required
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+              >
+                <option value="">선택하세요</option>
+                {companies.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="슬로건">
+              <input
+                name="slogan"
+                value={form.slogan || ''}
+                onChange={change('slogan')}
+                placeholder="예) 병원비 걱정 끝!"
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+              />
+            </Field>
+
+            <Field label="반려동물" required>
+              <select
+                name="species"
+                value={form.species || ''}
+                onChange={change('species')}
+                required
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+              >
+                <option value="">선택하세요</option>
+                <option value="dog">강아지</option>
+                <option value="cat">고양이</option>
+                <option value="all">둘다</option>
+              </select>
+            </Field>
+
+            <Field label="보장 비율(%)">
+              <input
+                type="number" min="0" max="100"
+                name="coveragePercent"
+                value={form.coveragePercent ?? ''}
+                onChange={changeNum('coveragePercent')}
+                placeholder="예) 70"
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+              />
+            </Field>
+
+            <Field label="월 보험료(범위)">
+              <input
+                name="monthlyFeeRange"
+                value={form.monthlyFeeRange || ''}
+                onChange={change('monthlyFeeRange')}
+                placeholder="예) 18,000 ~ 35,000"
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+              />
+            </Field>
+
+            <Field label="월 최대 보장 한도(만원)">
+              <input
+                type="number" min="0"
+                name="maxCoverage"
+                value={form.maxCoverage ?? ''}
+                onChange={changeNum('maxCoverage')}
+                placeholder="예) 200"
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+              />
+            </Field>
+          </div>
+        </div>
+
+        {/* 상세 입력 */}
+        <div className="tw:rounded-xl tw:border tw:bg-gray-50 tw:p-4">
+          <h4 className="tw:mb-3 tw:text-sm tw:font-semibold tw:text-gray-700">상세 정보</h4>
+          <div className="tw:grid tw:grid-cols-1 tw:gap-4">
+            <Field label="가입조건">
+              <input
+                name="joinCondition"
+                value={form.joinCondition || ''}
+                onChange={change('joinCondition')}
+                placeholder="예) 생후 60일 이상, 8세 이하"
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+              />
+            </Field>
+
+            <Field label="보장항목">
+              <textarea
+                name="coverageItems"
+                value={form.coverageItems || ''}
+                onChange={change('coverageItems')}
+                rows={3}
+                placeholder="예) 질병/상해, 입원/수술, MRI/CT 등"
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+              />
+            </Field>
+
+            <Field label="유의사항">
+              <textarea
+                name="precautions"
+                value={form.precautions || ''}
+                onChange={change('precautions')}
+                rows={4}
+                placeholder="예) 기존 질환 제외, 면책기간 30일 등"
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+              />
+            </Field>
+          </div>
+        </div>
+
+        {/* 액션 */}
+        <div className="tw:mt-8 tw:flex tw:flex-wrap tw:items-center tw:justify-between">
+          <div className="tw:flex tw:gap-2">
+            {onDelete && (
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={onDelete}
+                className="tw:inline-flex tw:items-center tw:justify-center tw:rounded-lg tw:border tw:border-red-300 tw:px-4 tw:py-2 tw:text-sm tw:text-red-600 hover:tw:bg-red-50 disabled:tw:opacity-60"
+              >
+                {deleting ? '삭제 중…' : '삭제'}
+              </button>
+            )}
+          </div>
+
+          <div className="tw:flex tw:gap-2">
+            <button
+              type="button"
+              onClick={() => navigate('/insurance/list')}
+              className="tw:inline-flex tw:items-center tw:justify-center tw:rounded-lg tw:border tw:px-4 tw:py-2 tw:text-sm hover:tw:bg-gray-50"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="tw:inline-flex tw:items-center tw:justify-center tw:rounded-lg tw:bg-[#F27A7A] tw:px-4 tw:py-2 tw:text-sm tw:font-medium tw:text-white hover:tw:opacity-90 disabled:tw:opacity-60"
+            >
+              {submitting ? '수정 중…' : '수정'}
+            </button>
+          </div>
         </div>
       </form>
 
-      <div className="text-right mt-4">
-        <button onClick={onDelete} className={btn}>삭제</button>
-      </div>
+      {/* 모바일 1열 */}
+      <style>{`
+        @media (max-width: 767px) {
+          .upd-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   )
 }
 
 function Field({ label, required, children }) {
   return (
-    <div>
-      <label className="block font-semibold mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
+    <label className="tw:block">
+      <span className="tw:mb-1 tw:inline-flex tw:items-center tw:gap-1 tw:text-sm tw:font-medium tw:text-gray-700">
+        {label} {required && <span className="tw:text-rose-500">*</span>}
+      </span>
       {children}
-    </div>
+    </label>
   )
 }

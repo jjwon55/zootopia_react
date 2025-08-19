@@ -1,4 +1,3 @@
--- 보험 상품
 CREATE TABLE insurance_product (
   product_id           INT AUTO_INCREMENT PRIMARY KEY,
   name                 VARCHAR(100) NOT NULL,
@@ -11,7 +10,7 @@ CREATE TABLE insurance_product (
   coverage_items       TEXT,
   precautions          TEXT,
   image_path           VARCHAR(255),
-  company              VARCHAR(50),               -- 회사 필터 쓸 거면 사용
+  company              VARCHAR(50) NOT NULL DEFAULT '',
   created_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   INDEX idx_ins_product_species (species),
@@ -27,6 +26,7 @@ CREATE TABLE insurance_qna (
   species     VARCHAR(20),
   question    VARCHAR(500) NOT NULL,
   answer      TEXT,
+  nickname    VARCHAR(50) NOT NULL,         -- 질문자 표시용
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   CONSTRAINT fk_qna_product FOREIGN KEY (product_id)
@@ -35,5 +35,6 @@ CREATE TABLE insurance_qna (
     REFERENCES users(user_id) ON DELETE CASCADE,
 
   INDEX idx_qna_product (product_id),
-  INDEX idx_qna_created (created_at)
+  INDEX idx_qna_created (created_at),
+  INDEX idx_qna_product_qna (product_id, qna_id) -- 목록 정렬 최적화 (product_id + qna_id DESC 정렬 대비)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

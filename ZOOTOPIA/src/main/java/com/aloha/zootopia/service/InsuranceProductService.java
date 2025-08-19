@@ -13,10 +13,13 @@ public interface InsuranceProductService {
     void updateProduct(InsuranceProduct product);
     void deleteProduct(int productId);
 
-    List<InsuranceProduct> getProductsPaged(int offset, int size);
+    // 페이징 (offset/limit로 명확화)
+    List<InsuranceProduct> getProductsPaged(int offset, int limit);
     int getTotalCount();
 
-    // ✅ 타입 파라미터로 변경
+    // 필터 + 페이징
     List<InsuranceProduct> getFilteredProducts(String species, String company, int offset, int limit);
     int countFilteredProducts(String species, String company);
+
+    
 }

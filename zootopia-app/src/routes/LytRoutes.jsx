@@ -17,16 +17,16 @@ const LytRoutes = () => {
     <>
       <Routes>
         {/* 기본 페이지 */}
-        <Route path="/" element={<Home />} />
+        <Route index element={<Home />} />
         {/* 아르바이트 경로 */}
-        <Route path="/parttime/list" element={<List />} />
-        <Route path="/parttime/insert" element={<Insert />} />
-        <Route path="/parttime/read/:jobId" element={<Read />} />
-        <Route path="/parttime/update/:jobId" element={<Update />} />
-        <Route path="/insurance/list" element={<InsuranceList />} />
-        <Route path="/insurance/insert" element={<InsuranceInsert />} />
-        <Route path="/insurance/read/:jobId" element={<InsuranceRead />} />
-        <Route path="/insurance/update/:jobId" element={<InsuranceUpdate />} />
+        <Route path="parttime/list" element={<List />} />
+        <Route path="parttime/insert" element={<Insert />} />
+        <Route path="parttime/read/:jobId" element={<Read />} />
+        <Route path="parttime/update/:jobId" element={<Update />} />
+        <Route path="insurance/list" element={<InsuranceList />} />
+        <Route path="insurance/insert" element={<InsuranceInsert />} />
+        <Route path="insurance/read/:productId" element={<InsuranceRead />} />
+        <Route path="insurance/update/:productId" element={<InsuranceUpdate />} />
       </Routes>
     </>
   )

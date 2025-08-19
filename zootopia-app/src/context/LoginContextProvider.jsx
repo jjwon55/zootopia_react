@@ -2,7 +2,7 @@ import React from 'react';
 import { createContext, useEffect, useState } from 'react';
 import api from '../apis/api';
 import * as auth from '../apis/auth';
-import * as Swal from '../apis/alert';
+import * as Swal from '../apis/posts/alert';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react'
@@ -40,7 +40,8 @@ const LoginContextProvider = ({ children }) => {
   // JWT로 사용자 정보 조회 후 로그인 세팅
   const loginSetting = async (authorization) => {
     try {
-      api.defaults.headers.common.Authorization = authorization;
+      const jwt = authorization.replace("Bearer ", "");
+      Cookies.set("jwt", jwt);
 
       const response = await auth.info();
       const data = response.data;
@@ -111,7 +112,7 @@ const LoginContextProvider = ({ children }) => {
   }, []);
 
   return (
-    <LoginContext.Provider value={{ isLogin, login, userInfo, roles, isLoading, logout }}>
+    <LoginContext.Provider value={{ isLogin, login, userInfo, roles, isLoading, logout, loginSetting }}>
       {children}
     </LoginContext.Provider>
   );

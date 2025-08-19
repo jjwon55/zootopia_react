@@ -13,33 +13,33 @@ export default function FaqSection({ bannerSrc }) {
   const src = bannerSrc || defaultBanner
 
   // 공통 사이즈/여백
-  const SIZE = 'w-full px-5 py-4 text-base min-h-[56px] border transition-colors'
+  const SIZE = 'tw:w-full tw:px-5 tw:py-4 tw:text-base tw:min-h-[56px] tw:border tw:transition-colors'
 
   return (
-    <div className="mt-10">
-      <div className="max-w-3xl mx-auto mb-5">
-        <div className="rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-          <div className="bg-rose-100 px-4 py-3 text-gray-900 font-semibold border-b border-gray-200">
-            <span className="mr-2">🐾</span> 펫보험 자주 묻는 질문 (FAQ)
+    <div className="tw:mt-10">
+      <div className="tw:max-w-3xl tw:mx-auto tw:mb-5">
+        <div className="tw:rounded-lg tw:border tw:border-gray-200 tw:shadow-sm tw:overflow-hidden">
+          <div className="tw:bg-rose-100 tw:px-4 tw:py-3 tw:text-gray-900 tw:font-semibold tw:border-b tw:border-gray-200">
+            <span className="tw:mr-2">🐾</span> 펫보험 자주 묻는 질문 (FAQ)
           </div>
 
-          <div className="p-3">
+          <div className="tw:p-3">
             {items.map((it, i) => {
               const isOpen = open === i
               return (
-                <div key={i} className="mb-3 last:mb-0">
-                  {/* 질문 = 회색 */}
+                <div key={i} className="tw:mb-3 last:tw:mb-0">
+                  {/* 질문 */}
                   <button
                     type="button"
                     onClick={() => setOpen(isOpen ? null : i)}
                     aria-expanded={isOpen}
                     aria-controls={`faq-panel-${i}`}
-                    className={`${SIZE} bg-gray-100 border-gray-200 text-gray-900 flex items-center justify-between
-                                ${isOpen ? 'rounded-t-lg rounded-b-none' : 'rounded-lg'} hover:bg-gray-200`}
+                    className={`${SIZE} tw:bg-gray-100 tw:border-gray-200 tw:text-gray-900 tw:flex tw:items-center tw:justify-between
+                                ${isOpen ? 'tw:rounded-t-lg tw:rounded-b-none' : 'tw:rounded-lg'} hover:tw:bg-gray-200`}
                   >
                     <span>Q. {it.q}</span>
                     <svg
-                      className={`h-4 w-4 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                      className={`tw:h-4 tw:w-4 tw:shrink-0 tw:transition-transform ${isOpen ? 'tw:rotate-180' : ''}`}
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >
@@ -51,11 +51,11 @@ export default function FaqSection({ bannerSrc }) {
                     </svg>
                   </button>
 
-                  {/* 답변 = 하얀색 */}
+                  {/* 답변 */}
                   <div
                     id={`faq-panel-${i}`}
                     hidden={!isOpen}
-                    className={`${SIZE} bg-white border-gray-200 text-gray-700 border-t-0 rounded-b-lg`}
+                    className={`${SIZE} tw:bg-white tw:border-gray-200 tw:text-gray-700 tw:border-t-0 tw:rounded-b-lg`}
                   >
                     A. {it.a}
                   </div>
@@ -67,11 +67,11 @@ export default function FaqSection({ bannerSrc }) {
       </div>
 
       {/* 하단 배너 */}
-      <div className="mt-10 flex justify-center">
+      <div className="tw:mt-10 tw:flex tw:justify-center">
         <img
           src={src}
           alt="펫보험 배너"
-          className="w-[260px] sm:w-[320px] md:w-[380px] rounded-lg shadow"
+          className="tw:w-[260px] sm:tw:w-[320px] md:tw:w-[380px] tw:rounded-lg tw:shadow"
         />
       </div>
     </div>

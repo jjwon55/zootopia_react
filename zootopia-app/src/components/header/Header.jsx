@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { LoginContext } from '../../context/LoginContextProvider';
 import logo from '../../assets/img/zootopialogo.png';
+import logoutIcon from '../../assets/img/logout.png';
 
 const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -41,7 +42,7 @@ const Header = () => {
             {[
               { to: '/', label: '홈' },
               { to: '/products/listp', label: '스토어' },
-              { to: '/map/map', label: '내 주변 찾기' },
+              { to: '/map', label: '내 주변 찾기' },
               { to: '/parttime/list', label: '서비스' },
               { to: '/posts', label: '커뮤니티' },
             ].map((item) => (
@@ -96,7 +97,7 @@ const Header = () => {
                     </div>
                     <hr className="tw:my-4 tw:border-t tw:border-[#ccc]" />
                     <Link
-                      to="/mypage/mypage"
+                      to="/mypage"
                       className="tw:flex tw:items-center tw:gap-4 tw:no-underline tw:text-black tw:py-2 tw:hover:font-semibold"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
@@ -112,7 +113,7 @@ const Header = () => {
                       className="tw:flex tw:items-center tw:gap-4 tw:w-full tw:text-left tw:py-2 tw:hover:font-semibold"
                     >
                       <img
-                        src="/assets/dist/img/logout.png"
+                        src={logoutIcon}
                         alt=""
                         className="tw:w-10 tw:h-10 tw:rounded-full tw:bg-[#e5e5e5] tw:p-2"
                       />
@@ -163,7 +164,7 @@ const Header = () => {
               {[
                 { to: '/', label: '홈' },
                 { to: '/products/listp', label: '스토어' },
-                { to: '/map/map', label: '내 주변 찾기' },
+                { to: '/map', label: '내 주변 찾기' },
                 { to: '/insurance/list', label: '서비스' },
                 { to: '/posts/list', label: '커뮤니티' },
               ].map((item) => (

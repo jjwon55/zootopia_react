@@ -9,24 +9,25 @@ import com.aloha.zootopia.domain.InsuranceProduct;
 
 @Mapper
 public interface InsuranceProductMapper {
+  void insertProduct(InsuranceProduct product);
+  InsuranceProduct selectProductById(@Param("productId") int productId);
+  void updateProduct(InsuranceProduct product);
+  void deleteProduct(@Param("productId") int productId);
 
-    void insertProduct(InsuranceProduct product);
-    InsuranceProduct selectProductById(@Param("productId") int productId);
-    void updateProduct(InsuranceProduct product);
-    void deleteProduct(@Param("productId") int productId);
+  // ✅ (limit, offset)로 이름 통일
+  List<InsuranceProduct> selectProductsPaged(@Param("offset") int offset, @Param("limit") int limit);
 
-    // (선택) 기본 페이징 전체목록
-    List<InsuranceProduct> selectProductsPaged(@Param("offset") int offset, @Param("size") int size);
-    int countAllProducts();
+  int countAllProducts();
 
-    // ✅ 필터 + 페이징 (species/company는 null 또는 빈문자면 무시)
-    List<InsuranceProduct> selectFilteredProducts(
-            @Param("species") String species,
-            @Param("company") String company,
-            @Param("offset") int offset,
-            @Param("limit") int limit);
+  // ✅ 필터 + 페이징도 동일
+  List<InsuranceProduct> selectFilteredProducts(
+      @Param("species") String species,
+      @Param("company") String company,
+      @Param("offset") int offset,
+      @Param("limit") int limit
+  );
 
-    int countFilteredProducts(
-            @Param("species") String species,
-            @Param("company") String company);
+  int countFilteredProducts(
+      @Param("species") String species,
+      @Param("company") String company);
 }
