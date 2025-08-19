@@ -1,65 +1,128 @@
 import React from 'react'
+import { MapPin, PawPrint, Calendar, Coins } from 'lucide-react'
 
 const JobFilter = ({
-  location,
-  animalType,
-  payRange,
-  startDate,
-  endDate,
-  keyword,
-  onChange
+  region = '',
+  location = '',
+  cityOptions = [],
+  animalGroup = '',
+  animalType = '',
+  speciesOptions = [],
+  payRange = '',
+  startDate = '',
+  endDate = '',
+  keywordDraft = '',
+  onFilterChange,
+  onKeywordChange,
+  onSearch,
+  onReset,
 }) => {
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    onSearch?.()
+  }
+
   return (
     <form
-      className="tw:flex tw:flex-nowrap tw:items-center tw:gap-3 tw:p-4 tw:rounded tw:shadow tw:bg-[#ffecec] tw:overflow-x-auto"
+      onSubmit={handleSubmit}
+      className="
+        tw:flex tw:flex-wrap tw:justify-center tw:items-center tw:gap-3
+        tw:p-4 tw:rounded-2xl tw:shadow-sm tw:mx-auto
+        tw:bg-[#FFF4F1] tw:border tw:border-[#FFD8CF] tw:max-w-5xl
+      "
     >
-      {/* 지역 */}
-      <div className="tw:flex tw:items-center tw:gap-1">
-        <span className="tw:text-[#F27A7A]">📍</span>
+      {/* 시/도 */}
+      <div className="tw:flex tw:items-center tw:gap-2">
+        <MapPin className="tw:w-4 tw:h-4 tw:text-[#FF7C6E]" aria-hidden />
         <select
-          name="location"
-          value={location}
-          onChange={onChange}
-          className="tw:border tw:rounded tw:px-2 tw:py-1 tw:text-sm tw:min-w-[120px] focus:tw:outline-[#F27A7A]"
+          name="region"
+          value={region}
+          onChange={onFilterChange}
+          className="
+            tw:border tw:border-[#FFD8CF] tw:rounded-xl
+            tw:text-sm tw:px-3 tw:py-2 tw:w-[160px] tw:bg-white
+            focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#FFCABF]
+          "
         >
-          <option value="">지역 선택</option>
-          <option value="서울">서울</option>
-          <option value="경기">경기</option>
-          <option value="인천">인천</option>
-          <option value="부산">부산</option>
-          <option value="대전">대전</option>
-          <option value="대구">대구</option>
-          <option value="목포">목포</option>
+          <option value="">시/도 선택</option>
+          {['서울','경기','인천','부산','대구','광주','대전','울산','세종','강원','충북','충남','전북','전남','경북','경남','제주'].map(opt => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
         </select>
       </div>
 
-      {/* 동물 종류 */}
-      <div className="tw:flex tw:items-center tw:gap-1">
-        <span>🐾</span>
+      {/* 시/군/구 */}
+      <div className="tw:flex tw:items-center tw:gap-2">
+        <select
+          name="location"
+          value={location}
+          onChange={onFilterChange}
+          disabled={!region}
+          title={!region ? '시/도를 먼저 선택하세요' : ''}
+          className={`
+            tw:border tw:border-[#FFD8CF] tw:rounded-xl
+            tw:text-sm tw:px-3 tw:py-2 tw:w-[180px] tw:bg-white
+            focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#FFCABF]
+            ${!region ? 'tw:opacity-60 tw:cursor-not-allowed' : ''}
+          `}
+        >
+          <option value="">{region ? '시/군/구 선택' : '시/도를 먼저 선택'}</option>
+          {cityOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+        </select>
+      </div>
+
+      {/* 동물 대분류 */}
+      <div className="tw:flex tw:items-center tw:gap-2">
+        <PawPrint className="tw:w-4 tw:h-4 tw:text-[#FF7C6E]" aria-hidden />
+        <select
+          name="animalGroup"
+          value={animalGroup}
+          onChange={onFilterChange}
+          className="
+            tw:border tw:border-[#FFD8CF] tw:rounded-xl
+            tw:text-sm tw:px-3 tw:py-2 tw:w-[160px] tw:bg-white
+            focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#FFCABF]
+          "
+        >
+          <option value="">동물 분류</option>
+          {['포유류','파충류','절지류','어류','양서류','조류'].map(opt => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* 동물 세부 종 */}
+      <div className="tw:flex tw:items-center tw:gap-2">
         <select
           name="animalType"
           value={animalType}
-          onChange={onChange}
-          className="tw:border tw:rounded tw:px-2 tw:py-1 tw:text-sm tw:min-w-[120px] focus:tw:outline-[#F27A7A]"
+          onChange={onFilterChange}
+          disabled={!animalGroup}
+          title={!animalGroup ? '동물 분류를 먼저 선택하세요' : ''}
+          className={`
+            tw:border tw:border-[#FFD8CF] tw:rounded-xl
+            tw:text-sm tw:px-3 tw:py-2 tw:w-[180px] tw:bg-white
+            focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#FFCABF]
+            ${!animalGroup ? 'tw:opacity-60 tw:cursor-not-allowed' : ''}
+          `}
         >
-          <option value="">동물 종류</option>
-          <option value="포유류">포유류</option>
-          <option value="파충류">파충류</option>
-          <option value="절지류">절지류</option>
-          <option value="양서류">양서류</option>
-          <option value="어류">어류</option>
-          <option value="조류">조류</option>
+          <option value="">{animalGroup ? '세부 종 선택' : '분류 먼저 선택'}</option>
+          {speciesOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
         </select>
       </div>
 
       {/* 보수 */}
-      <div className="tw:flex tw:items-center tw:gap-1">
-        <span className="tw:text-green-600">💰</span>
+      <div className="tw:flex tw:items-center tw:gap-2">
+        <Coins className="tw:w-4 tw:h-4 tw:text-[#FF7C6E]" aria-hidden />
         <select
           name="payRange"
           value={payRange}
-          onChange={onChange}
-          className="tw:border tw:rounded tw:px-2 tw:py-1 tw:text-sm tw:min-w-[100px] focus:tw:outline-[#F27A7A]"
+          onChange={onFilterChange}
+          className="
+            tw:border tw:border-[#FFD8CF] tw:rounded-xl
+            tw:text-sm tw:px-3 tw:py-2 tw:w-[140px] tw:bg-white
+            focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#FFCABF]
+          "
         >
           <option value="">보수</option>
           <option value="low">1만원 미만</option>
@@ -69,41 +132,71 @@ const JobFilter = ({
       </div>
 
       {/* 날짜 */}
-      <div className="tw:flex tw:items-center tw:gap-1">
-        <span className="tw:text-blue-600">📅</span>
+      <div className="tw:flex tw:items-center tw:gap-2">
+        <Calendar className="tw:w-4 tw:h-4 tw:text-[#FF7C6E]" aria-hidden />
         <input
           type="date"
           name="startDate"
-          value={startDate}
-          onChange={onChange}
-          className="tw:border tw:rounded tw:px-2 tw:py-1 tw:text-sm tw:min-w-[130px]"
+          value={startDate || ''}
+          onChange={onFilterChange}
+          className="
+            tw:border tw:border-[#FFD8CF] tw:rounded-xl
+            tw:text-sm tw:px-3 tw:py-2 tw:w-[150px] tw:bg-white
+            focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#FFCABF]
+          "
         />
         <span>~</span>
+        <Calendar className="tw:w-4 tw:h-4 tw:text-[#FF7C6E]" aria-hidden />
         <input
           type="date"
           name="endDate"
-          value={endDate}
-          onChange={onChange}
-          className="tw:border tw:rounded tw:px-2 tw:py-1 tw:text-sm tw:min-w-[130px]"
+          value={endDate || ''}
+          onChange={onFilterChange}
+          className="
+            tw:border tw:border-[#FFD8CF] tw:rounded-xl
+            tw:text-sm tw:px-3 tw:py-2 tw:w-[150px] tw:bg-white
+            focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#FFCABF]
+          "
         />
       </div>
 
-      {/* 검색 */}
-      <div className="tw:flex tw:items-center tw:gap-1">
+      {/* 키워드 + 버튼 */}
+      <div className="tw:flex tw:items-center tw:gap-2 tw:w-full md:tw:w-auto">
         <input
           type="text"
           name="keyword"
-          value={keyword}
-          onChange={onChange}
-          className="tw:border tw:rounded tw:px-2 tw:py-1 tw:text-sm tw:min-w-[160px]"
+          value={keywordDraft}
+          onChange={onKeywordChange}
           placeholder="검색어 입력"
+          className="
+            tw:flex-1 md:tw:flex-none tw:border tw:border-[#FFD8CF]
+            tw:rounded-xl tw:text-sm tw:px-3 tw:py-2 tw:min-w-[220px] tw:bg-white
+            focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#FFCABF]
+          "
         />
         <button
           type="submit"
-          className="tw:border tw:border-gray-400 tw:rounded tw:px-3 tw:py-1 tw:text-sm tw:bg-white hover:tw:bg-gray-100 tw:transition"
+          className="
+            tw:border tw:border-[#F27A7A] tw:bg-[#F27A7A] tw:text-white
+            tw:rounded-xl tw:px-4 tw:py-2 tw:text-sm
+            hover:tw:bg-[#e86e6e] focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#FFCABF]
+          "
         >
-          🔍
+          검색
         </button>
+        {onReset && (
+          <button
+            type="button"
+            onClick={onReset}
+            className="
+              tw:border tw:border-[#F27A7A] tw:text-[#F27A7A] tw:bg-white
+              tw:rounded-xl tw:px-4 tw:py-2 tw:text-sm
+              hover:tw:bg-[#FFECEA] focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#FFCABF]
+            "
+          >
+            초기화
+          </button>
+        )}
       </div>
     </form>
   )

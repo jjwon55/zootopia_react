@@ -35,9 +35,9 @@ export const applyApplicants = (jobId, body /* { introduction } */) =>
   }).then(r => r.data)
 
 // 지원자 조회 (GET /parttime/{jobId}/applicants?page=..)
-export const getApplicantsByJob = (jobId, page = 1) =>
+export const getApplicantsByJob = (jobId, page = 1, onlyMe = false) =>
   api.get(`/parttime/${jobId}/applicants`, {
-    params: { page },
+    params: { page, onlyMe },
     headers: { ...makeAuthHeaders(), ...xsrfHeader() },
   }).then(r => r.data)
 

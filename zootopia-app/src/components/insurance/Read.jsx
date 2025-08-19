@@ -64,7 +64,7 @@ export default function Read({
       </div>
 
       {/* 액션 */}
-      <div className="tw:flex tw:flex-col md:tw:flex-row tw:items-center tw:justify-between tw:gap-3 tw:mt-8">
+      <div className="tw:flex tw:flex-col md:tw:flex-row tw:items-center tw:justify-between tw:mt-8 tw:space-y-4 md:tw:space-y-0 md:tw:gap-3">
         <button className={BTN}>상담/가입 문의</button>
         <div className="tw:space-x-2">
           <Link to="/insurance/list" className={BTN_OUTLINE}>목록</Link>
