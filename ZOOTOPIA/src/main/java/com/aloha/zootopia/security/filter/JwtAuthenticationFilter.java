@@ -1,32 +1,32 @@
 package com.aloha.zootopia.security.filter;
 
 import com.aloha.zootopia.domain.AuthenticationRequest;
-import org.springframework.security.authentication.AuthenticationServiceException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
+import com.aloha.zootopia.domain.CustomUser;
+import com.aloha.zootopia.domain.Users;
+import com.aloha.zootopia.security.contants.SecurityConstants;
+import com.aloha.zootopia.security.provider.JwtProvider;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.aloha.zootopia.domain.CustomUser;
-import com.aloha.zootopia.domain.Users;
-import com.aloha.zootopia.security.contants.SecurityConstants;
-import com.aloha.zootopia.security.provider.JwtProvider;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
@@ -37,62 +37,55 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
   public JwtAuthenticationFilter(AuthenticationManager authenticationManager, JwtProvider jwtProvider) {
     this.authenticationManager = authenticationManager;
     this.jwtProvider = jwtProvider;
-    // 필터 URL 경로 설정 : /login
-    setFilterProcessesUrl(SecurityConstants.LOGIN_URL);
+    // 필터 URL 경로 설정 : /login (Vite 프록시가 /api 제거하면 서버엔 /login으로 들어옴)
+    setFilterProcessesUrl(SecurityConstants.LOGIN_URL); // e.g. "/login"
   }
 
-  /**
-   * 🔐 인증 시도 메소드
-   * : /login 경로로 (username, password) 요청하면 이 필터에서 로그인 인증을 시도합니다.
-   */
   @Override
   public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
       throws AuthenticationException {
 
-    if (!request.getMethod().equals("POST")) {
-        throw new AuthenticationServiceException("Authentication method not supported: " + request.getMethod());
+    if (!"POST".equalsIgnoreCase(request.getMethod())) {
+      throw new AuthenticationServiceException("Authentication method not supported: " + request.getMethod());
     }
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    AuthenticationRequest authenticationRequest = null;
+    String contentType = request.getContentType();
+    String email = null;
+    String password = null;
+
     try {
-        authenticationRequest = objectMapper.readValue(request.getInputStream(), AuthenticationRequest.class);
+      if (contentType != null && contentType.startsWith("application/json")) {
+        ObjectMapper mapper = new ObjectMapper();
+        AuthenticationRequest dto = mapper.readValue(request.getInputStream(), AuthenticationRequest.class);
+        email = dto != null ? dto.getEmail() : null;
+        password = dto != null ? dto.getPassword() : null;
+      } else {
+        email = request.getParameter("email");
+        password = request.getParameter("password");
+      }
     } catch (IOException e) {
-        log.error("Error reading authentication request body", e);
-        throw new AuthenticationServiceException("Error reading authentication request body", e);
+      log.error("Error reading authentication request body", e);
+      throw new AuthenticationServiceException("Error reading authentication request body", e);
     }
 
-    String email = authenticationRequest.getEmail();
-    String password = authenticationRequest.getPassword();
+    if (email == null || password == null) {
+      throw new AuthenticationServiceException("email/password required");
+    }
 
-    log.info("email : " + email);
-    log.info("password : " + password);
+    log.info("email : {}", email);
+    log.info("password : {}", password);
 
-    // 인증토큰 객체 생성
-    Authentication authentication = new UsernamePasswordAuthenticationToken(email, password);
+    UsernamePasswordAuthenticationToken authRequest =
+        new UsernamePasswordAuthenticationToken(email, password);
 
-    // 인증 시도
     try {
-      authentication = authenticationManager.authenticate(authentication);
+      return authenticationManager.authenticate(authRequest);
     } catch (AuthenticationException e) {
       log.warn("인증 실패: {}", e.getMessage());
-      throw e; // ❗ 반드시 예외를 다시 던져야 Security가 실패 처리함
+      throw e;
     }
-
-    log.info("authentication : " + authentication);
-    return authentication;
   }
 
-  /**
-   * ✅ 인증 성공 메소드
-   * : attemptAuthentication() 호출 후,
-   * 반환된 Authentication 객체가 인증된 것이 확인 되면 호출되는 메소드
-   * 
-   * ➡ 💍 JWT
-   * : 로그인 인증에 성공, JWT 토큰 생성
-   * Authorizaion 응답헤더에 jwt 토큰을 담아 응답
-   * { Authorizaion : Bearer + {jwt} }
-   */
   @Override
   protected void successfulAuthentication(
       HttpServletRequest request, HttpServletResponse response, FilterChain chain,
@@ -109,11 +102,9 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         .map(GrantedAuthority::getAuthority)
         .collect(Collectors.toList());
 
-    // JWT 생성
     String jwt = jwtProvider.createToken(email, userId, roles);
-    log.info("✅ JWT 생성 완료: {}", jwt);
+    log.info("✅ JWT 생성 완료");
 
-    // 응답 구조: { token: "...", user: {...} }
     Map<String, Object> responseBody = new HashMap<>();
     responseBody.put("token", jwt);
     responseBody.put("user", user);
@@ -121,9 +112,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     ObjectMapper objectMapper = new ObjectMapper();
     String json = objectMapper.writeValueAsString(responseBody);
 
-    response.setContentType("application/json");
-    response.setCharacterEncoding("UTF-8");
-    response.setStatus(200);
+    response.setStatus(HttpServletResponse.SC_OK);
+    response.setContentType("application/json;charset=UTF-8");
 
     PrintWriter printWriter = response.getWriter();
     printWriter.write(json);
@@ -132,26 +122,38 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     log.info("✅ JWT 및 사용자 정보 응답 완료");
   }
 
+  // ⬇⬇⬇ 여기만 바꾸면 됨: root cause가 DisabledException 이면 403으로 바로 응답하고 종료
   @Override
   protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-      AuthenticationException failed)
+                                            AuthenticationException failed)
       throws IOException, ServletException {
 
+    // root cause 추적
+    Throwable cause = failed;
+    while (cause.getCause() != null && cause.getCause() != cause) {
+      cause = cause.getCause();
+    }
+
+    boolean suspended =
+        (failed instanceof DisabledException) ||
+        (cause instanceof DisabledException) ||
+        (failed instanceof InternalAuthenticationServiceException
+            && failed.getMessage() != null
+            && failed.getMessage().contains("정지된 계정"));
+
+    if (suspended) {
+      log.warn("❌ 로그인 인증 실패(정지 계정): {}", failed.getMessage());
+      response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403
+      response.setContentType("application/json;charset=UTF-8");
+      response.getWriter().write("{\"error\":\"정지된 계정입니다.\"}");
+      response.getWriter().flush();
+      return; // 실패 핸들러/다음 체인으로 넘기지 않음 (401로 덮이는 것 방지)
+    }
+
     log.warn("❌ 로그인 인증 실패: {}", failed.getMessage());
-
-    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-    response.setContentType("application/json");
-    response.setCharacterEncoding("UTF-8");
-
-    Map<String, Object> result = new HashMap<>();
-    result.put("error", "아이디 또는 비밀번호가 일치하지 않습니다");
-
-    ObjectMapper objectMapper = new ObjectMapper();
-    String json = objectMapper.writeValueAsString(result);
-
-    PrintWriter writer = response.getWriter();
-    writer.write(json);
-    writer.flush();
+    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+    response.setContentType("application/json;charset=UTF-8");
+    response.getWriter().write("{\"error\":\"아이디 또는 비밀번호가 일치하지 않습니다.\"}");
+    response.getWriter().flush();
   }
-
 }

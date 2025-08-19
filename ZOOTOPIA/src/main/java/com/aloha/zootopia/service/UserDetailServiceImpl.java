@@ -12,37 +12,34 @@ import com.aloha.zootopia.mapper.UserMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * 🔐 UserDetailsService : 사용자 정보 불러오는 인터페이스
- * ✅ 이 인터페이스를 구현하여, 사용자 정보를 로드하는 방법을 정의할 수 있다.
- */
 @Slf4j
 @Service
 public class UserDetailServiceImpl implements UserDetailsService {
 
-    @Autowired
-    private UserMapper userMapper;
+  @Autowired
+  private UserMapper userMapper;
 
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        log.info(":::::::::: UserDetailServiceImpl ::::::::::");
-        log.info("- 사용자 정의 인증을 위해, 사용자 정보 조회");
-        log.info("- username : {} ", email);
-
-        Users user = null;
-        try {
-            // 👩‍💼 사용자 정보 및 권한 조회
-            user = userMapper.select(email);
-        } catch (Exception e) {
-            log.error("사용자 정보 조회 시 에러 발생 : ", e);
-            e.printStackTrace();
-        }
-        if( user == null ) {
-            throw new UsernameNotFoundException("사용자 정보를 찾을 수 없습니다. - " + email);
-        }
-        // 🔐 Users ➡ CustomUser ➡ UserDetails
-        CustomUser customUser = new CustomUser(user);
-        return customUser;
+ @Override
+public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    log.info(":::::::::: UserDetailServiceImpl ::::::::::");
+    Users user;
+    try {
+        user = userMapper.select(email);
+    } catch (Exception e) {
+        log.error("사용자 정보 조회 시 에러 발생 : ", e);
+        throw new UsernameNotFoundException("사용자 정보를 찾을 수 없습니다. - " + email);
     }
 
+    if (user == null) {
+        throw new UsernameNotFoundException("사용자 정보를 찾을 수 없습니다. - " + email);
+    }
+
+    // ✅ 정지 계정인 경우 DisabledException 바로 던짐
+    if ("SUSPENDED".equalsIgnoreCase(user.getStatus())) {
+        log.warn("정지된 계정 로그인 시도: {}", email);
+        throw new org.springframework.security.authentication.DisabledException("정지된 계정입니다.");
+    }
+
+    return new CustomUser(user);
+}
 }

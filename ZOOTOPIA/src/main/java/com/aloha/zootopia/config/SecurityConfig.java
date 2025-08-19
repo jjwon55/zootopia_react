@@ -30,7 +30,6 @@ import com.aloha.zootopia.security.handler.OAuth2LoginSuccessHandler;
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig {
 
-
   @Autowired
   private UserDetailServiceImpl userDetailServiceImpl;
   @Autowired
@@ -56,14 +55,14 @@ public class SecurityConfig {
   // ✅ CORS 설정
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
-      CorsConfiguration configuration = new CorsConfiguration();
-      configuration.addAllowedOrigin("http://localhost:5173"); // Allow your frontend origin
-      configuration.addAllowedMethod("*"); // Allow all HTTP methods
-      configuration.addAllowedHeader("*"); // Allow all headers
-      configuration.setAllowCredentials(true); // Allow credentials (cookies, authorization headers)
-      UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-      source.registerCorsConfiguration("/**", configuration); // Apply CORS to all paths
-      return source;
+    CorsConfiguration configuration = new CorsConfiguration();
+    configuration.addAllowedOrigin("http://localhost:5173"); // Allow your frontend origin
+    configuration.addAllowedMethod("*"); // Allow all HTTP methods
+    configuration.addAllowedHeader("*"); // Allow all headers
+    configuration.setAllowCredentials(true); // Allow credentials (cookies, authorization headers)
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration); // Apply CORS to all paths
+    return source;
   }
 
   // ✅ SecurityFilterChain 구성
@@ -115,8 +114,12 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationConfiguration authConfig)
       throws Exception {
-
     AuthenticationManager authenticationManager = authConfig.getAuthenticationManager();
+
+    // 로그인 필터 생성 + 실패 핸들러 연결
+    var loginFilter = new JwtAuthenticationFilter(authenticationManager, jwtProvider);
+    loginFilter.setFilterProcessesUrl("/login");
+    loginFilter.setAuthenticationFailureHandler(new com.aloha.zootopia.config.CustomAuthFailureHandler());
 
     http
         .csrf(csrf -> csrf.disable())
@@ -125,48 +128,31 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .userDetailsService(userDetailServiceImpl)
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        
         .oauth2Login(oauth2 -> oauth2
-            .userInfoEndpoint(userInfo -> userInfo
-                .userService(customOAuth2UserService)
-            )
+            .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
             .successHandler(oAuth2LoginSuccessHandler)
-            .failureUrl("/loginFailure")
-        )
-        .addFilterAt(new JwtAuthenticationFilter(authenticationManager, jwtProvider),
-            UsernamePasswordAuthenticationFilter.class)
+            .failureUrl("/loginFailure"))
+        // ⬇️ 여기서 우리가 만든 loginFilter를 등록
+        .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)
         .addFilterBefore(new JwtRequestFilter(authenticationManager, jwtProvider),
             UsernamePasswordAuthenticationFilter.class)
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Add this line to permit OPTIONS requests globally
-            .requestMatchers("/posts/**").permitAll()
-            .requestMatchers("/lost/**").permitAll()
-            .requestMatchers("/mypage/**").permitAll()
-            .requestMatchers("/showoff/**").permitAll()
-            .requestMatchers("/insurance/**").permitAll()
-            .requestMatchers("/admin/**").hasAnyRole("ADMIN","MANAGER","MOD")
-            .requestMatchers("/service/**").permitAll()
-            .requestMatchers( "/comments/**").authenticated()
-            .requestMatchers("/upload/**").permitAll()
-            .requestMatchers("/login").permitAll()
-            .requestMatchers("/join").permitAll()
-            .requestMatchers("/users").permitAll()
-            .requestMatchers("/auth/**").permitAll()
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            .requestMatchers("/login", "/join", "/users", "/auth/**").permitAll()
             .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**", "/img/**").permitAll()
+            .requestMatchers("/posts/**", "/lost/**", "/showoff/**", "/insurance/**").permitAll()
+            .requestMatchers("/service/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/parttime", "/parttime/**").permitAll()
             .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/hospitals/{hospitalId}/reviews").permitAll()
-
-            .requestMatchers("/admin/**").hasRole("ADMIN")
+            .requestMatchers("/admin/**").hasRole("ADMIN") // 중복 규칙 하나만 유지
             .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
             .requestMatchers("/products/create/**").hasRole("ADMIN")
-            .requestMatchers("/cart/**").authenticated()
-            .requestMatchers("/mypage/**").authenticated()
-            .requestMatchers(HttpMethod.POST, "/posts/*/like").authenticated()
+            .requestMatchers("/comments/**", "/cart/**", "/mypage/**").authenticated()
+            .requestMatchers("/login", "/api/login").permitAll()
             .anyRequest().authenticated());
 
     return http.build();
   }
+
 }
-
-

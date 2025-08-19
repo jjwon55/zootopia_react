@@ -7,7 +7,7 @@ CREATE TABLE `user_auth` (
 );
 
 
-
+-- old
 CREATE TABLE `user_auth` (
   `user_id` bigint NOT NULL AUTO_INCREMENT,
   `email` varchar(100) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE `user_auth` (
 ) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 
-
+-- new
 CREATE TABLE `user_auth` (
   `id` BIGINT NOT NULL AUTO_INCREMENT,       -- 내부 PK (auto increment)
   `email` VARCHAR(100) NOT NULL,             -- Users.email 참조 (로그인 기준)

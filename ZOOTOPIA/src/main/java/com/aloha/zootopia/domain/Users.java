@@ -27,6 +27,11 @@ public class Users {
     // 소셜 로그인 관련 필드
     private String provider;  // "naver" 등 소셜 구분자
     private String providerId;
+
+    private String status;
+    private String memo;
+
+     private Integer isDeleted;
     
     @Builder.Default
     private List<UserAuth> authList = new java.util.ArrayList<>();
