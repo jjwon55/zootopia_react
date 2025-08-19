@@ -37,59 +37,67 @@ public class CustomUser implements UserDetails, OAuth2User {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return user.getAuthList().stream()
-                                 .map(auth -> new SimpleGrantedAuthority(auth.getAuth()))
-                                 .collect(Collectors.toList());
+                .map(auth -> new SimpleGrantedAuthority(auth.getAuth()))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public String getPassword() {
-        return user.getPassword();
-    }
+    public String getPassword() { return user.getPassword(); }
 
     @Override
-    public String getUsername() {
-        return user.getEmail();
-    }
+    public String getUsername() { return user.getEmail(); }
 
+    // ✅ 정지/삭제/비활성 계정은 비활성 처리
     @Override
     public boolean isEnabled() {
-        return user.getEnabled() == 1;
+        // enabled 컬럼(1/0)도 함께 체크
+        if (user.getEnabled() == 0) return false;
+
+        // 상태값으로 정지 여부 체크
+        if (isSuspended()) return false;
+
+        // 소프트 삭제 계정이면 막기 (Users에 isDeleted 존재할 때)
+        try {
+            Integer isDeleted = user.getIsDeleted();
+            if (isDeleted != null && isDeleted == 1) return false;
+        } catch (Exception ignore) {}
+
+        return true;
     }
 
-    // OAuth2User 인터페이스 구현
+    // 필요 시 다른 UserDetails 속성들도 기본 true로
     @Override
-    public Map<String, Object> getAttributes() {
-        return attributes;
-    }
+    public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public String getName() {
-        // 소셜 로그인에서는 닉네임을 이름으로 사용
-        return user.getNickname();
-    }
+    public boolean isAccountNonLocked() { return !isSuspended(); }
 
-    public Users getUser() {
-        return user;
-    }
+    @Override
+    public boolean isCredentialsNonExpired() { return true; }
 
-    public Long getUserId() {
-        return user.getUserId();
-    }
+    // OAuth2User
+    @Override
+    public Map<String, Object> getAttributes() { return attributes; }
 
-    public String getNickname() {
-        return user.getNickname();
-    }
+    @Override
+    public String getName() { return user.getNickname(); }
+
+    public Users getUser() { return user; }
+
+    public Long getUserId() { return user.getUserId(); }
+
+    public String getNickname() { return user.getNickname(); }
 
     public boolean hasRole(String roleName) {
         return this.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_" + roleName));
     }
 
-    public void setProfileImg(String profileImg) {
-        this.user.setProfileImg(profileImg); // 내부 Users 객체에 위임
+    public void setProfileImg(String profileImg) { this.user.setProfileImg(profileImg); }
+
+    // 🔎 정지 여부
+    private boolean isSuspended() {
+        String status = user.getStatus();
+        return status != null && status.equalsIgnoreCase("SUSPENDED");
     }
-            
-
-
 }
-

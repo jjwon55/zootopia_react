@@ -30,7 +30,6 @@ import com.aloha.zootopia.security.handler.OAuth2LoginSuccessHandler;
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig {
 
-
   @Autowired
   private UserDetailServiceImpl userDetailServiceImpl;
   @Autowired
@@ -56,14 +55,14 @@ public class SecurityConfig {
   // ✅ CORS 설정
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
-      CorsConfiguration configuration = new CorsConfiguration();
-      configuration.addAllowedOrigin("http://localhost:5173"); // Allow your frontend origin
-      configuration.addAllowedMethod("*"); // Allow all HTTP methods
-      configuration.addAllowedHeader("*"); // Allow all headers
-      configuration.setAllowCredentials(true); // Allow credentials (cookies, authorization headers)
-      UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-      source.registerCorsConfiguration("/**", configuration); // Apply CORS to all paths
-      return source;
+    CorsConfiguration configuration = new CorsConfiguration();
+    configuration.addAllowedOrigin("http://localhost:5173"); // Allow your frontend origin
+    configuration.addAllowedMethod("*"); // Allow all HTTP methods
+    configuration.addAllowedHeader("*"); // Allow all headers
+    configuration.setAllowCredentials(true); // Allow credentials (cookies, authorization headers)
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration); // Apply CORS to all paths
+    return source;
   }
 
   // ✅ SecurityFilterChain 구성
@@ -115,8 +114,12 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationConfiguration authConfig)
       throws Exception {
-
     AuthenticationManager authenticationManager = authConfig.getAuthenticationManager();
+
+    // 로그인 필터 생성 + 실패 핸들러 연결
+    var loginFilter = new JwtAuthenticationFilter(authenticationManager, jwtProvider);
+    loginFilter.setFilterProcessesUrl("/login");
+    loginFilter.setAuthenticationFailureHandler(new com.aloha.zootopia.config.CustomAuthFailureHandler());
 
     http
         .csrf(csrf -> csrf.disable())
@@ -125,53 +128,46 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .userDetailsService(userDetailServiceImpl)
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        
         .oauth2Login(oauth2 -> oauth2
-            .userInfoEndpoint(userInfo -> userInfo
-                .userService(customOAuth2UserService)
-            )
+            .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
             .successHandler(oAuth2LoginSuccessHandler)
-            .failureUrl("/loginFailure")
-        )
-        .addFilterAt(new JwtAuthenticationFilter(authenticationManager, jwtProvider),
-            UsernamePasswordAuthenticationFilter.class)
+            .failureUrl("/loginFailure"))
+        // ⬇️ 여기서 우리가 만든 loginFilter를 등록
+        .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)
         .addFilterBefore(new JwtRequestFilter(authenticationManager, jwtProvider),
             UsernamePasswordAuthenticationFilter.class)
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Add this line to permit OPTIONS requests globally
-            .requestMatchers("/posts/**").permitAll()
-            .requestMatchers("/lost/**").permitAll()
-            .requestMatchers("/mypage/**").permitAll()
-            .requestMatchers("/showoff/**").permitAll()
-            .requestMatchers("/insurance/**").permitAll()
+            // CORS 프리플라이트
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-            // KakaoPay 개발용 공개 엔드포인트 (운영시 인증 적용 고려)
-            .requestMatchers("/api/payments/kakao/**").permitAll()
+            // 로그인/회원가입/인증 관련 공개
+            .requestMatchers("/login", "/api/login", "/join", "/users", "/auth/**").permitAll()
 
-            .requestMatchers("/admin/**").hasAnyRole("ADMIN","MANAGER","MOD")
-            .requestMatchers("/service/**").permitAll()
-            .requestMatchers( "/comments/**").authenticated()
-            .requestMatchers("/upload/**").permitAll()
-            .requestMatchers("/login").permitAll()
-            .requestMatchers("/join").permitAll()
-            .requestMatchers("/users").permitAll()
-            .requestMatchers("/auth/**").permitAll()
-            .requestMatchers("/auth/kakao/**").permitAll()
+            // 정적 리소스
             .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**", "/img/**").permitAll()
+
+            // 공개 API
+            .requestMatchers("/posts/**", "/lost/**", "/showoff/**", "/insurance/**", "/service/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/parttime", "/parttime/**").permitAll()
             .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/hospitals/{hospitalId}/reviews").permitAll()
 
-            .requestMatchers("/admin/**").hasRole("ADMIN")
+            // 결제 콜백 (개발 중 공개)
+            .requestMatchers("/api/payments/kakao/**").permitAll()
+
+            // 권한 영역
+            .requestMatchers("/admin/**").hasAnyRole("ADMIN","MANAGER","MOD")
             .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
             .requestMatchers("/products/create/**").hasRole("ADMIN")
-            .requestMatchers("/cart/**").authenticated()
-            .requestMatchers("/mypage/**").authenticated()
-            .requestMatchers(HttpMethod.POST, "/posts/*/like").authenticated()
-            .anyRequest().authenticated());
+
+            // 인증 필요
+            .requestMatchers("/comments/**", "/cart/**", "/mypage/**").authenticated()
+
+            // 그 외
+            .anyRequest().authenticated()
+        )
 
     return http.build();
   }
+
 }
-
-
