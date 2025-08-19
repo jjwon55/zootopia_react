@@ -1,0 +1,52 @@
+/* 소셜 로그인 영역만 유지 (CSS Module용 카멜케이스) */
+.socialLogin {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 25px 0 20px 0;
+}
+
+.socialBtn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: white;
+    font-size: 1.2rem;
+}
+
+/* 개별 버튼 */
+.kakao {
+    background-image: url('../../assets/img/kakaologinbtn.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    color: white;
+}
+
+.naver {
+    background-image: url('../../assets/img/naverloginbtn.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    color: white;
+}
+
+.google {
+    background-image: url('../../assets/img/googleloginbtn.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    color: white;
+}
+
+.kakao:hover,
+.naver:hover,
+.google:hover {
+    transition: 0.3s ease-in-out;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}

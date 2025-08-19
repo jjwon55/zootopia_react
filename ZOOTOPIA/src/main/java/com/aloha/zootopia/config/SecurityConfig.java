@@ -18,17 +18,20 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Lazy;
 
 import com.aloha.zootopia.security.filter.JwtAuthenticationFilter;
 import com.aloha.zootopia.security.filter.JwtRequestFilter;
 import com.aloha.zootopia.security.provider.JwtProvider;
 import com.aloha.zootopia.service.UserDetailServiceImpl;
 import com.aloha.zootopia.security.handler.OAuth2LoginSuccessHandler;
+import com.aloha.zootopia.security.handler.OAuth2LoginSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig {
+
 
   @Autowired
   private UserDetailServiceImpl userDetailServiceImpl;
@@ -143,13 +146,15 @@ public class SecurityConfig {
             .requestMatchers("/lost/**").permitAll()
             .requestMatchers("/mypage/**").permitAll()
             .requestMatchers("/showoff/**").permitAll()
+            .requestMatchers("/insurance/**").permitAll()
+
             .requestMatchers("/service/**").permitAll()
             .requestMatchers( "/comments/**").authenticated()
             .requestMatchers("/upload/**").permitAll()
             .requestMatchers("/login").permitAll()
             .requestMatchers("/auth/**").permitAll()
             .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**", "/img/**").permitAll()
-            
+            .requestMatchers(HttpMethod.GET, "/parttime", "/parttime/**").permitAll()
             .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
                         // 개발 편의를 위해 제품/장바구니 API 임시 허용 (운영 전 삭제 필요)
                         .requestMatchers("/products/api/**").permitAll()
