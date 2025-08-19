@@ -76,6 +76,9 @@ public class CustomUser implements UserDetails, OAuth2User {
         return user.getUserId();
     }
 
+    public String getNickname() {
+        return user.getNickname();
+    }
 
     public boolean hasRole(String roleName) {
         return this.getAuthorities().stream()

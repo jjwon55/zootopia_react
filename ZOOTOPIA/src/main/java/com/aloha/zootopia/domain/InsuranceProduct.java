@@ -16,7 +16,7 @@ public class InsuranceProduct {
 
     @NumberFormat(pattern = "#,###")
     private int maxCoverage;              // 최대 보장 한도
-    
+    private String company; 
     private String species;               // dog, cat, all
     private String joinCondition;         // 가입조건
     private String coverageItems;         // 보장항목
