@@ -1,6 +1,7 @@
 import { data } from 'react-router-dom';
 import api from './api';
 import axios from 'axios';
+import { makeAuthHeaders, xsrfHeader } from './utils/authHeaders'
 
 // 회원가입
 export const join = (data) => api.post(`/users`,data)

@@ -49,8 +49,8 @@ public class InsuranceProductServiceImpl implements InsuranceProductService {
     }
 
     @Override
-    public List<InsuranceProduct> getProductsPaged(int offset, int size) {
-        return productMapper.selectProductsPaged(offset, size);
+    public List<InsuranceProduct> getProductsPaged(int offset, int limit) {
+        return productMapper.selectProductsPaged(offset, limit);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class InsuranceProductServiceImpl implements InsuranceProductService {
         return productMapper.countAllProducts();
     }
 
-    // ✅ 타입 파라미터 버전
+    // ✅ 필터 + 페이징 (limit/offset 이름과 맞춤)
     @Override
     public List<InsuranceProduct> getFilteredProducts(String species, String company, int offset, int limit) {
         return productMapper.selectFilteredProducts(species, company, offset, limit);
