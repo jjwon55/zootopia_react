@@ -1,7 +1,6 @@
 import { data } from 'react-router-dom';
 import api from './api';
 import axios from 'axios';
-import { makeAuthHeaders, xsrfHeader } from './utils/authHeaders'
 
 // 회원가입
 export const join = (data) => api.post(`/users`,data)
@@ -28,6 +27,7 @@ export const info = () => api.get(`/users/info`)
 export const update = (data) => api.put(`/users`, data)
 
 // 회원 탈퇴
-// export const remove = (username) => api.delete(`/users/${username}`)
+
+export const remove = (username) => api.delete(`/users/${username}`)
 
 

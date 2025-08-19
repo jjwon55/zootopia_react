@@ -1,7 +1,5 @@
 package com.aloha.zootopia.security.filter;
 
-import com.aloha.zootopia.domain.AuthenticationRequest;
-import org.springframework.security.authentication.AuthenticationServiceException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -49,21 +47,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
   public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
       throws AuthenticationException {
 
-    if (!request.getMethod().equals("POST")) {
-        throw new AuthenticationServiceException("Authentication method not supported: " + request.getMethod());
-    }
-
-    ObjectMapper objectMapper = new ObjectMapper();
-    AuthenticationRequest authenticationRequest = null;
-    try {
-        authenticationRequest = objectMapper.readValue(request.getInputStream(), AuthenticationRequest.class);
-    } catch (IOException e) {
-        log.error("Error reading authentication request body", e);
-        throw new AuthenticationServiceException("Error reading authentication request body", e);
-    }
-
-    String email = authenticationRequest.getEmail();
-    String password = authenticationRequest.getPassword();
+    String email = request.getParameter("email");
+    String password = request.getParameter("password");
 
     log.info("email : " + email);
     log.info("password : " + password);

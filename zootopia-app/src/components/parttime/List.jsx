@@ -72,10 +72,11 @@ const List = ({
           onReset={onReset}
         />
 
-        {/* ====== 카드 영역 ====== */}
-        <div className="tw:max-w-5xl tw:mx-auto tw:mt-8 tw:mb-6">
+      {/* ====== 카드 영역 ====== */}
+        <div className="tw:max-w-4xl tw:mx-auto tw:mt-8 tw:mb-6">
           {jobs.length > 0 ? (
-            <div className="tw:grid sm:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-6 tw:my-4">
+            // 💡 강제 2열
+            <div className="tw:grid tw:grid-cols-2 tw:gap-6 tw:my-4">
               {jobs.map(job => (
                 <JobCard key={job.jobId} job={job} />
               ))}
@@ -86,16 +87,10 @@ const List = ({
             </div>
           )}
 
-          {/* 페이지네이션 */}
           <div className="tw:text-center tw:my-6">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={onPageChange}
-            />
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
           </div>
 
-          {/* 등록 버튼 */}
           <div className="tw:text-right tw:mb-2">
             <Link
               to="/parttime/insert"
