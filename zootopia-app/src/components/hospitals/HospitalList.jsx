@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import defaultHospitalImg from "../../assets/img/default-hospital.png";
 import { LoginContext } from "../../context/LoginContextProvider";
+import { Cross, Hospital, MousePointerClick } from "lucide-react";
 
 const HospitalList = ({
   hospitalList,
@@ -53,8 +54,8 @@ const HospitalList = ({
               key={animal.animalId}
               className={`tw:px-[20px] tw:py-[8px] tw:m-1 tw:rounded-full tw:font-medium tw:cursor-pointer tw:transition-all ${
                 selectedAnimals.includes(animal.animalId)
-                  ? " tw:bg-[#ff6b6b] tw:text-[#ffffff] tw:-translate-y-[2px]"
-                  : "tw:bg-[#faafaf9f] tw:text-white"
+                  ? " tw:bg-[#ff6b6b] tw:text-[#ffffff] tw:-translate-y-[2px] tw:hover:bg-[#e60000]"
+                  : "tw:bg-[#faafaf9f] tw:text-white tw:hover:bg-[#ff6b6b]"
               }`}
             >
               <input
@@ -75,7 +76,7 @@ const HospitalList = ({
               className={`tw:px-[20px] tw:py-[8px] tw:m-1 tw:rounded-full tw:font-medium tw:cursor-pointer tw:transition-all ${
                 selectedSpecialties.includes(specialty.specialtyId)
                   ? "tw:bg-[#ff6b6b] tw:text-[#ffffff] tw:-translate-y-[2px]"
-                  : "tw:bg-[#faafaf9f] tw:text-white"
+                  : "tw:bg-[#faafaf9f] tw:text-white tw:hover:bg-[#ff6b6b]"
               }`}
             >
               <input
@@ -124,8 +125,8 @@ const HospitalList = ({
               </div>
 
               {/* 내용 */}
-              <div className="tw:p-[20px]">
-                <h3 className="tw:text-lg tw:font-bold tw:mb-2">{hospital.name}</h3>
+              <div className="tw:p-[20px] tw:relative">
+                <h3 className="tw:text-lg tw:font-bold tw:mb-2 tw:flex tw:gap-1">{hospital.name}</h3>
                 <p className="tw:text-sm tw:text-gray-600 tw:mb-3">{hospital.address}</p>
                 <div className="tw:flex tw:flex-wrap tw:gap-[6px]">
                   {hospital.tags?.map((tag, idx) => (
