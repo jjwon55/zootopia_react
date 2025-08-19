@@ -8,12 +8,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.aloha.zootopia.domain.AuthenticationRequest;
 import com.aloha.zootopia.domain.CustomUser;
 import com.aloha.zootopia.domain.Users;
 import com.aloha.zootopia.security.contants.SecurityConstants;
