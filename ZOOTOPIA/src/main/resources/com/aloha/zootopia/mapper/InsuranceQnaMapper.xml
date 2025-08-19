@@ -16,21 +16,12 @@
     <result property="createdAt"  column="created_at"/>
   </resultMap>
 
-  <insert id="insertQna"
-          parameterType="com.aloha.zootopia.domain.InsuranceQna"
+  <insert id="insertQna" parameterType="com.aloha.zootopia.domain.InsuranceQna"
           useGeneratedKeys="true" keyProperty="qnaId">
     INSERT INTO insurance_qna
       (product_id, user_id, species, question, answer, nickname, created_at)
     VALUES
-      (
-        #{productId},
-        #{userId},
-        COALESCE(#{species}, '기타'),
-        #{question},
-        COALESCE(#{answer}, ''),
-        COALESCE(#{nickname}, '익명'),
-        NOW()
-      )
+      (#{productId}, #{userId}, #{species}, #{question}, #{answer}, #{nickname}, NOW())
   </insert>
 
   <select id="selectQnaByProductId" resultMap="InsuranceQnaMap">

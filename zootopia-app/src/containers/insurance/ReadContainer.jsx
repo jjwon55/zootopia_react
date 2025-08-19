@@ -2,42 +2,41 @@ import React, { useEffect, useState, useContext, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import Read from '../../components/insurance/Read'
 import { LoginContext } from '../../context/LoginContextProvider'
-import { req } from '../../apis/utils/http'
 
-// ✅ 수정: 세션 우선 → 현재 로그인 사용자를 정확히 반영
+// ✅ 통일: apis/insurance만 사용 (jwt는 인터셉터가 처리)
+import {
+  readProduct,
+  getQnaList,
+  registerQna,
+  editQna,
+  deleteQna,
+  answerQna,
+} from '../../apis/insurance/insurance'
 
 export default function ReadContainer() {
-  const { productId } = useParams() // productId
-  const id = productId // 이후 코드에서 id 그대로 사용해도 됨
+  const { productId } = useParams()
+  const id = productId
+
   const ctx = useContext(LoginContext) || {}
   const { isLogin } = ctx
-  // 다양한 형태(문자열/객체, ROLE_ prefix 포함)에 대응
+
+  // 역할 파싱 → isAdmin
   const roleSources = [
-    ctx.roles,
-    ctx.authList,
-    ctx.authorities,
-    ctx.userInfo?.roles,
-    ctx.userInfo?.authList,
-    ctx.userInfo?.authorities,
+    ctx.roles, ctx.authList, ctx.authorities,
+    ctx.userInfo?.roles, ctx.userInfo?.authList, ctx.userInfo?.authorities,
   ].filter(Boolean)
   const flatRoles = roleSources.flatMap(v => Array.isArray(v) ? v : [v])
-  const roleToString = (r) => typeof r === 'string'
-    ? r
-    : (r?.auth || r?.role || r?.authority || r?.name || '')
-  const isAdmin = flatRoles.some(r =>
-    /(^|_)ADMIN$/i.test(roleToString(r).toUpperCase())
-  )
+  const roleToString = (r) =>
+    typeof r === 'string' ? r : (r?.auth || r?.role || r?.authority || r?.name || '')
+  const isAdmin = flatRoles.some(r => /(^|_)ADMIN$/i.test(roleToString(r).toUpperCase()))
 
-  // 상품 상세
+  // 상세 상태
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  // QnA
-  const [qna, setQna] = useState({
-    list: [],
-    pagination: { page: 1, totalPage: 1 }
-  })
+  // QnA 상태
+  const [qna, setQna] = useState({ list: [], pagination: { page: 1, totalPage: 1 } })
   const [qnaLoading, setQnaLoading] = useState(false)
   const [qnaError, setQnaError] = useState('')
 
@@ -45,8 +44,8 @@ export default function ReadContainer() {
   const loadProduct = useCallback(async () => {
     setLoading(true); setError('')
     try {
-      if (!id) { setError('잘못된 접근입니다.'); return; }
-      const data = await req(`/insurance/read/${id}`)
+      if (!id) { setError('잘못된 접근입니다.'); return }
+      const { data } = await readProduct(id)
       setProduct(data.product || null)
     } catch (e) {
       setError(e.message || '상세 조회 실패')
@@ -59,8 +58,8 @@ export default function ReadContainer() {
   const loadQna = useCallback(async (page = 1) => {
     setQnaLoading(true); setQnaError('')
     try {
-      if (!id) { setQnaError('잘못된 접근입니다.'); return; }
-      const data = await req(`/insurance/qna/list?productId=${id}&page=${page}`)
+      if (!id) { setQnaError('잘못된 접근입니다.'); return }
+      const { data } = await getQnaList({ productId: id, page })
       setQna({
         list: data.qnaList || [],
         pagination: data.pagination || { page, totalPage: 1 }
@@ -79,44 +78,53 @@ export default function ReadContainer() {
 
   // QnA 액션들
   const onQnaRegister = async ({ species, question }) => {
-    if (isAdmin) return; // 관리자면 조용히 무시
-     await req('/insurance/qna/register-ajax', {
-       method: 'POST',
-       json: { species: species || null, question, productId: id },
-       auth: true
-     })
-  }
-  const onQnaEdit = async ({ qnaId, species, question }) => {
-    if (isAdmin) return; // 관리자면 조용히 무시
-     await req('/insurance/qna/edit-ajax', {
-       method: 'POST',
-       json: { qnaId, species, question, productId: id },
-       auth: true
-     })
+    if (isAdmin) return // 정책: 관리자는 등록 X
+    try {
+      await registerQna({ productId: id, species: species || null, question })
+      await loadQna(1) // 등록 후 첫 페이지로 새로고침
+    } catch (e) {
+      setQnaError(e.message || 'Q&A 등록 실패')
     }
+  }
+
+  const onQnaEdit = async ({ qnaId, species, question }) => {
+    if (isAdmin) return // 정책: 관리자는 질문 수정 X
+    try {
+      await editQna({ qnaId, productId: id, species, question })
+      await loadQna(qna.pagination.page)
+    } catch (e) {
+      setQnaError(e.message || 'Q&A 수정 실패')
+    }
+  }
+
   const onQnaDelete = async ({ qnaId }) => {
-    await req(`/insurance/qna/delete-ajax/${qnaId}?productId=${id}`, { method: 'POST' })
-    await loadQna(qna.pagination.page)
+    try {
+      await deleteQna({ qnaId, productId: id })
+      await loadQna(qna.pagination.page)
+    } catch (e) {
+      setQnaError(e.message || 'Q&A 삭제 실패')
+    }
   }
 
   const onQnaAnswer = async ({ qnaId, answer }) => {
-   await req('/insurance/qna/answer', {
-     method: 'POST',
-     json: { qnaId, answer, productId: id },
-     auth: true
-   })
+    if (!isAdmin) return // 정책: 관리자만 답변
+    try {
+      await answerQna({ qnaId, productId: id, answer })
+      await loadQna(qna.pagination.page)
+    } catch (e) {
+      setQnaError(e.message || '답변 등록 실패')
+    }
   }
+
   const onQnaPageChange = (page) => loadQna(page)
 
   return (
     <Read
-      // 상세
       product={product}
       loading={loading}
       error={error}
       isLogin={isLogin}
       isAdmin={isAdmin}
-      // QnA
       qna={qna}
       qnaLoading={qnaLoading}
       qnaError={qnaError}
@@ -125,7 +133,6 @@ export default function ReadContainer() {
       onQnaDelete={onQnaDelete}
       onQnaAnswer={onQnaAnswer}
       onQnaPageChange={onQnaPageChange}
-      // 필요 시 상세 재로딩
       reload={loadProduct}
     />
   )
