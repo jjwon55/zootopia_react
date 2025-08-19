@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.aloha.zootopia.mapper.OrderMapper">
+
+  <resultMap id="OrderResult" type="com.aloha.zootopia.domain.Order">
+    <id property="id" column="id" />
+  <result property="orderCode" column="order_code" />
+    <result property="userId" column="user_id" />
+    <result property="productId" column="product_id" />
+    <result property="productName" column="product_name" />
+    <result property="price" column="price" />
+    <result property="status" column="status" />
+  <result property="payTid" column="pay_tid" />
+    <result property="image" column="image" />
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, order_code, user_id, product_id, product_name, price, status, pay_tid, image
+  </sql>
+
+  <select id="findByUserId" parameterType="long" resultMap="OrderResult">
+    SELECT <include refid="Base_Column_List" />
+    FROM orders
+    WHERE user_id = #{userId}
+    ORDER BY id DESC
+  </select>
+
+  <insert id="insert" parameterType="com.aloha.zootopia.domain.Order" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO orders (order_code, user_id, product_id, product_name, price, status, pay_tid, image)
+    VALUES (#{orderCode}, #{userId}, #{productId}, #{productName}, #{price}, #{status}, #{payTid}, #{image})
+  </insert>
+
+  <update id="updateStatus">
+    UPDATE orders SET status=#{status}
+    WHERE id=#{id}
+  </update>
+
+  <select id="findByOrderCode" parameterType="string" resultMap="OrderResult">
+    SELECT <include refid="Base_Column_List" /> FROM orders WHERE order_code = #{orderCode} LIMIT 1
+  </select>
+
+  <update id="updatePayTid">
+    UPDATE orders SET pay_tid = #{payTid} WHERE order_code = #{orderCode}
+  </update>
+
+  <update id="updateStatusByOrderCode">
+    UPDATE orders SET status = #{status} WHERE order_code = #{orderCode}
+  </update>
+
+</mapper>

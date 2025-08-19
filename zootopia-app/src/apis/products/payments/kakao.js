@@ -27,7 +27,14 @@ export const KakaoPay = {
     }
 
     // 실제(또는 테스트 CID) 사용 시: 백엔드 프록시 엔드포인트로 호출
-    const { data } = await api.post('/payments/kakao/ready', payload);
+    // 백엔드 컨트롤러: POST /api/payments/kakao/ready
+    const { data } = await api.post('/payments/kakao/ready', {
+      orderId: payload.orderId,
+      userId: payload.userId || 'guest',
+      itemName: payload.orderName,
+      quantity: payload.items?.reduce((s, i) => s + (i.quantity||0), 0) || 1,
+      totalAmount: payload.amount
+    });
     return data;
   },
 
@@ -38,12 +45,23 @@ export const KakaoPay = {
    */
   async approve(payload) {
     if (isDemo) {
+      // MOCK 승인 반환 (실제 호출 시 백엔드 경유)
       await delay(600);
-      return { approved: true, payload };
+      return { approved: true, payload, mock: true };
     }
-    const { data } = await api.post('/payments/kakao/approve', payload);
+    const { data } = await api.post('/payments/kakao/approve', {
+      orderId: payload.orderId,
+      userId: payload.userId || 'guest',
+      pgToken: payload.pg_token || payload.pgToken || 'PG_TOKEN'
+    });
     return data;
   }
-};
+}
+
+export async function kakaoPayCancel({ tid, cancelAmount, cancelReason }) {
+  const { data } = await api.post('/payments/kakao/cancel', { tid, cancelAmount, cancelReason });
+  return data;
+}
+// Note: separate named export for cancellation (not part of KakaoPay object for clarity)
 
 export default KakaoPay;

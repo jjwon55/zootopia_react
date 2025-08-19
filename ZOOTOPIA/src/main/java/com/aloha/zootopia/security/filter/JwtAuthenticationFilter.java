@@ -1,7 +1,5 @@
 package com.aloha.zootopia.security.filter;
 
-import com.aloha.zootopia.domain.AuthenticationRequest;
-import org.springframework.security.authentication.AuthenticationServiceException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;

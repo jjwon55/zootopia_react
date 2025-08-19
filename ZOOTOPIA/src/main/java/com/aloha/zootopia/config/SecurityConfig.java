@@ -147,6 +147,10 @@ public class SecurityConfig {
             .requestMatchers("/mypage/**").permitAll()
             .requestMatchers("/showoff/**").permitAll()
             .requestMatchers("/insurance/**").permitAll()
+
+            // KakaoPay 개발용 공개 엔드포인트 (운영시 인증 적용 고려)
+            .requestMatchers("/api/payments/kakao/**").permitAll()
+
             .requestMatchers("/admin/**").hasAnyRole("ADMIN","MANAGER","MOD")
             .requestMatchers("/service/**").permitAll()
             .requestMatchers( "/comments/**").authenticated()
@@ -155,6 +159,7 @@ public class SecurityConfig {
             .requestMatchers("/join").permitAll()
             .requestMatchers("/users").permitAll()
             .requestMatchers("/auth/**").permitAll()
+            .requestMatchers("/auth/kakao/**").permitAll()
             .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**", "/img/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/parttime", "/parttime/**").permitAll()
             .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
