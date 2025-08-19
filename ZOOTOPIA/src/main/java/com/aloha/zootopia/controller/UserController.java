@@ -56,26 +56,27 @@ public class UserController {
       return new ResponseEntity<>("UNAUTHORIZED", HttpStatus.UNAUTHORIZED);
   }
 
-  // /**
-  //  * 회원 가입
-  //  * @param user
-  //  * @return
-  //  * @throws Exception
-  //  */
-  // @PostMapping("")
-  // public ResponseEntity<?> join(@RequestBody Users user) throws Exception {
-  //     log.info("회원 가입 요청");
-  //     boolean result = userService.insert(user);
+  /**
+   * 회원 가입
+   * @param user
+   * @return
+   * @throws Exception
+   */
+    @PostMapping("")
+    public ResponseEntity<?> join(@RequestBody Users user) throws Exception {
+        log.info("회원 가입 요청");
 
-  //     if( result ) {
-  //         log.info("회원가입 성공!");
-  //         return new ResponseEntity<>("SUCCESS", HttpStatus.OK);
-  //     }
-  //     else {
-  //         log.info("회원가입 실패!");
-  //         return new ResponseEntity<>("FAIL", HttpStatus.BAD_REQUEST);
-  //     }
-  // }
+        int affected = userService.join(user); // ✅ join으로 호출
+        boolean result = affected > 0;         // ✅ int → boolean 판정
+
+        if (result) {
+            log.info("회원가입 성공!");
+            return new ResponseEntity<>("SUCCESS", HttpStatus.OK);
+        } else {
+            log.info("회원가입 실패!");
+            return new ResponseEntity<>("FAIL", HttpStatus.BAD_REQUEST);
+        }
+    }
 
   // /**
   //  * 회원 정보 수정
