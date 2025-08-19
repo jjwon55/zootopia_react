@@ -1,30 +1,65 @@
-import req from './request';
+// apis/insurance.js  ← posts.js와 동일 패턴
+import axios from 'axios'
+import Cookies from 'js-cookie'
 
-// 목록/조회 (인증 불필요)
-export const listProducts = ({ species = '', company = '', page = 1 } = {}) => {
-  const qs = new URLSearchParams({
-    species,
-    company,
-    page: String(page),
-  }).toString();
-  return req(`/insurance/list?${qs}`);
-};
+const api = axios.create({
+  baseURL: '/api',
+  withCredentials: true, // 쿠키 자동 전송
+})
+
+// ✅ 매 요청마다 쿠키에서 jwt 읽어 Authorization 헤더에 세팅
+api.interceptors.request.use((config) => {
+  const jwt = Cookies.get('jwt')
+  if (jwt && typeof jwt === 'string') {
+    config.headers.Authorization = `Bearer ${jwt}`
+  }
+  // (선택) CSRF 더블서브밋 쓰면 같이 실어주기
+  const xsrf = Cookies.get('XSRF-TOKEN')
+  if (xsrf) config.headers['X-XSRF-TOKEN'] = xsrf
+  return config
+})
+
+// =============================
+// 보험 상품 API
+// =============================
+export const listProducts = (params) =>
+  api.get('/insurance/list', { params })  // { species, company, page }
 
 export const readProduct = (productId) =>
-  req(`/insurance/read/${productId}`);
+  api.get(`/insurance/read/${productId}`)
 
-// ⬇️ ADMIN 전용 (auth:true)
-export const uploadImage = (file) => {
-  const fd = new FormData();
-  fd.append('imageFile', file);   // 서버 @RequestParam("imageFile")와 일치!
-  return req('/insurance/upload-image', { method: 'POST', formData: fd, auth: true });
-};
-
+export const uploadImage = async (file) => {
+  const fd = new FormData()
+  fd.append('imageFile', file)
+  const { data } = await api.post('/insurance/upload-image', fd)
+  return data              // { imagePath: '/upload/xxx.jpg' }
+  // 또는: return data.imagePath
+}
 export const registerProduct = (product) =>
-  req('/insurance/register', { method: 'POST', json: product, auth: true });
+  api.post('/insurance/register', product)
 
 export const updateProduct = (product) =>
-  req('/insurance/update', { method: 'POST', json: product, auth: true });
+  api.post('/insurance/update', product)
 
 export const deleteProduct = (productId) =>
-  req(`/insurance/delete/${productId}`, { method: 'POST', auth: true });
+  api.post(`/insurance/delete/${productId}`)
+
+// =============================
+// 보험 QnA API
+// =============================
+export const getQnaList = ({ productId, page = 1 }) =>
+  api.get('/insurance/qna/list', { params: { productId, page } })
+
+export const registerQna = ({ productId, species, question }) =>
+  api.post('/insurance/qna/register-ajax', { productId, species, question })
+
+export const editQna = ({ qnaId, productId, species, question }) =>
+  api.post('/insurance/qna/edit-ajax', { qnaId, productId, species, question })
+
+export const deleteQna = ({ qnaId, productId }) =>
+  api.post(`/insurance/qna/delete-ajax/${qnaId}`, null, { params: { productId } })
+
+export const answerQna = ({ qnaId, productId, answer }) =>
+  api.post('/insurance/qna/answer', { qnaId, productId, answer })
+
+export default api

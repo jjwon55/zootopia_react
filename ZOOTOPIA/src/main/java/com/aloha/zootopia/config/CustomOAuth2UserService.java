@@ -1,5 +1,7 @@
 package com.aloha.zootopia.config;
 
+import com.aloha.zootopia.config.GoogleUserInfo;
+import com.aloha.zootopia.config.KakaoUserInfo;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -26,6 +28,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         SocialLogin userInfo = switch (provider) {
                                     case "naver" -> new NaverUserInfo(oAuth2User.getAttributes());
+                                    case "kakao" -> new KakaoUserInfo(oAuth2User.getAttributes());
+                                    case "google" -> new GoogleUserInfo(oAuth2User.getAttributes());
                                     default -> throw new IllegalArgumentException("Unsupported provider: " + provider);
         };
 

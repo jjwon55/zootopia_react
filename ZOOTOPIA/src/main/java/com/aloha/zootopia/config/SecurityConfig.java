@@ -14,11 +14,16 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.context.annotation.Lazy;
 
 import com.aloha.zootopia.security.filter.JwtAuthenticationFilter;
 import com.aloha.zootopia.security.filter.JwtRequestFilter;
 import com.aloha.zootopia.security.provider.JwtProvider;
 import com.aloha.zootopia.service.UserDetailServiceImpl;
+import com.aloha.zootopia.security.handler.OAuth2LoginSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -30,6 +35,11 @@ public class SecurityConfig {
   private UserDetailServiceImpl userDetailServiceImpl;
   @Autowired
   private JwtProvider jwtProvider;
+  @Lazy
+  @Autowired
+  private CustomOAuth2UserService customOAuth2UserService;
+  @Autowired
+  private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler; // Add this line
 
   // ✅ PasswordEncoder 등록
   @Bean
@@ -41,6 +51,19 @@ public class SecurityConfig {
   @Bean
   public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
     return authConfig.getAuthenticationManager();
+  }
+
+  // ✅ CORS 설정
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+      CorsConfiguration configuration = new CorsConfiguration();
+      configuration.addAllowedOrigin("http://localhost:5173"); // Allow your frontend origin
+      configuration.addAllowedMethod("*"); // Allow all HTTP methods
+      configuration.addAllowedHeader("*"); // Allow all headers
+      configuration.setAllowCredentials(true); // Allow credentials (cookies, authorization headers)
+      UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+      source.registerCorsConfiguration("/**", configuration); // Apply CORS to all paths
+      return source;
   }
 
   // ✅ SecurityFilterChain 구성
@@ -101,11 +124,21 @@ public class SecurityConfig {
         .httpBasic(basic -> basic.disable())
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .userDetailsService(userDetailServiceImpl)
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        
+        .oauth2Login(oauth2 -> oauth2
+            .userInfoEndpoint(userInfo -> userInfo
+                .userService(customOAuth2UserService)
+            )
+            .successHandler(oAuth2LoginSuccessHandler)
+            .failureUrl("/loginFailure")
+        )
         .addFilterAt(new JwtAuthenticationFilter(authenticationManager, jwtProvider),
             UsernamePasswordAuthenticationFilter.class)
         .addFilterBefore(new JwtRequestFilter(authenticationManager, jwtProvider),
             UsernamePasswordAuthenticationFilter.class)
         .authorizeHttpRequests(auth -> auth
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Add this line to permit OPTIONS requests globally
             .requestMatchers("/posts/**").permitAll()
             .requestMatchers("/lost/**").permitAll()
             .requestMatchers("/mypage/**").permitAll()

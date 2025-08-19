@@ -16,7 +16,20 @@ export default function Update({
   const navigate = useNavigate()
   const fileRef = useRef(null)
 
+  const companies = [
+    '삼성화재',
+    'KB손해보험',
+    '메리츠화재',
+    'DB손해보험',
+    '현대해상',
+    '한화손해보험',
+  ]
+
   const change = (k) => (e) => onChange({ ...form, [k]: e.target.value })
+  const changeNum = (k) => (e) => {
+    const v = e.target.value
+    onChange({ ...form, [k]: v === '' ? '' : Number(v) })
+  }
 
   const onPickImage = async (e) => {
     const f = e.target.files?.[0]
@@ -107,6 +120,22 @@ export default function Update({
               />
             </Field>
 
+            {/* ✅ 보험사 */}
+            <Field label="보험사" required>
+              <select
+                name="company"
+                value={form.company || ''}
+                onChange={change('company')}
+                required
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+              >
+                <option value="">선택하세요</option>
+                {companies.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </Field>
+
             <Field label="슬로건">
               <input
                 name="slogan"
@@ -137,7 +166,7 @@ export default function Update({
                 type="number" min="0" max="100"
                 name="coveragePercent"
                 value={form.coveragePercent ?? ''}
-                onChange={change('coveragePercent')}
+                onChange={changeNum('coveragePercent')}
                 placeholder="예) 70"
                 className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
               />
@@ -158,7 +187,7 @@ export default function Update({
                 type="number" min="0"
                 name="maxCoverage"
                 value={form.maxCoverage ?? ''}
-                onChange={change('maxCoverage')}
+                onChange={changeNum('maxCoverage')}
                 placeholder="예) 200"
                 className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
               />

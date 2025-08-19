@@ -33,6 +33,7 @@ INSERT INTO users (user_id, email, password, nickname, intro, phone, profile_img
 (1, 'admin', '$2a$10$2XMPFzReUtpL32VoJznvmuD0n1eV5BNSczGb3oFGdDtd.6cqW5R5O', '관리자계정', '커뮤니티 관리 전담 운영자입니다.', '010-0000-0000', '/images/profile10.png', NOW());
 
 
+
 ALTER TABLE users ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' AFTER nickname;
 ALTER TABLE users ADD COLUMN memo VARCHAR(255) NULL AFTER status;
 ALTER TABLE users ADD COLUMN is_deleted TINYINT(1) NOT NULL DEFAULT 0 AFTER provider_id;
@@ -64,3 +65,7 @@ CREATE TABLE user_auth (
 
 INSERT INTO user_auth (user_id, auth)
 VALUES (12, 'ROLE_ADMIN');
+
+ALTER TABLE users ADD COLUMN provider VARCHAR(20) DEFAULT NULL,
+     ADD COLUMN provider_id VARCHAR(100) DEFAULT NULL;
+

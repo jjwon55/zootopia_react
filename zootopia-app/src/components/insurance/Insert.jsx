@@ -13,13 +13,46 @@ export default function Insert({
 }) {
   const navigate = useNavigate()
   const fileRef = useRef(null)
+  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+  const companies = [
+    '삼성화재',
+    'KB손해보험',
+    '메리츠화재',
+    'DB손해보험',
+    '현대해상',
+    '한화손해보험',
+  ]
 
   const change = (k) => (e) => onChange({ ...form, [k]: e.target.value })
+  const changeNum = (k) => (e) => {
+    const v = e.target.value
+    onChange({ ...form, [k]: v === '' ? '' : Number(v) })
+  }
 
   const onPickImage = async (e) => {
     const f = e.target.files?.[0]
     if (!f) return
-    await onUploadImage(f)
+    // 1) 용량 체크
+    if (f.size > MAX_SIZE) {
+      alert('최대 5MB까지 업로드할 수 있어요.')
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
+    try {
+      // 2) 업로드 실행 → 경로 반환 받기
+      const res = await onUploadImage(f)
+      const path = typeof res === 'string' ? res : res?.imagePath
+      if (!path) throw new Error('NO_IMAGE_PATH')
+      // 3) 폼에 반영 (미리보기 표시)
+      onChange({ ...form, imagePath: path })
+    } catch (err) {
+      console.error(err)
+      alert('이미지 업로드에 실패했습니다.')
+    } finally {
+      // 4) 같은 파일을 다시 선택해도 onChange 이벤트가 발생하도록 리셋
+      if (fileRef.current) fileRef.current.value = ''
+    }
   }
 
   const removeImage = () => {
@@ -67,7 +100,7 @@ export default function Insert({
             </div>
 
             <div className="tw:mt-3 tw:flex tw:flex-wrap tw:items-center tw:gap-2">
-              <label className="tw:inline-flex tw:cursor-pointer tw:items-center tw:justify-center tw:rounded-lg tw:bg-[#F27A7A] tw:text-white tw:px-3 tw:py-1.5 tw:text-sm hover:tw:opacity-90">
+              <label className={`tw:inline-flex tw:cursor-pointer tw:items-center tw:justify-center tw:rounded-lg tw:bg-[#F27A7A] tw:text-white tw:px-3 tw:py-1.5 tw:text-sm hover:tw:opacity-90 ${uploading ? 'tw:opacity-60 tw:pointer-events-none' : ''}`}>
                 파일 선택
                 <input
                   ref={fileRef}
@@ -77,15 +110,15 @@ export default function Insert({
                   onChange={onPickImage}
                 />
               </label>
-                {form.imagePath && (
-                  <button
-                    type="button"
-                    onClick={removeImage}
-                    className="tw:inline-flex tw:items-center tw:justify-center tw:rounded-lg tw:bg-[#F27A7A] tw:text-white tw:px-3 tw:py-1.5 tw:text-sm tw:font-medium hover:tw:bg-[#e36b6b] focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#F27A7A]"
-                  >
-                    삭제
-                  </button>
-                )}
+              {form.imagePath && (
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="tw:inline-flex tw:items-center tw:justify-center tw:rounded-lg tw:bg-[#F27A7A] tw:text-white tw:px-3 tw:py-1.5 tw:text-sm tw:font-medium hover:tw:bg-[#e36b6b] focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#F27A7A]"
+                >
+                  삭제
+                </button>
+              )}
               {uploading && <span className="tw:text-xs tw:text-gray-500">업로드 중…</span>}
             </div>
 
@@ -97,7 +130,7 @@ export default function Insert({
             <Field label="상품명" required>
               <input
                 name="name"
-                value={form.name}
+                value={form.name || ''}
                 onChange={change('name')}
                 placeholder="예) 펫케어 안심플랜"
                 className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
@@ -105,10 +138,26 @@ export default function Insert({
               />
             </Field>
 
+            {/* ✅ 보험사 추가 */}
+            <Field label="보험사" required>
+              <select
+                name="company"
+                value={form.company || ''}
+                onChange={change('company')}
+                required
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+              >
+                <option value="">선택하세요</option>
+                {companies.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </Field>
+
             <Field label="슬로건">
               <input
                 name="slogan"
-                value={form.slogan}
+                value={form.slogan || ''}
                 onChange={change('slogan')}
                 placeholder="예) 병원비 걱정 끝!"
                 className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
@@ -118,7 +167,7 @@ export default function Insert({
             <Field label="반려동물" required>
               <select
                 name="species"
-                value={form.species}
+                value={form.species || ''}
                 onChange={change('species')}
                 required
                 className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
@@ -134,8 +183,8 @@ export default function Insert({
               <input
                 type="number" min="0" max="100"
                 name="coveragePercent"
-                value={form.coveragePercent}
-                onChange={change('coveragePercent')}
+                value={form.coveragePercent ?? ''}
+                onChange={changeNum('coveragePercent')}
                 placeholder="예) 70"
                 className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
               />
@@ -144,19 +193,20 @@ export default function Insert({
             <Field label="월 보험료(범위)">
               <input
                 name="monthlyFeeRange"
-                value={form.monthlyFeeRange}
+                value={form.monthlyFeeRange || ''}
                 onChange={change('monthlyFeeRange')}
                 placeholder="예) 18,000 ~ 35,000"
                 className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
               />
+              <p className="tw:mt-1 tw:text-[11px] tw:text-gray-500">숫자/쉼표/틸드(~)만 입력하세요. 단위(원)는 생략</p>
             </Field>
 
             <Field label="월 최대 보장 한도(만원)">
               <input
                 type="number" min="0"
                 name="maxCoverage"
-                value={form.maxCoverage}
-                onChange={change('maxCoverage')}
+                value={form.maxCoverage ?? ''}
+                onChange={changeNum('maxCoverage')}
                 placeholder="예) 200"
                 className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
               />
@@ -171,7 +221,7 @@ export default function Insert({
             <Field label="가입조건">
               <input
                 name="joinCondition"
-                value={form.joinCondition}
+                value={form.joinCondition || ''}
                 onChange={change('joinCondition')}
                 placeholder="예) 생후 60일 이상, 8세 이하"
                 className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
@@ -181,7 +231,7 @@ export default function Insert({
             <Field label="보장항목">
               <textarea
                 name="coverageItems"
-                value={form.coverageItems}
+                value={form.coverageItems || ''}
                 onChange={change('coverageItems')}
                 rows={3}
                 placeholder="예) 질병/상해, 입원/수술, MRI/CT 등"
@@ -192,7 +242,7 @@ export default function Insert({
             <Field label="유의사항">
               <textarea
                 name="precautions"
-                value={form.precautions}
+                value={form.precautions || ''}
                 onChange={change('precautions')}
                 rows={4}
                 placeholder="예) 기존 질환 제외, 면책기간 30일 등"
@@ -213,10 +263,10 @@ export default function Insert({
           </button>
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || uploading}
             className="tw:inline-flex tw:items-center tw:justify-center tw:rounded-lg tw:bg-[#F27A7A] tw:px-4 tw:py-2 tw:text-sm tw:font-medium tw:text-white hover:tw:opacity-90 disabled:tw:opacity-60"
           >
-            {submitting ? '등록 중…' : '등록'}
+            {submitting ? '등록 중…' : (uploading ? '이미지 업로드 중…' : '등록')}
           </button>
         </div>
       </form>

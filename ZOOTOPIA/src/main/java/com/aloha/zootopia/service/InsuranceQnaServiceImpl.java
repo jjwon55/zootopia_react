@@ -17,7 +17,9 @@ public class InsuranceQnaServiceImpl implements InsuranceQnaService {
 
     @Transactional
     @Override
-    public void registerQuestion(InsuranceQna qna) { qnaMapper.insertQna(qna); }
+    public void registerQuestion(InsuranceQna qna) {
+        qnaMapper.insertQna(qna);
+    }
 
     @Override
     public List<InsuranceQna> getQnaList(int productId) { return qnaMapper.selectQnaByProductId(productId); }
