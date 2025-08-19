@@ -137,20 +137,35 @@ public class SecurityConfig {
         .addFilterBefore(new JwtRequestFilter(authenticationManager, jwtProvider),
             UsernamePasswordAuthenticationFilter.class)
         .authorizeHttpRequests(auth -> auth
+            // CORS 프리플라이트
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            .requestMatchers("/login", "/join", "/users", "/auth/**").permitAll()
+
+            // 로그인/회원가입/인증 관련 공개
+            .requestMatchers("/login", "/api/login", "/join", "/users", "/auth/**").permitAll()
+
+            // 정적 리소스
             .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**", "/img/**").permitAll()
-            .requestMatchers("/posts/**", "/lost/**", "/showoff/**", "/insurance/**").permitAll()
-            .requestMatchers("/service/**").permitAll()
+
+            // 공개 API
+            .requestMatchers("/posts/**", "/lost/**", "/showoff/**", "/insurance/**", "/service/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/parttime", "/parttime/**").permitAll()
             .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/hospitals/{hospitalId}/reviews").permitAll()
-            .requestMatchers("/admin/**").hasRole("ADMIN") // 중복 규칙 하나만 유지
+
+            // 결제 콜백 (개발 중 공개)
+            .requestMatchers("/api/payments/kakao/**").permitAll()
+
+            // 권한 영역
+            .requestMatchers("/admin/**").hasAnyRole("ADMIN","MANAGER","MOD")
             .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
             .requestMatchers("/products/create/**").hasRole("ADMIN")
+
+            // 인증 필요
             .requestMatchers("/comments/**", "/cart/**", "/mypage/**").authenticated()
-            .requestMatchers("/login", "/api/login").permitAll()
-            .anyRequest().authenticated());
+
+            // 그 외
+            .anyRequest().authenticated()
+        )
 
     return http.build();
   }
