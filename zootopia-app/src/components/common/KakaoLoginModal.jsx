@@ -27,10 +27,23 @@ export default function KakaoLoginModal({ open, onClose, onLoggedIn }) {
 
   if (!open) return null;
 
+  const backendBase = (() => {
+    // 프론트가 5173에서 돌고 있다면 8080으로 포트 교체
+    try {
+      const url = new URL(window.location.href);
+      // 포트가 5173이면 8080으로 교체 (개발 기본)
+      if (url.port === '5173') url.port = '8080';
+      // 환경변수 우선 (배포시 설정)
+      const env = import.meta?.env?.VITE_BACKEND_ORIGIN;
+      return env || url.origin;
+    } catch (e) {
+      return 'http://localhost:8080';
+    }
+  })();
+  const kakaoAuthorizeUrl = backendBase + '/auth/kakao/authorize';
+
   const simulateQrScan = () => {
-    // 실제 OAuth: 전체 창 이동 (로그인 후 front 에서 callback 결과 처리 -> JWT 세팅) 
-    // 모달 내에서 새 탭으로 열고 싶으면 window.open 사용
-    window.location.href = '/auth/kakao/authorize';
+    window.location.href = kakaoAuthorizeUrl;
   };
 
   const handleIdPwLogin = (e) => {
@@ -62,9 +75,10 @@ export default function KakaoLoginModal({ open, onClose, onLoggedIn }) {
 
         {!fakeKakaoSession && tab === 'qr' && (
           <div className="tw:flex tw:flex-col tw:items-center tw:gap-4 tw:text-center">
-            <QRCodeCanvas value={window.location.origin + '/kakao-auth-demo'} size={180} includeMargin={true} bgColor="#ffffff" fgColor="#3c1e1e" />
+            {/* 실제 백엔드 authorize 엔드포인트로 QR 제공 */}
+            <QRCodeCanvas value={kakaoAuthorizeUrl} size={180} includeMargin={true} bgColor="#ffffff" fgColor="#3c1e1e" />
             <div className="tw:text-sm tw:text-gray-600 tw:leading-relaxed">
-              휴대폰 카카오톡에서 <strong>QR코드</strong>로 카카오 로그인<br/>또는 아래 버튼으로 계정 로그인 페이지로 이동하세요.
+              휴대폰 카카오톡에서 <strong>QR코드</strong> 스캔 후 로그인 승인하세요.<br/>문제 발생 시 아래 버튼을 눌러 이동.
             </div>
             <button onClick={simulateQrScan} className="tw:px-5 tw:py-2 tw:bg-yellow-400 hover:tw:bg-yellow-500 tw:rounded tw:font-semibold tw:text-gray-900 tw:shadow-sm">
               카카오 계정으로 로그인
