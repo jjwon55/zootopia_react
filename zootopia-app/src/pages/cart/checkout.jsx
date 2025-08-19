@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { KakaoPay } from '../../apis/products/payments/kakao';
+import api from '../../apis/api';
 import { clearCart as clearLocalOrApiCart } from '../../apis/products/cart';
 import { useLoginContext } from '../../context/LoginContextProvider';
 import fallbackImg from '../../assets/react.svg';
+import OrderCompleteModal from '../../components/common/OrderCompleteModal';
+import KakaoLoginModal from '../../components/common/KakaoLoginModal';
 
 export default function Checkout() {
   const { userInfo } = useLoginContext();
@@ -10,6 +13,8 @@ export default function Checkout() {
   const [orderItems, setOrderItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [orderModal, setOrderModal] = useState({ open: false, code: '' });
+  const [kakaoLogin, setKakaoLogin] = useState({ loggedIn: false, user: null, modal: false });
   const [shippingInfo, setShippingInfo] = useState({
     name: '',
     phone: '',
@@ -23,17 +28,16 @@ export default function Checkout() {
   // 결제 동의 상태
   const [agreements, setAgreements] = useState({
     all: false,
-    terms: false,     // 이용약관 [필수]
-    privacy: false,   // 개인정보 처리방침 [필수]
-    pg: false,        // 결제대행 서비스 약관 [필수]
-    marketing: false  // 마케팅 정보 수신 [선택]
+    terms: false,
+    privacy: false,
+    pg: false,
+    marketing: false
   });
-
   const requiredAgreed = agreements.terms && agreements.privacy && agreements.pg;
   const canPay = orderItems.length > 0 && requiredAgreed;
 
   useEffect(() => {
-    // 1) 바로구매 데이터가 있으면 우선 사용
+    // 1) 바로구매 임시 데이터
     try {
       const temp = localStorage.getItem('tempOrder');
       if (temp) {
@@ -49,8 +53,7 @@ export default function Checkout() {
         return;
       }
     } catch {}
-
-    // 2) 장바구니(localStorage)에서 불러오기 (로그인 사용자 기반 키)
+    // 2) 장바구니(localStorage)
     try {
       const raw = localStorage.getItem(`cart:user:${userId}`);
       const cart = raw ? JSON.parse(raw) : [];
@@ -65,7 +68,7 @@ export default function Checkout() {
     } catch {
       setOrderItems([]);
     }
-  }, []);
+  }, [userId]);
 
   const getTotalPrice = () => {
     return orderItems.reduce((total, item) => total + (item.price * item.quantity), 0);
@@ -150,19 +153,25 @@ export default function Checkout() {
       return;
     }
 
+    const newOrderId = 'ORD-' + crypto.randomUUID();
+
     if (paymentMethod === 'kakao') {
-      // 카카오페이 플로우 (데모 모드에서 실제 결제 없음)
+      // 카카오 계정 로그인 필요: 없으면 모달 먼저 오픈
+      if (!kakaoLogin.loggedIn) {
+        setKakaoLogin(prev => ({ ...prev, modal: true }));
+        return; // 로그인 완료 후 다시 버튼 클릭 필요 (또는 자동 진행)
+      }
       const amount = getTotalPrice();
-      const orderId = 'ORDER_' + Date.now();
+      const orderId = newOrderId;
       const orderName = orderItems.map((i) => i.name).slice(0, 1).join(', ');
       try {
         setIsProcessing(true);
-        const readyRes = await KakaoPay.ready({ amount, orderId, orderName, items: orderItems });
+        const readyRes = await KakaoPay.ready({ amount, orderId, orderName, items: orderItems, userId });
         sessionStorage.setItem('kakao:tid', readyRes.tid);
         sessionStorage.setItem('kakao:orderId', orderId);
-        sessionStorage.setItem('kakao:returnUrl', window.location.origin + '/kakao-pay-mock');
         sessionStorage.setItem('kakao:userId', String(userId));
-        window.location.href = readyRes.next_redirect_pc_url; // 데모: 내부 모의 결제 페이지로 이동
+        // demo 모드에서는 /kakao-pay-mock, 실제 연동에서는 카카오 redirect URL (현재 서비스는 백엔드에서 모의 URL 반환)
+        window.location.href = readyRes.next_redirect_pc_url || '/kakao-pay-mock';
       } catch (err) {
         console.error(err);
         alert('결제 준비 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
@@ -172,22 +181,29 @@ export default function Checkout() {
       return;
     }
 
-    // 그 외 결제수단: 처리 로딩 모사 후, 수단별 메시지
+    // 그 외 결제수단: 처리 로딩 모사 후, 주문 생성 + 모달
     try {
       setIsProcessing(true);
       await new Promise((res) => setTimeout(res, 800));
-      const methodMsgMap = {
-        card: '결제가 완료 되었습니다.',
-        bank: '결제가 완료 되었습니다.',
-        phone: '결제가 완료 되었습니다.',
-      };
-      alert(methodMsgMap[paymentMethod] || '결제가 완료 되었습니다.');
-      // 결제 완료: 장바구니 및 바로구매 임시 데이터 비우기
+      const orderId = newOrderId;
+      // 백엔드 주문 생성
+      try {
+        await api.post('/orders', {
+          orderCode: orderId,
+          userId,
+          productId: orderItems[0]?.id || 0,
+          productName: orderItems[0]?.name || '주문상품',
+          price: getTotalPrice(),
+          status: '결제완료'
+        });
+      } catch (err) {
+        console.warn('주문 생성 실패(일반 결제):', err);
+      }
+      // 장바구니 정리
       try { await clearLocalOrApiCart(userId); } catch {}
       try { localStorage.removeItem(`cart:user:${userId}`); } catch {}
       try { localStorage.removeItem('tempOrder'); } catch {}
-      // 결제 완료 후 스토어 목록으로 이동
-      window.location.href = '/products/listp';
+      setOrderModal({ open: true, code: orderId });
     } finally {
       setIsProcessing(false);
     }
@@ -195,6 +211,17 @@ export default function Checkout() {
 
   return (
     <div className="tw:min-h-screen tw:py-10 tw:relative" style={{ backgroundColor: '#FFF6F6' }}>
+      <OrderCompleteModal
+        open={orderModal.open}
+        orderCode={orderModal.code}
+        onClose={() => setOrderModal({ open: false, code: '' })}
+        goDetailUrl={`/orders/${orderModal.code}`}
+      />
+      <KakaoLoginModal
+        open={kakaoLogin.modal}
+        onClose={() => setKakaoLogin(prev => ({ ...prev, modal: false }))}
+        onLoggedIn={(ku) => setKakaoLogin({ loggedIn: true, user: ku, modal: false })}
+      />
       {/* 결제 처리 로딩 오버레이 */}
       {isProcessing && (
         <div className="tw:fixed tw:inset-0 tw:z-[1200] tw:bg-black/30 tw:flex tw:items-center tw:justify-center">
