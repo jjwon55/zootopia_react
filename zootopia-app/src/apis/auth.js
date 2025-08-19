@@ -7,6 +7,7 @@ import { makeAuthHeaders, xsrfHeader } from './utils/authHeaders'
 export const join = (data) => api.post(`/users`,data)
 
 export const login = (email, password) => {
+
   const params = new URLSearchParams()
   params.append('email', email)
   params.append('password', password)
@@ -15,7 +16,6 @@ export const login = (email, password) => {
     withCredentials: true,
   })
 }
-
 
 export const info = () =>
   api.get('/users/info', { headers: { ...makeAuthHeaders(), ...xsrfHeader() } })

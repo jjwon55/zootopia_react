@@ -52,6 +52,8 @@ const HospitalDetailContainer = () => {
   const isAdmin = userInfo?.authList.some(auth => auth.auth === "ROLE_ADMIN" || auth.auth === "ROLE_SUPERADMIN");
   const currentUserId = userInfo?.userId;
 
+  console.log("HospitalDetailContainer - isAdmin:", isAdmin);
+
   return (
     <HospitalDetail
       hospitalId={hospitalId}
