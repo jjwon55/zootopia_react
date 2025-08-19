@@ -1,0 +1,136 @@
+<!-- resources/mappers/AdminUserMapper.xml -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.aloha.zootopia.mapper.AdminUserMapper">
+
+  <!-- 요약 조회 -->
+  <resultMap id="UserSummaryMap" type="com.aloha.zootopia.domain.AdminUserSummary">
+    <id property="userId" column="user_id" />
+    <result property="email" column="email"/>
+    <result property="nickname" column="nickname"/>
+    <result property="status" column="status"/>
+    <result property="createdAt" column="created_at"/>
+  </resultMap>
+
+  <select id="findUsers" resultMap="UserSummaryMap">
+    SELECT u.user_id, u.email, u.nickname, u.status, u.created_at
+      FROM users u
+    <where>
+      <if test="q != null and q != ''">
+        AND (u.email LIKE CONCAT('%',#{q},'%') OR u.nickname LIKE CONCAT('%',#{q},'%'))
+      </if>
+      <if test="status != null and status != ''">
+        AND u.status = #{status}
+      </if>
+      <if test="role != null and role != ''">
+        AND EXISTS (
+          SELECT 1
+            FROM user_auth ua
+           WHERE ua.user_id = u.user_id
+             AND ua.auth = #{role}
+        )
+      </if>
+      <if test="from != null">AND u.created_at &gt;= #{from}</if>
+      <if test="to != null">AND u.created_at &lt;= #{to}</if>
+      AND u.is_deleted = 0
+    </where>
+    ORDER BY ${sortColumn} ${sortDir}
+    LIMIT #{size} OFFSET #{offset}
+  </select>
+
+  <select id="countUsers" resultType="long">
+    SELECT COUNT(*)
+      FROM users u
+    <where>
+      <if test="q != null and q != ''">
+        AND (u.email LIKE CONCAT('%',#{q},'%') OR u.nickname LIKE CONCAT('%',#{q},'%'))
+      </if>
+      <if test="status != null and status != ''">
+        AND u.status = #{status}
+      </if>
+      <if test="role != null and role != ''">
+        AND EXISTS (
+          SELECT 1
+            FROM user_auth ua
+           WHERE ua.user_id = u.user_id
+             AND ua.auth = #{role}
+        )
+      </if>
+      <if test="from != null">AND u.created_at &gt;= #{from}</if>
+      <if test="to != null">AND u.created_at &lt;= #{to}</if>
+      AND u.is_deleted = 0
+    </where>
+  </select>
+
+  <!-- 상세 조회 -->
+  <resultMap id="UserDetailMap" type="com.aloha.zootopia.domain.AdminUserDetail">
+    <id property="userId" column="user_id"/>
+    <result property="email" column="email"/>
+    <result property="nickname" column="nickname"/>
+    <result property="status" column="status"/>
+    <result property="memo" column="memo"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="updatedAt" column="updated_at"/>
+    <result property="postCount" column="post_count"/>
+    <result property="commentCount" column="comment_count"/>
+  </resultMap>
+
+  <select id="findUserById" resultMap="UserDetailMap">
+    SELECT u.user_id,
+          u.email,
+          u.nickname,
+          u.status,
+          u.memo,
+          u.created_at,
+          u.updated_at,
+          (SELECT COUNT(1)
+              FROM posts p
+            WHERE p.user_id = u.user_id) AS post_count,
+          (SELECT COUNT(1)
+              FROM post_comments c
+            WHERE c.user_id = u.user_id
+              AND c.is_deleted = 0) AS comment_count
+      FROM users u
+    WHERE u.user_id = #{userId}
+      AND u.is_deleted = 0
+  </select>
+
+
+  <!-- 역할(Role) -->
+  <select id="findRolesByUserId" resultType="string">
+    SELECT ua.auth
+      FROM user_auth ua
+     WHERE ua.user_id = #{userId}
+  </select>
+
+  <delete id="deleteRoles">
+    DELETE FROM user_auth WHERE user_id = #{userId}
+  </delete>
+
+  <insert id="insertRole">
+    INSERT INTO user_auth(user_id, auth)
+    VALUES(#{userId}, #{role})
+  </insert>
+
+  <!-- 사용자 필드 업데이트 -->
+  <update id="updateUserFields">
+    UPDATE users
+       <set>
+         <if test="fields.nickname != null"> nickname = #{fields.nickname}, </if>
+         <if test="fields.status != null"> status = #{fields.status}, </if>
+         <if test="fields.memo != null"> memo = #{fields.memo}, </if>
+         updated_at = NOW()
+       </set>
+     WHERE user_id = #{userId}
+  </update>
+
+  <insert id="insertRolesBatch">
+    INSERT INTO user_auth(user_id, auth)
+    VALUES
+    <foreach collection="roles" item="r" separator=",">
+      (#{userId}, #{r})
+    </foreach>
+    <!-- 유니크 충돌 시 무시하고 싶다면(MySQL):
+        ON DUPLICATE KEY UPDATE auth = VALUES(auth) -->
+  </insert>
+
+</mapper>
