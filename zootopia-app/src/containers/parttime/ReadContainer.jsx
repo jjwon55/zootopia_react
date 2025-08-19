@@ -60,16 +60,42 @@ const ReadContainer = () => {
       setJob(finalJob)
       setSuccessMessage(payload.successMessage ?? '')
       setErrorMessage(payload.errorMessage ?? '')
-      setHasApplied(Boolean(payload.hasApplied))
       setIsWriter(Boolean(payload.isWriter))
+      setHasApplied(Boolean(payload.hasApplied))         // 1차: 상세에 있으면 사용
       setMyApplication(payload.myApplication ?? null)
 
       // 지원자 목록 (보호 API)
       try {
-        const aResp = await parttimeApi.getApplicantsByJob(jid, applicantPage)
-        const aPayload = aResp?.data ?? aResp ?? {}
-        setApplicants(aPayload.applicants ?? aPayload.items ?? aPayload.content ?? [])
-        setTotalApplicantPages(aPayload.totalPages ?? 1)
+          const aPayload = await parttimeApi.getApplicantsByJob(jid, applicantPage, false)
+          const apps = aPayload.applicants ?? aPayload.items ?? aPayload.content ?? []
+          setApplicants(apps)
+          setTotalApplicantPages(aPayload.totalPages ?? 1)
+        
+          // 2) 목록 기반으로 내 신청 탐색
+          const myId = userInfo?.userId
+          let mine = null
+          if (myId) {
+            mine = apps.find(a => (a.userId ?? a.user_id) === myId) ?? null
+          }
+        
+          // 3) 서버가 hasApplied/myApplication을 내려줬다면 우선 반영
+          if (aPayload.hasApplied !== undefined) setHasApplied(Boolean(aPayload.hasApplied))
+          if (aPayload.myApplication !== undefined) setMyApplication(aPayload.myApplication)
+          
+          // 4) 아직 못 찾았고, 관리자/작성자면 내 신청만 강제 조회(onlyMe=true)
+          if (!mine && (isAdmin || isWriter)) {
+            try {
+              const onlyMe = await parttimeApi.getApplicantsByJob(jid, 1, true)
+              const onlyApps = onlyMe.applicants ?? []
+              if (onlyMe.hasApplied || onlyApps.length > 0) {
+                setHasApplied(true)
+                setMyApplication(onlyMe.myApplication ?? onlyApps[0] ?? null)
+              }
+            } catch {}
+          } else if (mine) {
+            setHasApplied(true)
+            setMyApplication(mine)
+          }
       } catch {
         setApplicants([])
         setTotalApplicantPages(1)
