@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
-import { useToast } from "../../../components/admin/common/Toaster";
+// ✅ SweetAlert helpers
+import { toastSuccess, toastError } from "../../../apis/posts/alert";
 
 // ✅ 허용 역할(프론트도 백엔드와 맞춰 2개만)
 const ROLE_OPTIONS = ["ROLE_USER", "ROLE_ADMIN"];
 
-export default function UserDetailDrawer({ user, onClose, onSaveBasic, onSaveRoles, onToggleBan }) {
+/**
+ * UserDetailDrawer
+ * variant: 'drawer' | 'modal'  (기본: drawer)
+ */
+export default function UserDetailDrawer({ user, onClose, onSaveBasic, onSaveRoles, onToggleBan, variant = 'drawer' }) {
   const [nickname, setNickname] = useState(user.nickname || "");
   const [status, setStatus] = useState(user.status || "ACTIVE");
   const [memo, setMemo] = useState(user.memo || "");
@@ -14,14 +19,20 @@ export default function UserDetailDrawer({ user, onClose, onSaveBasic, onSaveRol
   const [savingBasic, setSavingBasic] = useState(false);
   const [savingRoles, setSavingRoles] = useState(false);
 
-  const { toast, oops, node: toastNode } = useToast();
-
+  // 🔁 외부 user 변경 시 폼 초기화
   useEffect(() => {
     setNickname(user.nickname || "");
     setStatus(user.status || "ACTIVE");
     setMemo(user.memo || "");
     setRoles(user.roles?.filter(r => ROLE_OPTIONS.includes(r)) || []); // ✅ 불필요 역할 클린업
   }, [user]);
+
+  // ⎋ ESC로 닫기 지원
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   const toggleRole = (r) => {
     setRoles(prev => prev.includes(r) ? prev.filter(x=>x!==r) : [...prev, r]);
@@ -31,9 +42,10 @@ export default function UserDetailDrawer({ user, onClose, onSaveBasic, onSaveRol
     try {
       setSavingBasic(true);
       await onSaveBasic({ nickname, status, memo });
-      toast("저장 완료");
+      toastSuccess("저장 완료");
     } catch(e) {
-      oops("저장 실패");
+      console.error(e);
+      toastError("저장 실패");
     } finally {
       setSavingBasic(false);
     }
@@ -44,9 +56,10 @@ export default function UserDetailDrawer({ user, onClose, onSaveBasic, onSaveRol
       setSavingRoles(true);
       const safe = (roles || []).filter(r => ROLE_OPTIONS.includes(r));
       await onSaveRoles(safe);
-      toast("역할 저장 완료");
+      toastSuccess("역할 저장 완료");
     } catch(e) {
-      oops("역할 저장 실패");
+      console.error(e);
+      toastError("역할 저장 실패");
     } finally {
       setSavingRoles(false);
     }
@@ -57,65 +70,119 @@ export default function UserDetailDrawer({ user, onClose, onSaveBasic, onSaveRol
      onToggleBan && onToggleBan(user);
   };
 
+  const StatusBadge = ({ value }) => (
+    <span className={`tw:badge tw:badge-sm ${value==='SUSPENDED' ? 'tw:badge-error' : 'tw:badge-success'}`}>{value}</span>
+  );
+
+  const isModal = variant === 'modal';
+
   return (
-    <div className="tw:fixed tw:inset-0 tw:bg-black/30 tw:z-50" onClick={onClose}>
+    <div className="tw:fixed tw:inset-0 tw:z-50 tw:flex tw:items-center tw:justify-center" aria-hidden="false">
+      {/* Backdrop */}
+      <div className="tw:absolute tw:inset-0 tw:bg-black/30 tw:backdrop-blur-[1px]" onClick={onClose} />
+
+      {/* Panel */}
       <aside
-        className="tw:absolute tw:right-0 tw:top-0 tw:h-full tw:w-full md:tw:max-w-xl tw:bg-white tw:shadow-2xl tw:p-6 tw:overflow-y-auto"
-        onClick={e=>e.stopPropagation()}
+        className={[
+          "tw:relative tw:bg-white tw:shadow-2xl tw:border tw:border-gray-100 tw:flex tw:flex-col",
+          isModal
+            ? "tw:w-[min(92vw,720px)] tw:max-h-[88vh] tw:rounded-2xl"
+            : "tw:fixed tw:right-0 tw:top-0 tw:h-full tw:w-full md:tw:max-w-xl tw:border-l"
+        ].join(' ')}
         role="dialog"
         aria-modal="true"
         aria-label={`회원 상세 #${user.userId}`}
+        onClick={(e)=>e.stopPropagation()}
       >
-        <div className="tw:flex tw:items-center tw:justify-between tw:mb-4">
-          <h2 className="tw:text-xl tw:font-semibold">회원 상세 #{user.userId}</h2>
-          <button type="button" className="tw:px-3 tw:py-1.5 tw:rounded-md tw:bg-gray-200 hover:tw:bg-gray-300" onClick={onClose}>닫기</button>
-        </div>
+        {/* Header */}
+        <header className="tw:flex tw:items-center tw:justify-between tw:px-6 tw:py-4 tw:border-b tw:border-gray-100">
+          <div className="tw:space-y-0.5">
+            <h2 className="tw:text-lg tw:font-semibold">회원 상세 #{user.userId}</h2>
+            <div className="tw:text-xs tw:text-gray-500 tw:flex tw:flex-wrap tw:items-center tw:gap-2">
+              <code className="tw:text-[11px] tw:bg-gray-100 tw:px-1.5 tw:py-0.5 tw:rounded">{user.email}</code>
+              <StatusBadge value={status} />
+              <div className="tw:flex tw:flex-wrap tw:gap-1">
+                {(roles || []).map(r => (
+                  <span key={r} className="tw:badge tw:badge-outline tw:badge-xs">{r}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="tw:px-3 tw:py-1.5 tw:rounded-md tw:bg-gray-200 hover:tw:bg-gray-300"
+            onClick={onClose}
+            aria-label="닫기"
+          >닫기</button>
+        </header>
 
-        <section className="tw:space-y-4">
-          <div>
-            <span className="tw:text-gray-500">이메일</span>
-            <div className="tw:font-mono">{user.email}</div>
+        {/* Body */}
+        <section className={`tw:flex-1 tw:overflow-y-auto tw:px-6 tw:py-6 tw:space-y-6 ${isModal ? 'tw:max-h-[calc(88vh-56px-64px)]' : ''}`}>
+          {/* 기본 정보 */}
+          <div className="tw:space-y-4">
+            <div>
+              <label className="tw:text-sm tw:text-gray-600">닉네임</label>
+              <input
+                className="tw:w-full tw:mt-1 tw:rounded-xl tw:border tw:border-gray-300 tw:px-3 tw:py-2 focus:tw:ring-2 focus:tw:ring-blue-500"
+                value={nickname}
+                onChange={e=>setNickname(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            <div className="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4">
+              <div>
+                <label className="tw:text-sm tw:text-gray-600">상태</label>
+                <select
+                  className="tw:w-full tw:mt-1 tw:rounded-xl tw:border tw:border-gray-300 tw:px-2 tw:py-2"
+                  value={status}
+                  onChange={e=>setStatus(e.target.value)}
+                >
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="SUSPENDED">SUSPENDED</option>
+                </select>
+              </div>
+              <div>
+                <label className="tw:text-sm tw:text-gray-600">게시글/댓글</label>
+                <div className="tw:mt-1 tw:flex tw:gap-3">
+                  <div className="tw:bg-gray-50 tw:rounded-lg tw:px-3 tw:py-2 tw:text-center tw:flex-1">
+                    <div className="tw:text-xs tw:text-gray-500">게시글</div>
+                    <div className="tw:text-lg tw:font-bold">{user.postCount ?? 0}</div>
+                  </div>
+                  <div className="tw:bg-gray-50 tw:rounded-lg tw:px-3 tw:py-2 tw:text-center tw:flex-1">
+                    <div className="tw:text-xs tw:text-gray-500">댓글</div>
+                    <div className="tw:text-lg tw:font-bold">{user.commentCount ?? 0}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="tw:text-sm tw:text-gray-600">운영 메모</label>
+              <textarea
+                className="tw:w-full tw:mt-1 tw:rounded-xl tw:border tw:border-gray-300 tw:px-3 tw:py-2"
+                rows={4}
+                value={memo}
+                onChange={e=>setMemo(e.target.value)}
+                placeholder="유저 특이사항/관리 메모를 적어두세요"
+              />
+            </div>
           </div>
 
+          {/* 역할 섹션 */}
           <div>
-            <label className="tw:text-sm tw:text-gray-600">닉네임</label>
-            <input
-              className="tw:w-full tw:mt-1 tw:rounded-lg tw:border tw:border-gray-300 tw:px-3 tw:py-2 focus:tw:ring-2 focus:tw:ring-blue-500"
-              value={nickname}
-              onChange={e=>setNickname(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="tw:text-sm tw:text-gray-600">상태</label>
-            <select
-              className="tw:w-full tw:mt-1 tw:rounded-lg tw:border tw:border-gray-300 tw:px-2 tw:py-2"
-              value={status}
-              onChange={e=>setStatus(e.target.value)}
-            >
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="SUSPENDED">SUSPENDED</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="tw:text-sm tw:text-gray-600">운영 메모</label>
-            <textarea
-              className="tw:w-full tw:mt-1 tw:rounded-lg tw:border tw:border-gray-300 tw:px-3 tw:py-2"
-              rows={4}
-              value={memo}
-              onChange={e=>setMemo(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <div className="tw:text-gray-700 tw:font-semibold tw:mt-4">역할</div>
+            <div className="tw:flex tw:items-center tw:justify-between">
+              <h3 className="tw:text-sm tw:font-semibold tw:text-gray-700">역할</h3>
+              <div className="tw:text-xs tw:text-gray-400">백엔드와 동기화됨</div>
+            </div>
             <div className="tw:flex tw:flex-wrap tw:gap-2 tw:mt-2">
               {ROLE_OPTIONS.map(r => (
                 <button
                   key={r}
                   type="button"   // ✅ 기본 submit 방지
-                  className={`tw:px-3 tw:py-1 tw:rounded-md tw:text-sm tw:border ${roles.includes(r) ? 'tw:bg-blue-600 tw:text-white' : 'tw:bg-gray-100 hover:tw:bg-gray-200'}`}
+                  className={`tw:px-3 tw:py-1 tw:rounded-full tw:text-sm tw:border tw:transition-colors ${roles.includes(r)
+                    ? 'tw:bg-blue-600 tw:text-white tw:border-blue-600'
+                    : 'tw:bg-white tw:text-gray-700 tw:border-gray-300 hover:tw:bg-gray-50'}`}
                   onClick={()=>toggleRole(r)}
                 >
                   {r}
@@ -123,20 +190,10 @@ export default function UserDetailDrawer({ user, onClose, onSaveBasic, onSaveRol
               ))}
             </div>
           </div>
-
-          <div className="tw:mt-6 tw:grid tw:grid-cols-2 tw:gap-4">
-            <div className="tw:bg-gray-50 tw:rounded-lg tw:p-4 tw:text-center">
-              <div className="tw:text-gray-500 tw:text-sm">게시글</div>
-              <div className="tw:text-2xl tw:font-bold">{user.postCount ?? 0}</div>
-            </div>
-            <div className="tw:bg-gray-50 tw:rounded-lg tw:p-4 tw:text-center">
-              <div className="tw:text-gray-500 tw:text-sm">댓글</div>
-              <div className="tw:text-2xl tw:font-bold">{user.commentCount ?? 0}</div>
-            </div>
-          </div>
         </section>
 
-        <div className="tw:mt-8 tw:flex tw:flex-wrap tw:gap-2">
+        {/* Footer (sticky) */}
+        <footer className="tw:px-6 tw:py-4 tw:border-t tw:border-gray-100 tw:bg-white tw:flex tw:flex-wrap tw:gap-2">
           <button
             type="button"  // ✅ 버튼 타입 명시
             className="tw:px-4 tw:py-2 tw:rounded-md tw:bg-blue-600 tw:text-white hover:tw:bg-blue-700 disabled:tw:opacity-50"
@@ -153,6 +210,7 @@ export default function UserDetailDrawer({ user, onClose, onSaveBasic, onSaveRol
           >
             {savingRoles ? "저장 중..." : "역할 저장"}
           </button>
+          <div className="tw:flex-1" />
           <button
             type="button"  // ✅ 버튼 타입 명시
             className={`tw:px-4 tw:py-2 tw:rounded-md tw:text-white ${status==='SUSPENDED'?'tw:bg-green-600 hover:tw:bg-green-700':'tw:bg-yellow-500 hover:tw:bg-yellow-600'}`}
@@ -160,9 +218,7 @@ export default function UserDetailDrawer({ user, onClose, onSaveBasic, onSaveRol
           >
             {status==='SUSPENDED' ? '정지 해제' : '정지'}
           </button>
-        </div>
-
-        {toastNode}
+        </footer>
       </aside>
     </div>
   );

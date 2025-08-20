@@ -19,4 +19,5 @@ public class AdminUserSummary {
     private String status; // ACTIVE | SUSPENDED | DELETED
     private List<String> roles;
     private LocalDateTime createdAt;
+    private Integer reportCount;
 }

@@ -9,11 +9,25 @@
     <result property="nickname" column="nickname"/>
     <result property="status" column="status"/>
     <result property="createdAt" column="created_at"/>
+     <result property="reportCount" column="report_count"/>
   </resultMap>
 
   <select id="findUsers" resultMap="UserSummaryMap">
-    SELECT u.user_id, u.email, u.nickname, u.status, u.created_at
-      FROM users u
+    SELECT
+      u.user_id,
+      u.email,
+      u.nickname,
+      u.status,
+      u.created_at,
+      <!-- /* 👇 신고 건수 컬럼 추가 (전체 건수) */ -->
+      (SELECT COUNT(1)
+        FROM user_report ur
+        WHERE ur.reported_user_id = u.user_id
+        <!-- /* 진행중만 보고 싶으면 ↓ 주석 해제
+          AND ur.status = 'PENDING'
+        */ -->
+      ) AS report_count
+    FROM users u
     <where>
       <if test="q != null and q != ''">
         AND (u.email LIKE CONCAT('%',#{q},'%') OR u.nickname LIKE CONCAT('%',#{q},'%'))
@@ -21,13 +35,12 @@
       <if test="status != null and status != ''">
         AND u.status = #{status}
       </if>
-      <!-- ✅ role 필터: email 기반으로 변경 -->
       <if test="role != null and role != ''">
         AND EXISTS (
           SELECT 1
             FROM user_auth ua
-           WHERE ua.email = u.email
-             AND ua.auth  = #{role}
+          WHERE ua.email = u.email
+            AND ua.auth  = #{role}
         )
       </if>
       <if test="from != null">AND u.created_at &gt;= #{from}</if>
@@ -37,6 +50,7 @@
     ORDER BY ${sortColumn} ${sortDir}
     LIMIT #{size} OFFSET #{offset}
   </select>
+
 
   <select id="countUsers" resultType="long">
     SELECT COUNT(*)
