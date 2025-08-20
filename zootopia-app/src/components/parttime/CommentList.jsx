@@ -39,11 +39,13 @@ const CommentList = ({
                       className="
                         tw:border tw:border-[#F27A7A] tw:text-[#F27A7A]
                         tw:rounded-xl tw:px-3 tw:py-1 tw:text-xs
-                        hover:tw:bg-rose-50 tw:transition
+                        tw:shadow-sm hover:tw:shadow-md
+                        hover:tw:bg-[#FFECEA] hover:-tw-translate-y-0.5 active:tw-translate-y-0.5
+                        tw:transition tw:duration-200
                         focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#F27A7A]/40
                       "
                     >
-                      삭제
+                      🗑 삭제
                     </button>
                   </div>
                 )}
