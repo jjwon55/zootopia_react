@@ -6,13 +6,10 @@ import ProductDetail from '../pages/products/detail.jsx';
 import Cart from '../pages/cart/cart.jsx';
 import Checkout from '../pages/cart/checkout.jsx';
 import NotFound from '../pages/products/NotFound.jsx';
-import KakaoPayMock from '../pages/cart/KakaoPayMock.jsx';
-import KakaoPayResult from '../pages/cart/KakaoPayResult.jsx';
+// KakaoPay 관련 페이지 제거
 import OrderDetail from '../pages/orders/OrderDetail.jsx';
-
-// 간단한 취소/실패 placeholder 컴포넌트
-function KakaoPayFail() { return <div style={{padding:40}}>카카오페이 결제가 실패/취소되었습니다. <a href="/checkout">다시 시도</a></div>; }
-function KakaoPayCancel() { return <div style={{padding:40}}>카카오페이 결제가 취소되었습니다. <a href="/checkout">다시 시도</a></div>; }
+import TossSuccess from '../pages/payments/TossSuccess.jsx';
+import TossFail from '../pages/payments/TossFail.jsx';
 
 export default function HsmRoutes() {
   return (
@@ -30,11 +27,9 @@ export default function HsmRoutes() {
       {/* 장바구니/결제 */}
       <Route path="/checkout" element={<Checkout />} />
 
-  {/* 카카오페이 데모 결제 페이지 / 실제 성공 콜백 / 실패 / 취소 */}
-  <Route path="/kakao-pay-mock" element={<KakaoPayMock />} />
-  <Route path="/pay/success" element={<KakaoPayResult />} />
-  <Route path="/pay/fail" element={<KakaoPayFail />} />
-  <Route path="/pay/cancel" element={<KakaoPayCancel />} />
+  {/* Toss 결제 결과 (추후 실제 Success 컴포넌트로 교체 가능) */}
+  <Route path="/pay/toss/success" element={<TossSuccess />} />
+  <Route path="/pay/toss/fail" element={<TossFail />} />
 
   {/* 주문 상세 */}
   <Route path="/orders/:orderCode" element={<OrderDetail />} />
