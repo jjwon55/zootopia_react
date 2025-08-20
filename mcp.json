@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "tosspayments-integration-guide": {
+      "command": "npx",
+      "args": ["-y", "@tosspayments/integration-guide-mcp@latest"],
+      "env": {
+        "TOSS_CLIENT_KEY": "${TOSS_CLIENT_KEY}",
+        "TOSS_SECRET_KEY": "${TOSS_SECRET_KEY}" ,
+        "TOSS_SUCCESS_URL": "http://localhost:5173/pay/toss/success",
+        "TOSS_FAIL_URL": "http://localhost:5173/pay/toss/fail"
+      }
+    }
+  }
+}

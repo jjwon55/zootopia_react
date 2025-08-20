@@ -166,19 +166,24 @@ public class ProductController {
         try {
             // 더미 데이터 생성
             List<Product> allProducts = createDummyProducts();
+            // 테이블(products.sql) 순서 = no ASC 정렬 보장
+            allProducts.sort(java.util.Comparator.comparingInt(Product::getNo));
             
             // 카테고리 필터링
             if (category != null && !category.isEmpty() && !"전체".equals(category)) {
                 allProducts = allProducts.stream()
                     .filter(p -> category.equals(p.getCategory()))
+                    .sorted(java.util.Comparator.comparingInt(Product::getNo))
                     .collect(java.util.stream.Collectors.toList());
             }
             
             // 검색 필터링
             if (search != null && !search.isEmpty()) {
+                String kw = search.toLowerCase();
                 allProducts = allProducts.stream()
-                    .filter(p -> p.getName().toLowerCase().contains(search.toLowerCase()) ||
-                               p.getDescription().toLowerCase().contains(search.toLowerCase()))
+                    .filter(p -> p.getName().toLowerCase().contains(kw) ||
+                               p.getDescription().toLowerCase().contains(kw))
+                    .sorted(java.util.Comparator.comparingInt(Product::getNo))
                     .collect(java.util.stream.Collectors.toList());
             }
             
