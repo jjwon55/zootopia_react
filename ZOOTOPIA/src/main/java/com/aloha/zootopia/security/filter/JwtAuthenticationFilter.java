@@ -143,26 +143,6 @@ public Authentication attemptAuthentication(HttpServletRequest request, HttpServ
     log.info("✅ JWT 및 사용자 정보 응답 완료");
   }
 
-  @Override
-  protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-      AuthenticationException failed)
-      throws IOException, ServletException {
 
-    log.warn("❌ 로그인 인증 실패: {}", failed.getMessage());
-
-    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-    response.setContentType("application/json");
-    response.setCharacterEncoding("UTF-8");
-
-    Map<String, Object> result = new HashMap<>();
-    result.put("error", "아이디 또는 비밀번호가 일치하지 않습니다");
-
-    ObjectMapper objectMapper = new ObjectMapper();
-    String json = objectMapper.writeValueAsString(result);
-
-    PrintWriter writer = response.getWriter();
-    writer.write(json);
-    writer.flush();
-  }
 
 }

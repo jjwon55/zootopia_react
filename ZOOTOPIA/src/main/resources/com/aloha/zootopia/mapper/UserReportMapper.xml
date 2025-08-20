@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.aloha.zootopia.mapper.UserReportMapper">
+
+  <!-- 예시: resultMap -->
+  <resultMap id="UserReportMap" type="com.aloha.zootopia.domain.UserReport">
+    <id     property="reportId" column="report_id"/>
+    <result property="reportedUserId" column="reported_user_id"/>
+    <result property="reporterUserId" column="reporter_user_id"/>
+    <result property="reason" column="reason"/>
+    <result property="status" column="status"/>
+    <result property="memo" column="memo"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="updatedAt" column="updated_at"/>
+    <result property="reporterEmail" column="reporter_email"/>
+  </resultMap>
+
+  <insert id="insert" parameterType="com.aloha.zootopia.domain.UserReport">
+    INSERT INTO user_report
+    (reported_user_id, reporter_user_id, reason_code, reason_text,
+     post_id, comment_id, lost_post_id, lost_comment_id, status)
+    VALUES
+    (#{reportedUserId}, #{reporterUserId}, #{reasonCode}, #{reasonText},
+     #{postId}, #{commentId}, #{lostPostId}, #{lostCommentId}, 'PENDING')
+  </insert>
+
+  <!-- 24시간 내 동일 타겟 신고 여부 -->
+  <select id="existsRecentSame" resultType="int">
+    SELECT COUNT(1)
+    FROM user_report
+    WHERE reporter_user_id = #{reporterUserId}
+      AND reported_user_id = #{reportedUserId}
+      AND COALESCE(post_id,0) = COALESCE(#{postId},0)
+      AND COALESCE(comment_id,0) = COALESCE(#{commentId},0)
+      AND COALESCE(lost_post_id,0) = COALESCE(#{lostPostId},0)
+      AND COALESCE(lost_comment_id,0) = COALESCE(#{lostCommentId},0)
+      AND created_at >= DATE_SUB(NOW(), INTERVAL #{hours} HOUR)
+  </select>
+
+  <select id="countPendingByUser" resultType="int">
+    SELECT COUNT(1)
+    FROM user_report
+    WHERE reported_user_id = #{reportedUserId}
+      AND status = 'PENDING'
+  </select>
+
+  <sql id="orderBy">
+    ORDER BY
+    <choose>
+      <when test="sort == 'reported'">ur.reported_user_id</when>
+      <when test="sort == 'reason'">ur.reason_code</when>
+      <otherwise>ur.created_at</otherwise>
+    </choose>
+    <choose>
+      <when test="dir == 'asc'">ASC</when>
+      <otherwise>DESC</otherwise>
+    </choose>
+  </sql>
+
+  <select id="findByFilter" resultType="com.aloha.zootopia.domain.UserReport">
+    SELECT ur.*,
+          r.email AS reporter_email
+    FROM user_report ur
+    LEFT JOIN users u ON u.user_id = ur.reported_user_id
+    LEFT JOIN users r ON r.user_id = ur.reporter_user_id
+    <where>
+    <if test="status != null"> ur.status = #{status} </if>
+    <if test="reason != null"> AND ur.reason_code = #{reason} </if>
+    <if test="reportedUserId != null"> AND ur.reported_user_id = #{reportedUserId} </if>  <!-- ★ 추가 -->
+    <if test="q != null and q != ''">
+        AND (u.email LIKE CONCAT('%',#{q},'%')
+        OR u.nickname LIKE CONCAT('%',#{q},'%')
+        OR r.email LIKE CONCAT('%',#{q},'%')
+        OR r.nickname LIKE CONCAT('%',#{q},'%'))
+    </if>
+    </where>
+    <include refid="orderBy"/>
+    LIMIT #{offset}, #{size}
+  </select>
+
+  <select id="countByFilter" resultType="int">
+    SELECT COUNT(1)
+    FROM user_report ur
+    LEFT JOIN users u ON u.user_id = ur.reported_user_id
+    LEFT JOIN users r ON r.user_id = ur.reporter_user_id
+    <where>
+    <if test="status != null"> ur.status = #{status} </if>
+    <if test="reason != null"> AND ur.reason_code = #{reason} </if>
+    <if test="reportedUserId != null"> AND ur.reported_user_id = #{reportedUserId} </if>  <!-- ★ 추가 -->
+    <if test="q != null and q != ''">
+        AND (u.email LIKE CONCAT('%',#{q},'%')
+        OR u.nickname LIKE CONCAT('%',#{q},'%')
+        OR r.email LIKE CONCAT('%',#{q},'%')
+        OR r.nickname LIKE CONCAT('%',#{q},'%'))
+    </if>
+    </where>
+  </select>
+
+  <update id="updateStatus">
+    UPDATE user_report
+    SET status = #{status},
+        admin_note = #{adminNote},
+        reviewed_at = CASE
+          WHEN #{status} IN ('REVIEWED','REJECTED','ACTION_TAKEN') THEN NOW()
+          ELSE reviewed_at
+        END
+    WHERE report_id = #{reportId}
+  </update>
+</mapper>
