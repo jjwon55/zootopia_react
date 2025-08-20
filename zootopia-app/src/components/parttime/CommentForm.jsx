@@ -54,14 +54,15 @@ const CommentForm = ({ user, onSubmit }) => {
               tw:rounded-xl tw:px-4 tw:py-2 tw:text-sm tw:font-semibold
               tw:border tw:border-[#F27A7A]
               tw:text-white tw:bg-[#F27A7A]
-              tw:shadow-sm
+              tw:shadow-md hover:tw:shadow-lg
+              hover:-tw-translate-y-0.5 active:tw-translate-y-0.5
               hover:tw:bg-[#e86e6e]
               disabled:tw:opacity-50 disabled:tw:cursor-not-allowed
               focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#F27A7A]/40
-              tw:transition
+              tw:transition tw:duration-200
             `}
           >
-            남기기
+            ✨ 남기기
           </button>
         </div>
       </div>

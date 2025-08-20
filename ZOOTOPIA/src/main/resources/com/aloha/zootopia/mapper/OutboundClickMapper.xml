@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.aloha.zootopia.mapper.OutboundClickMapper">
+
+<insert id="insert" parameterType="com.aloha.zootopia.domain.OutboundClick"
+        useGeneratedKeys="true" keyProperty="id">
+  INSERT INTO insurance_outbound_click
+    (user_id, product_id, label, href, user_agent, ip)
+  VALUES
+    (#{userId, jdbcType=BIGINT},     <!-- ← BIGINT -->
+     #{productId, jdbcType=INTEGER},
+     #{label, jdbcType=VARCHAR},
+     #{href, jdbcType=VARCHAR},
+     #{userAgent, jdbcType=VARCHAR},
+     #{ip, jdbcType=VARCHAR})
+</insert>
+
+</mapper>

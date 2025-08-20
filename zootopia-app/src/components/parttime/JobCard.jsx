@@ -20,10 +20,12 @@ const JobCard = ({ job }) => (
         className="
           tw:inline-block tw:rounded-xl tw:border tw:border-[#F27A7A]
           tw:bg-white tw:px-3 tw:py-1.5 tw:text-sm tw:text-[#F27A7A]
-          hover:tw:bg-rose-50 tw:transition
+          tw:shadow-sm hover:tw:shadow-md
+          hover:tw:bg-[#FFECEA] hover:-tw-translate-y-0.5 active:tw-translate-y-0.5
+          tw:transition tw:duration-200
         "
       >
-        상세보기
+        👉 상세보기
       </Link>
     </div>
     </div>

@@ -18,8 +18,8 @@ public interface InsuranceProductService {
     int getTotalCount();
 
     // 필터 + 페이징
-    List<InsuranceProduct> getFilteredProducts(String species, String company, int offset, int limit);
-    int countFilteredProducts(String species, String company);
+    List<InsuranceProduct> getFilteredProducts(String species, String company, Integer sponsored, int offset, int limit);
+    int countFilteredProducts(String species, String company, Integer sponsored);
 
     
 }

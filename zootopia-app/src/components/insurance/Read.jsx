@@ -7,6 +7,39 @@ const BTN =
 const BTN_OUTLINE =
   'tw:border tw:rounded-xl tw:px-3 tw:py-2 hover:tw:bg-rose-50 tw:transition tw:duration-150'
 
+/** 간단한 아웃바운드 링크 (클릭 로그 + 새 탭 이동) */
+function OutboundLink({ href, productId, label = 'apply', sponsored = false, className = '', children }) {
+  if (!href) {
+    return (
+      <button className={`${className} tw:opacity-50`} disabled>
+        이동 가능한 링크 없음
+      </button>
+    )
+  }
+
+  const onClick = () => {
+    try {
+      const payload = { productId, label, href, ts: Date.now() }
+      navigator.sendBeacon?.(
+        '/track/outbound/insurance',
+        new Blob([JSON.stringify(payload)], { type: 'application/json' })
+      )
+    } catch {}
+  }
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel={sponsored ? 'noopener noreferrer nofollow sponsored' : 'noopener noreferrer'}
+      onClick={onClick}
+      className={className}
+    >
+      {children}
+    </a>
+  )
+}
+
 export default function Read({
   product,
   loading,
@@ -24,8 +57,12 @@ export default function Read({
   reload,
 }) {
   if (loading) return <div className="tw:p-6">로딩 중…</div>
-  if (error)   return <div className="tw:p-6 tw:text-red-500">{error}</div>
+  if (error) return <div className="tw:p-6 tw:text-red-500">{error}</div>
   if (!product) return <div className="tw:p-6">상품을 찾을 수 없습니다.</div>
+
+  // 서버가 조립해 준 URL(outboundApplyUrl) 우선 → 없으면 homepageUrl로 대체
+  const applyHref = product.outboundApplyUrl || product.homepageUrl
+  const applyLabel = product.outboundApplyUrl ? 'apply' : 'homepage'
 
   return (
     <div className="tw:max-w-6xl tw:mx-auto tw:px-4 tw:py-10">
@@ -48,10 +85,20 @@ export default function Read({
             />
           )}
           <ul className="tw:text-sm tw:text-left tw:mx-auto tw:max-w-xs tw:space-y-1">
-            {product.company && <li>🏢 보험사: <b>{product.company}</b></li>}
-            <li>✅ 보장 비율: <b>{product.coveragePercent}%</b></li>
-            <li>💰 월 보험료: <b>{product.monthlyFeeRange}</b></li>
-            <li>💎 월 최대 보장 한도: <b>{product.maxCoverage} 만 원</b></li>
+            {product.company && (
+              <li>
+                🏢 보험사: <b>{product.company}</b>
+              </li>
+            )}
+            <li>
+              ✅ 보장 비율: <b>{product.coveragePercent}%</b>
+            </li>
+            <li>
+              💰 월 보험료: <b>{product.monthlyFeeRange}</b>
+            </li>
+            <li>
+              💎 월 최대 보장 한도: <b>{product.maxCoverage} 만 원</b>
+            </li>
           </ul>
         </div>
 
@@ -65,14 +112,36 @@ export default function Read({
 
       {/* 액션 */}
       <div className="tw:flex tw:flex-col md:tw:flex-row tw:items-center tw:justify-between tw:mt-8 tw:space-y-4 md:tw:space-y-0 md:tw:gap-3">
-        <button className={BTN}>상담/가입 문의</button>
+        <OutboundLink
+          href={applyHref}
+          productId={product.productId}
+          label={applyLabel}
+          sponsored={!!product.sponsored}
+          className={BTN}
+        >
+          상담/가입 문의
+        </OutboundLink>
+
         <div className="tw:space-x-2">
-          <Link to="/insurance/list" className={BTN_OUTLINE}>목록</Link>
+          <Link to="/insurance/list" className={BTN_OUTLINE}>
+            목록
+          </Link>
           {isAdmin && (
-            <Link to={`/insurance/update/${product.productId}`} className={BTN}>수정</Link>
+            <Link to={`/insurance/update/${product.productId}`} className={BTN}>
+              수정
+            </Link>
           )}
         </div>
       </div>
+
+      {/* 면책/표기 */}
+      <p className="tw:mt-6 tw:text-xs tw:text-[#777]">
+        {product.disclaimer ||
+          '※ 본 페이지는 상품 소개 목적이며, 가입·상담은 보험사 사이트에서 진행됩니다. 가격·약관·보장 조건 등은 보험사 기준이며 사전 고지 없이 변경될 수 있습니다.'}
+        {product.sponsored && (
+          <span className="tw:ml-2 tw:text-rose-500">[광고/제휴]</span>
+        )}
+      </p>
 
       <hr className="tw:my-8 tw:border-rose-100" />
 
