@@ -89,35 +89,49 @@ export default function ProductList() {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const response = await fetchProducts({
+      // 전체 mock 데이터 (55개)
+      let data = mockProductsDatabase.slice(0, 55);
 
-        category: selectedCategory === '전체' ? '' : selectedCategory,
+      // 카테고리 필터 ("전체" 는 통과)
+      if (selectedCategory && selectedCategory !== '전체') {
+        data = data.filter(p => p.category === selectedCategory);
+      }
 
-        search: searchTerm,
-        page: currentPage,
-        size: 12
-      });
-      
+      // 검색어 필터 (이름 + 설명 간단 매칭)
+      if (searchTerm.trim()) {
+        const term = searchTerm.trim().toLowerCase();
+        data = data.filter(p =>
+          p.name.toLowerCase().includes(term) ||
+          (p.description && p.description.toLowerCase().includes(term))
+        );
+      }
 
-  // 요청에 따라 API 결과와 무관하게 mockProductsDatabase 앞 54개만 사용
-  const fixedProducts = mockProductsDatabase.slice(0, 55);
-  setProducts(fixedProducts);
-  setTotalProducts(fixedProducts.length);
-  setTotalPages(1);
+      // 페이지네이션 계산 (size 고정 12)
+      const pageSize = 12;
+      const total = data.length;
+      const pages = Math.max(1, Math.ceil(total / pageSize));
+      const clampedPage = Math.min(currentPage, pages);
+      if (clampedPage !== currentPage) {
+        setCurrentPage(clampedPage); // 페이지 초과 시 보정
+      }
+      const start = (clampedPage - 1) * pageSize;
+      const pageItems = data.slice(start, start + pageSize);
+
+      setProducts(pageItems);
+      setTotalProducts(total);
+      setTotalPages(pages);
     } catch (error) {
       console.error('Failed to load products:', error);
-  const fixedProducts = mockProductsDatabase.slice(0, 55);
-  setProducts(fixedProducts);
-  setTotalProducts(fixedProducts.length);
-  setTotalPages(1);
-
+      setProducts([]);
+      setTotalProducts(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
   };
 
 
-  // (요청) 항상 mockProductsDatabase 앞 8개 고정 사용 -> 별도 함수 불필요
+  // 카테고리/검색 기반 필터링으로 동작 (Mock 데이터 로컬 처리)
 
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
