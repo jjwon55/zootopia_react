@@ -30,6 +30,7 @@ export default function UsersPage() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
   const [role, setRole] = useState("");
+  const [reportedOnly, setReportedOnly] = useState(false); // ✅ 유지(헤더 토글용)
   const [sort, setSort] = useState("createdAt");
   const [dir, setDir] = useState("desc");
   const [page, setPage] = useState(0);
@@ -37,7 +38,10 @@ export default function UsersPage() {
 
   const [actingId, setActingId] = useState(null);
 
-  const params = useMemo(() => ({ q, status, role, page, size: PAGE_SIZE, sort, dir }), [q, status, role, page, sort, dir]);
+  const params = useMemo(
+    () => ({ q, status, role, page, size: PAGE_SIZE, sort, dir }),
+    [q, status, role, page, sort, dir]
+  );
 
   const fetchList = async () => {
     setLoading(true);
@@ -53,7 +57,10 @@ export default function UsersPage() {
     }
   };
 
-  useEffect(() => { fetchList(); /* eslint-disable-next-line */ }, [params]);
+  useEffect(() => {
+    fetchList();
+    // eslint-disable-next-line
+  }, [params]);
 
   const onOpen = async (userId) => {
     if (userId == null) return;
@@ -61,7 +68,7 @@ export default function UsersPage() {
       const { data } = await getUser(userId);
       const cleaned = {
         ...data.data,
-        roles: (data.data?.roles || []).filter(r => ROLE_OPTIONS.includes(r)),
+        roles: (data.data?.roles || []).filter((r) => ROLE_OPTIONS.includes(r)),
       };
       setSelected(cleaned);
     } catch (e) {
@@ -88,7 +95,7 @@ export default function UsersPage() {
     }
   };
 
-  // ✅ SweetAlert confirm으로 대체
+  // ✅ SweetAlert confirm
   const askToggleBan = async (u) => {
     if (!u?.userId) return;
     const nextBan = u.status !== "SUSPENDED";
@@ -115,7 +122,7 @@ export default function UsersPage() {
   };
 
   const onSaveRoles = async (roles) => {
-    const safe = (roles || []).filter(r => ROLE_OPTIONS.includes(r));
+    const safe = (roles || []).filter((r) => ROLE_OPTIONS.includes(r));
     const id = selected?.userId;
     if (id == null) return;
     try {
@@ -134,23 +141,6 @@ export default function UsersPage() {
     setPage(0);
   };
 
-  // 🔹 작은 정렬 아이콘
-  const SortCaret = ({ active, dir }) => (
-    <span className="tw:inline-flex tw:flex-col tw:ml-1 tw:text-[10px] tw:leading-none tw:align-middle tw:text-gray-400">
-      <span className={`-tw:mb-[2px] ${active && dir === 'asc' ? 'tw:text-gray-700' : ''}`}>▲</span>
-      <span className={`${active && dir === 'desc' ? 'tw:text-gray-700' : ''}`}>▼</span>
-    </span>
-  );
-
-  const setSortBy = (key) => {
-    if (sort === key) {
-      setDir(d => d === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSort(key);
-      setDir('desc');
-    }
-  };
-
   return (
     <div className="tw:px-4 tw:md:px-6 tw:py-6 tw:space-y-6 tw:max-w-[1400px] tw:mx-auto">
       {/* ===== 헤더 ===== */}
@@ -158,10 +148,11 @@ export default function UsersPage() {
         <div className="tw:space-y-1">
           <h1 className="tw:text-2xl tw:md:text-3xl tw:font-bold tw:leading-tight">👤 회원 관리</h1>
           <p className="tw:text-sm tw:text-gray-500">
-            총 <b>{pageInfo?.totalElements ?? 0}</b>명 • 페이지 {page + 1}/{pageInfo?.totalPages || 1}
+            총 <b>{pageInfo?.totalElements ?? 0}</b>명
+            {reportedOnly && <> • 신고 사용자만 보기</>}
+            {" • "}페이지 {page + 1}/{pageInfo?.totalPages || 1}
           </p>
         </div>
-
       </div>
 
       {/* ===== 검색/필터 카드 ===== */}
@@ -172,36 +163,42 @@ export default function UsersPage() {
               className="tw:input tw:input-bordered tw:w-full tw:pr-24"
               placeholder="이메일/닉네임 검색"
               value={qInput}
-              onChange={e => setQInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+              onChange={(e) => setQInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch();
+              }}
             />
             <div className="tw:absolute tw:top-1/2 -tw:translate-y-1/2 tw:right-1.5 tw:flex tw:gap-1">
               {q && (
                 <button
                   type="button"
                   className="tw:btn tw:btn-ghost tw:btn-sm"
-                  onClick={() => { setQInput(""); setQ(""); setPage(0); }}
+                  onClick={() => {
+                    setQInput("");
+                    setQ("");
+                    setPage(0);
+                  }}
                 >
                   초기화
                 </button>
               )}
-              <button
-                type="button"
-                onClick={handleSearch}
-                className="tw:btn tw:btn-primary tw:btn-sm"
-              >
+              <button type="button" onClick={handleSearch} className="tw:btn tw:btn-primary tw:btn-sm">
                 검색
               </button>
             </div>
           </div>
         </div>
 
-        <div className="tw:p-4 tw:grid tw:grid-cols-2 tw:md:grid-cols-4 lg:tw:grid-cols-6 tw:gap-2">
+        {/* ⛔️ 신고자 필터(카드 내) 제거됨 */}
+        <div className="tw:p-4 tw:grid tw:grid-cols-2 md:tw:grid-cols-4 lg:tw:grid-cols-6 tw:gap-2">
           {/* 상태 필터 */}
           <select
             className="tw:select tw:select-bordered"
             value={status}
-            onChange={e => { setStatus(e.target.value); setPage(0); }}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(0);
+            }}
           >
             <option value="">상태(전체)</option>
             <option value="ACTIVE">{STATUS_LABELS.ACTIVE}</option>
@@ -212,24 +209,28 @@ export default function UsersPage() {
           <select
             className="tw:select tw:select-bordered"
             value={role}
-            onChange={e => { setRole(e.target.value); setPage(0); }}
+            onChange={(e) => {
+              setRole(e.target.value);
+              setPage(0);
+            }}
           >
             <option value="">역할(전체)</option>
-            {ROLE_OPTIONS.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+            {ROLE_OPTIONS.map((r) => (
+              <option key={r} value={r}>
+                {ROLE_LABELS[r]}
+              </option>
+            ))}
           </select>
 
           {/* 선택된 필터 요약 배지 */}
           <div className="tw:col-span-2 lg:tw:col-span-4 tw:flex tw:flex-wrap tw:items-center tw:gap-2">
-            {q && (
-              <span className="tw:badge tw:badge-outline">검색: {q}</span>
-            )}
+            {q && <span className="tw:badge tw:badge-outline">검색: {q}</span>}
             {status && (
               <span className="tw:badge tw:badge-outline tw:badge-success">상태: {STATUS_LABELS[status] || status}</span>
             )}
-            {role && (
-              <span className="tw:badge tw:badge-outline tw:badge-info">역할: {ROLE_LABELS[role] || role}</span>
-            )}
-            {!q && !status && !role && (
+            {role && <span className="tw:badge tw:badge-outline tw:badge-info">역할: {ROLE_LABELS[role] || role}</span>}
+            {reportedOnly && <span className="tw:badge tw:badge-outline tw:badge-error">신고 있음</span>}
+            {!q && !status && !role && !reportedOnly && (
               <span className="tw:text-xs tw:text-gray-400">필터가 선택되지 않았습니다</span>
             )}
           </div>
@@ -248,105 +249,124 @@ export default function UsersPage() {
               <th className="tw:text-left tw:p-3 tw:px-5">역할</th>
               <th className="tw:text-left tw:p-3 tw:px-5">가입일</th>
               <th className="tw:text-left tw:p-3 tw:px-5">액션</th>
-              <th className="tw:text-left tw:p-3 tw:px-5">신고</th>
+
+              {/* ✅ 신고 헤더 + 체크박스 토글 (여기로 이동) */}
+              <th className="tw:text-left tw:p-3 tw:px-5">
+                <label className="tw:inline-flex tw:items-center tw:gap-2 tw:text-sm">
+                  <input
+                    type="checkbox"
+                    className="tw:checkbox tw:checkbox-sm"
+                    checked={reportedOnly}
+                    onChange={(e) => {
+                      setReportedOnly(e.target.checked);
+                      setPage(0);
+                    }}
+                    aria-label="신고된 사용자만 보기"
+                    title="신고된 사용자만 보기"
+                  />
+                  신고
+                </label>
+              </th>
             </tr>
           </thead>
 
           <tbody>
-            {!loading && rows.map((u, idx) => {
-              const safeRoles = (u.roles || []).filter(r => ROLE_OPTIONS.includes(r));
-              return (
-                <tr key={u.userId} className={idx % 2 === 0 ? "tw:bg-gray-100" : ""}>
-                  <td className="tw:p-3 tw:px-5">{u.userId}</td>
-                  <td className="tw:p-3 tw:px-5">
-                    <button
-                      type="button"
-                      className="tw:text-blue-600 hover:tw:underline"
-                      onClick={() => onOpen(u.userId)}
-                    >
-                      {u.email}
-                    </button>
-                  </td>
-                  <td className="tw:p-3 tw:px-5">{u.nickname}</td>
-                  <td className="tw:p-3 tw:px-5">
-                    <span
-                      className={`tw:badge tw:badge-sm ${u.status === "SUSPENDED" ? "tw:badge-error" : "tw:badge-success"}`}
-                    >
-                      {STATUS_LABELS[u.status] || u.status}
-                    </span>
-                  </td>
-                  <td className="tw:p-3 tw:px-5">
-                    <select
-                      className="tw:select tw:select-sm tw:select-bordered"
-                      value={safeRoles[0] || ""}
-                      onChange={async (e) => {
-                        const newRole = e.target.value;
-                        try {
-                          await updateUserRoles(u.userId, [newRole]);
-                          toastSuccess("역할이 변경되었습니다.");
-                          await fetchList();
-                        } catch (err) {
-                          console.error(err);
-                          toastError("역할 변경 실패");
-                        }
-                      }}
-                    >
-                      <option value="">- 선택 -</option>
-                      {ROLE_OPTIONS.map(r => (
-                        <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="tw:p-3 tw:px-5">
-                    {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "-"}
-                  </td>
-                  <td className="tw:p-3 tw:px-5 tw:flex tw:justify-start tw:gap-2">
-                    <button
-                      className="tw:text-sm tw:bg-blue-500 hover:tw:bg-blue-700 tw:text-white tw:py-1 tw:px-2 tw:rounded"
-                      onClick={() => onOpen(u.userId)}
-                    >
-                      상세
-                    </button>
-                    <button
-                      className={`tw:text-sm ${u.status === 'SUSPENDED' ? 'tw:bg-green-500 hover:tw:bg-green-700' : 'tw:bg-red-500 hover:tw:bg-red-700'} tw:text-white tw:py-1 tw:px-2 tw:rounded`}
-                      onClick={() => askToggleBan(u)}
-                      disabled={actingId === u.userId || loading}
-                    >
-                      {actingId === u.userId ? "처리 중..." : (u.status === "SUSPENDED" ? "해제" : "정지")}
-                    </button>
-                  </td>
-                  <td className="tw:p-3 tw:px-5">
-                    {u.reportCount > 0 ? (
-                      <button
-                        className="tw:text-sm tw:bg-red-500 hover:tw:bg-red-700 tw:text-white tw:py-1 tw:px-2 tw:rounded"
-                        onClick={() => setReportsUser(u)}
-                      >
-                        {u.reportCount}건
-                      </button>
-                    ) : (
-                      <span className="tw:text-gray-400">-</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
+            {!loading &&
+              rows
+                .filter((u) => !reportedOnly || u.reportCount > 0) // ✅ 신고 필터 적용
+                .map((u, idx) => {
+                  const safeRoles = (u.roles || []).filter((r) => ROLE_OPTIONS.includes(r));
+                  return (
+                    <tr key={u.userId} className={idx % 2 === 0 ? "tw:bg-gray-100" : ""}>
+                      <td className="tw:p-3 tw:px-5">{u.userId}</td>
+                      <td className="tw:p-3 tw:px-5">
+                        <button
+                          type="button"
+                          className="tw:text-blue-600 hover:tw:underline"
+                          onClick={() => onOpen(u.userId)}
+                        >
+                          {u.email}
+                        </button>
+                      </td>
+                      <td className="tw:p-3 tw:px-5">{u.nickname}</td>
+                      <td className="tw:p-3 tw:px-5">
+                        <span
+                          className={`tw:badge tw:badge-sm ${u.status === "SUSPENDED" ? "tw:badge-error" : "tw:badge-success"
+                            }`}
+                        >
+                          {STATUS_LABELS[u.status] || u.status}
+                        </span>
+                      </td>
+                      <td className="tw:p-3 tw:px-5">
+                        <select
+                          className="tw:select tw:select-sm tw:select-bordered"
+                          value={safeRoles[0] || ""}
+                          onChange={async (e) => {
+                            const newRole = e.target.value;
+                            try {
+                              await updateUserRoles(u.userId, [newRole]);
+                              toastSuccess("역할이 변경되었습니다.");
+                              await fetchList();
+                            } catch (err) {
+                              console.error(err);
+                              toastError("역할 변경 실패");
+                            }
+                          }}
+                        >
+                          <option value="">- 선택 -</option>
+                          {ROLE_OPTIONS.map((r) => (
+                            <option key={r} value={r}>
+                              {ROLE_LABELS[r]}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="tw:p-3 tw:px-5">{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "-"}</td>
+                      <td className="tw:p-3 tw:px-5 tw:flex tw:justify-start tw:gap-2">
+                        <button
+                          className="tw:text-sm tw:bg-blue-500 hover:tw:bg-blue-700 tw:text-white tw:py-1 tw:px-2 tw:rounded"
+                          onClick={() => onOpen(u.userId)}
+                        >
+                          상세
+                        </button>
+                        <button
+                          className={`tw:text-sm ${u.status === "SUSPENDED" ? "tw:bg-green-500 hover:tw:bg-green-700" : "tw:bg-red-500 hover:tw:bg-red-700"
+                            } tw:text-white tw:py-1 tw:px-2 tw:rounded`}
+                          onClick={() => askToggleBan(u)}
+                          disabled={actingId === u.userId || loading}
+                        >
+                          {actingId === u.userId ? "처리 중..." : u.status === "SUSPENDED" ? "해제" : "정지"}
+                        </button>
+                      </td>
+                      <td className="tw:p-3 tw:px-5">
+                        {u.reportCount > 0 ? (
+                          <button
+                            className="tw:text-sm tw:bg-red-500 hover:tw:bg-red-700 tw:text-white tw:py-1 tw:px-2 tw:rounded"
+                            onClick={() => setReportsUser(u)}
+                          >
+                            {u.reportCount}건
+                          </button>
+                        ) : (
+                          <span className="tw:text-gray-400">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
           </tbody>
         </table>
       </div>
+
       {/* ===== 페이지네이션 ===== */}
       <div className="tw:flex tw:justify-center tw:mt-4">
         <div className="tw:join">
-          <button
-            className="tw:join-item tw:btn btn-sm"
-            disabled={page === 0}
-            onClick={() => setPage(0)}
-          >
+          <button className="tw:join-item tw:btn btn-sm" disabled={page === 0} onClick={() => setPage(0)}>
             « 처음
           </button>
           <button
             className="tw:join-item tw:btn btn-sm"
             disabled={page === 0}
-            onClick={() => setPage(p => Math.max(p - 1, 0))}
+            onClick={() => setPage((p) => Math.max(p - 1, 0))}
           >
             ‹ 이전
           </button>
@@ -356,7 +376,7 @@ export default function UsersPage() {
           <button
             className="tw:join-item tw:btn btn-sm"
             disabled={page + 1 >= (pageInfo?.totalPages || 1)}
-            onClick={() => setPage(p => Math.min(p + 1, (pageInfo?.totalPages || 1) - 1))}
+            onClick={() => setPage((p) => Math.min(p + 1, (pageInfo?.totalPages || 1) - 1))}
           >
             다음 ›
           </button>
@@ -370,25 +390,18 @@ export default function UsersPage() {
         </div>
       </div>
 
+      {/* ===== 상세/신고 모달 ===== */}
       {selected && (
-      <UserDetailDrawer
-      variant="modal"
-        user={selected}
-        onClose={onClose}
-        onSaveBasic={onSaveBasic}
-        onSaveRoles={onSaveRoles}
-        onToggleBan={askToggleBan}
-      />
-    )}
-    {reportsUser && (
-      <ReportsModal
-        user={reportsUser}
-        onClose={() => setReportsUser(null)}
-      />
-    )}
-
+        <UserDetailDrawer
+          variant="modal"
+          user={selected}
+          onClose={onClose}
+          onSaveBasic={onSaveBasic}
+          onSaveRoles={onSaveRoles}
+          onToggleBan={askToggleBan}
+        />
+      )}
+      {reportsUser && <ReportsModal user={reportsUser} onClose={() => setReportsUser(null)} />}
     </div>
-
-    
   );
 }
