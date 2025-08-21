@@ -109,7 +109,7 @@ public class ProductController {
     // React API 엔드포인트 - 상품 상세 조회
     @GetMapping("/api/detail/{no}")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> getProductDetail(@PathVariable int no) {
+    public ResponseEntity<Map<String, Object>> getProductDetail(@PathVariable("no") int no) {
         Map<String, Object> response = new HashMap<>();
         try {
             Product product = productService.getByNo(no);
@@ -217,7 +217,7 @@ public class ProductController {
     
     // 상품 상세 페이지 - 완성된 버전
     @GetMapping("/detail/{no}")
-    public String detail(@PathVariable("no") Integer productNumber, Model model) {
+    public String detail(@PathVariable("productNumber") Integer productNumber, Model model) {
         System.out.println("=== 상품 상세 페이지 호출됨: " + productNumber + " ===");
         // 더미 상품 데이터에서 해당 상품 찾기
         List<Product> allProducts = createDummyProducts();
@@ -246,28 +246,28 @@ public class ProductController {
     
     // 테스트용 상품 상세 페이지
     @GetMapping("/detail-test/{no}")
-    public String detailTest(@PathVariable int no, Model model) {
+    public String detailTest(@PathVariable("no") int no, Model model) {
         System.out.println("=== 테스트용 상품 상세 페이지 호출됨: " + no + " ===");
         return "products/detail_test";
     }
     
     // 정적 테스트 페이지
     @GetMapping("/detail-static/{no}")
-    public String detailStatic(@PathVariable int no, Model model) {
+    public String detailStatic(@PathVariable("no") int no, Model model) {
         System.out.println("=== 정적 테스트 페이지 호출됨: " + no + " ===");
         return "products/detail_static";
     }
     
     // 가장 단순한 테스트 페이지
     @GetMapping("/simple/{no}")
-    public String simple(@PathVariable int no, Model model) {
+    public String simple(@PathVariable("no") int no, Model model) {
         System.out.println("=== 간단 테스트 페이지 호출됨: " + no + " ===");
         return "products/detail";
     }
     
     // 최소한의 데이터로 상세 페이지 테스트
     @GetMapping("/minimal-detail/{no}")
-    public String minimalDetail(@PathVariable int no, Model model) {
+    public String minimalDetail(@PathVariable("no") int no, Model model) {
         System.out.println("=== 최소한 상세 페이지 호출됨: " + no + " ===");
         
         try {
@@ -688,7 +688,7 @@ public class ProductController {
     
     // 기본 템플릿 테스트
     @GetMapping("/template-test/{no}")
-    public String templateTest(@PathVariable int no, Model model) {
+    public String templateTest(@PathVariable("no") int no, Model model) {
         System.out.println("=== 기본 템플릿 테스트 호출됨: " + no + " ===");
         return "test_basic";
     }
@@ -766,7 +766,7 @@ public class ProductController {
     
     // 간단한 템플릿 테스트
     @GetMapping("/template-detail/{no}")
-    public String templateDetail(@PathVariable int no, Model model) {
+    public String templateDetail(@PathVariable("no") int no, Model model) {
         System.out.println("=== 템플릿 테스트 /template-detail/" + no + " 호출됨 ===");
         model.addAttribute("productNo", no);
         model.addAttribute("productName", "테스트 상품");
@@ -775,7 +775,7 @@ public class ProductController {
     
     // 안전한 상품 상세 페이지 (예외 처리 강화)
     @GetMapping("/safe-detail/{no}")
-    public String safeDetail(@PathVariable int no, Model model) {
+    public String safeDetail(@PathVariable("no") int no, Model model) {
         System.out.println("=== SAFE ProductController /safe-detail/" + no + " 호출됨 ===");
         
         try {
@@ -823,7 +823,7 @@ public class ProductController {
     
     // 매우 단순한 테스트 엔드포인트
     @GetMapping("/ultra-simple/{no}")
-    public String ultraSimple(@PathVariable int no, Model model) {
+    public String ultraSimple(@PathVariable("no") int no, Model model) {
         System.out.println("=== ULTRA SIMPLE /ultra-simple/" + no + " 호출됨 ===");
         
         try {
@@ -843,7 +843,7 @@ public class ProductController {
     // 정적 응답 테스트 (템플릿 없이)
     @GetMapping("/static-test/{no}")
     @ResponseBody
-    public String staticTest(@PathVariable int no) {
+    public String staticTest(@PathVariable("no") int no) {
         System.out.println("=== STATIC TEST /static-test/" + no + " 호출됨 ===");
         
         return "<html><body><h1>Static Test for Product " + no + "</h1><p>이 페이지가 보인다면 컨트롤러는 정상 작동합니다.</p><a href='/products'>목록으로</a></body></html>";
@@ -851,7 +851,7 @@ public class ProductController {
     
     // 정적 템플릿 테스트
     @GetMapping("/template-static-test/{no}")
-    public String templateStaticTest(@PathVariable int no, Model model) {
+    public String templateStaticTest(@PathVariable("no") int no, Model model) {
         System.out.println("=== TEMPLATE STATIC TEST /template-static-test/" + no + " 호출됨 ===");
         
         try {
@@ -865,7 +865,7 @@ public class ProductController {
     
     // Thymeleaf 테스트
     @GetMapping("/thymeleaf-test/{no}")
-    public String thymeleafTest(@PathVariable int no, Model model) {
+    public String thymeleafTest(@PathVariable("no") int no, Model model) {
         System.out.println("=== THYMELEAF TEST /thymeleaf-test/" + no + " 호출됨 ===");
         
         try {
@@ -882,7 +882,7 @@ public class ProductController {
     
     // Product 객체 테스트
     @GetMapping("/product-object-test/{no}")
-    public String productObjectTest(@PathVariable int no, Model model) {
+    public String productObjectTest(@PathVariable("no") int no, Model model) {
         System.out.println("=== PRODUCT OBJECT TEST /product-object-test/" + no + " 호출됨 ===");
         
         try {
@@ -910,14 +910,14 @@ public class ProductController {
     
     // 정적 테스트용 상품 상세 페이지
     @GetMapping("/detail-static-test/{no}")
-    public String detailStaticTest(@PathVariable int no) {
+    public String detailStaticTest(@PathVariable("no") int no) {
         System.out.println("=== 정적 테스트 페이지 호출됨: " + no + " ===");
         return "products/detail_static_test";
     }
     
     // Thymeleaf 테스트용 상품 상세 페이지
     @GetMapping("/detail-thymeleaf-test/{no}")
-    public String detailThymeleafTest(@PathVariable int no, Model model) {
+    public String detailThymeleafTest(@PathVariable("no") int no, Model model) {
         System.out.println("=== Thymeleaf 테스트 페이지 호출됨: " + no + " ===");
         model.addAttribute("no", no);
         return "products/detail_thymeleaf_test";
@@ -926,7 +926,7 @@ public class ProductController {
     // JSON 응답 테스트
     @GetMapping("/detail/{no}/json")
     @ResponseBody
-    public Map<String, Object> detailJson(@PathVariable int no) {
+    public Map<String, Object> detailJson(@PathVariable("no") int no) {
         System.out.println("=== JSON 상세 페이지 호출됨: " + no + " ===");
         
         Map<String, Object> result = new HashMap<>();

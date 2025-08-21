@@ -54,7 +54,7 @@ const HospitalList = ({
               key={animal.animalId}
               className={`tw:px-[20px] tw:py-[8px] tw:m-1 tw:rounded-full tw:font-medium tw:cursor-pointer tw:transition-all ${
                 selectedAnimals.includes(animal.animalId)
-                  ? " tw:bg-[#ff6b6b] tw:text-[#ffffff] tw:-translate-y-[2px] tw:hover:bg-[#e60000]"
+                  ? " tw:bg-[#fa4b4b] tw:text-[#ffffff] tw:-translate-y-[2px] tw:hover:bg-[#e60000]"
                   : "tw:bg-[#faafaf9f] tw:text-white tw:hover:bg-[#ff6b6b]"
               }`}
             >
@@ -75,7 +75,7 @@ const HospitalList = ({
               key={specialty.specialtyId}
               className={`tw:px-[20px] tw:py-[8px] tw:m-1 tw:rounded-full tw:font-medium tw:cursor-pointer tw:transition-all ${
                 selectedSpecialties.includes(specialty.specialtyId)
-                  ? "tw:bg-[#ff6b6b] tw:text-[#ffffff] tw:-translate-y-[2px]"
+                  ? "tw:bg-[#fa4b4b] tw:text-[#ffffff] tw:-translate-y-[2px] tw:hover:bg-[#e60000]"
                   : "tw:bg-[#faafaf9f] tw:text-white tw:hover:bg-[#ff6b6b]"
               }`}
             >

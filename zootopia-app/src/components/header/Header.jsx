@@ -5,13 +5,16 @@ import logo from '../../assets/img/zootopialogo.png';
 import logoutIcon from '../../assets/img/logout.png';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
+import { MessageContext } from '../../context/MessageContextProvider';
 
 const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const { logout, isLogin, userInfo } = useContext(LoginContext);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false)
+
+  const { logout, isLogin, userInfo } = useContext(LoginContext);
+  const { unreadCount } = useContext(MessageContext);
 
   const nickname = userInfo?.nickname;
   const profileImage = userInfo?.profileImg || '/assets/img/default-profile.png';
@@ -38,6 +41,18 @@ const Header = () => {
     ]
   },
 ];
+
+
+  // 뱃지 스타일 (추가)
+    const badgeStyle = {
+        backgroundColor: 'red',
+        color: 'white',
+        borderRadius: '50%',
+        padding: '2px 6px',
+        fontSize: '12px',
+        marginLeft: '5px',
+        verticalAlign: 'super',
+    };
 
 
   return (
@@ -128,6 +143,9 @@ const Header = () => {
 
         {/* 로그인/회원가입 또는 사용자 메뉴 (데스크톱) */}
         <div className="tw:hidden tw:lg:flex tw:items-center tw:gap-3 tw:relative">
+          <Link to="/messages/received">쪽지함</Link>
+                {/* unreadCount가 0보다 클 때만 뱃지를 표시 (추가) */}
+                {isLogin && unreadCount > 0 && (<span style={badgeStyle}>{unreadCount}</span>)}
           {!isLogin ? (
             <div className="tw:flex tw:items-center tw:gap-2">
               <Link
