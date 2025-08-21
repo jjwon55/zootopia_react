@@ -109,20 +109,36 @@ const Read = ({
           </div>
 
           {/* 액션 버튼 그룹 */}
-          <div className="tw:flex tw:flex-col md:tw:flex-row tw:items-center tw:justify-between tw:gap-3 tw:mt-8">
-            <div className="tw:flex tw:gap-2">
+          <div className="tw:flex tw:items-center tw:justify-between tw:mt-8">
+            {/* 목록 버튼 → 왼쪽 */}
+            <div className="tw:flex tw:justify-start tw:flex-1">
+              <Link to="/parttime/list" className={BTN_OUTLINE_PRIMARY}>
+                목록으로
+              </Link>
+            </div>
+
+            {/* 수정/삭제 → 오른쪽 */}
+            <div className="tw:flex tw:justify-end tw:gap-2 tw:flex-1">
               {(isOwner || isAdmin) && (
                 <>
-                  <Link to={`/parttime/update/${job.jobId}`} className={BTN_OUTLINE_PRIMARY}>수정</Link>
-                  <button onClick={onDelete} className={BTN_PRIMARY} disabled={deleting}>
+                  <Link
+                    to={`/parttime/update/${job.jobId}`}
+                    className={BTN_OUTLINE_PRIMARY}
+                  >
+                    수정
+                  </Link>
+                  <button
+                    onClick={onDelete}
+                    className={BTN_PRIMARY}
+                    disabled={deleting}
+                  >
                     {deleting ? '삭제중…' : '삭제'}
                   </button>
                 </>
               )}
             </div>
-            <Link to="/parttime/list" className={BTN_OUTLINE_PRIMARY}>목록으로</Link>
           </div>
-        </div>
+          </div>
 
         {/* 알림 메시지 카드 */}
         {(successMessage || errorMessage) && (

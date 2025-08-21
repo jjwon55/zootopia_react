@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom'
 
 const BTN_PRIMARY =
   'tw:inline-flex tw:items-center tw:gap-1 tw:rounded-xl tw:px-3 tw:py-2 tw:text-white tw:bg-[#F27A7A] hover:tw:opacity-90 tw:shadow-sm tw:transition tw:duration-150 focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#F27A7A]/60'
-const BTN_GHOST =
-  'tw:border tw:rounded-xl tw:px-3 tw:py-2 hover:tw:bg-rose-50 tw:transition tw:duration-150 focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-rose-200'
+
+const BTN_OUTLINE =
+  'tw:inline-flex tw:items-center tw:gap-1 tw:rounded-xl tw:px-3 tw:py-2 tw:border tw:border-[#F27A7A] tw:text-[#F27A7A] hover:tw:bg-[#F27A7A]/10 tw:transition tw:duration-150 focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#F27A7A]/30'
 
 export default function QnaSection({
   isLogin,
@@ -102,30 +103,27 @@ export default function QnaSection({
       {/* 페이지네이션 */}
       <div className="tw:mt-5 tw:flex tw:justify-center tw:gap-1">
         <button
-          className={`${BTN_GHOST} tw:h-9 tw:px-3`}
+          className={`${BTN_OUTLINE} tw:h-9 tw:px-3 disabled:tw:opacity-50 disabled:tw:cursor-not-allowed`}
           disabled={(qna?.pagination?.page || 1) <= 1}
           onClick={() => onQnaPageChange?.((qna?.pagination?.page || 1) - 1)}
-          aria-label="이전 페이지"
         >이전</button>
 
         {Array.from({ length: qna?.pagination?.totalPage || 1 }, (_, i) => i + 1).map((n) => (
           <button
             key={n}
-            className={`tw:h-9 tw:px-3 tw:border tw:rounded-xl tw:transition tw:duration-150 hover:tw:bg-rose-50 ${
+            className={`tw:h-9 tw:px-3 tw:rounded-xl tw:transition tw:duration-150 ${
               n === (qna?.pagination?.page || 1)
-                ? 'tw:bg-[#F27A7A] tw:text-white tw:border-[#F27A7A]'
-                : 'tw:bg-white'
+                ? 'tw:bg-[#F27A7A] tw:text-white tw:border tw:border-[#F27A7A]'
+                : BTN_OUTLINE
             }`}
             onClick={() => onQnaPageChange?.(n)}
-            aria-label={`${n} 페이지로 이동`}
           >{n}</button>
         ))}
 
         <button
-          className={`${BTN_GHOST} tw:h-9 tw:px-3`}
+          className={`${BTN_OUTLINE} tw:h-9 tw:px-3 disabled:tw:opacity-50 disabled:tw:cursor-not-allowed`}
           disabled={(qna?.pagination?.page || 1) >= (qna?.pagination?.totalPage || 1)}
           onClick={() => onQnaPageChange?.((qna?.pagination?.page || 1) + 1)}
-          aria-label="다음 페이지"
         >다음</button>
       </div>
     </section>
