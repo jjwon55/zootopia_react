@@ -1,22 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
+// import { KakaoPay } from '../../apis/products/payments/kakao';
 import api from '../../apis/api';
 import { clearCart as clearLocalOrApiCart } from '../../apis/products/cart';
 import { useLoginContext } from '../../context/LoginContextProvider';
 import fallbackImg from '../../assets/react.svg';
 import OrderCompleteModal from '../../components/common/OrderCompleteModal';
-// KakaoPay 제거: KakaoLoginModal import 삭제
-import { createPaymentWidget, initPaymentMethods, requestTossPayment } from '../../apis/products/payments/toss';
+import KakaoLoginModal from '../../components/common/KakaoLoginModal';
 
 export default function Checkout() {
+  // 카카오 로그인 상태 (모달/로그인 여부)
+  const [kakaoLogin, setKakaoLogin] = useState({ loggedIn: false, user: null, modal: false });
   const { userInfo } = useLoginContext();
   const userId = userInfo?.userId || 1;
   const [orderItems, setOrderItems] = useState([]);
-  // 단일 결제수단: Toss 위젯
+  const [paymentMethod, setPaymentMethod] = useState('card');
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderModal, setOrderModal] = useState({ open: false, code: '' });
-  // KakaoPay 로그인 상태 제거
-  const [tossWidget, setTossWidget] = useState(null);
-  const paymentMethodsRef = useRef(null);
   const [shippingInfo, setShippingInfo] = useState({
     name: '',
     phone: '',
@@ -39,22 +38,31 @@ export default function Checkout() {
   const canPay = orderItems.length > 0 && requiredAgreed;
 
   useEffect(() => {
-    // 1) 바로구매 임시 데이터
-    try {
-      const temp = localStorage.getItem('tempOrder');
-      if (temp) {
-        const parsed = JSON.parse(temp);
-        const items = (parsed.items || []).map((it, idx) => ({
-          id: it.productId || idx + 1,
-          name: it.productName || it.name,
-          price: it.price,
-          quantity: it.quantity,
-          imageUrl: it.imageUrl || it.image
-        }));
-        setOrderItems(items);
-        return;
-      }
-    } catch {}
+    const search = typeof window !== 'undefined' ? window.location.search : '';
+    const params = new URLSearchParams(search);
+    const fromCart = params.get('from') === 'cart';
+
+    if (!fromCart) {
+      // 1) 바로구매 임시 데이터 우선
+      try {
+        const temp = localStorage.getItem('tempOrder');
+        if (temp) {
+          const parsed = JSON.parse(temp);
+          const items = (parsed.items || []).map((it, idx) => ({
+            id: it.productId || idx + 1,
+            name: it.productName || it.name,
+            price: it.price,
+            quantity: it.quantity,
+            imageUrl: it.imageUrl || it.image
+          }));
+          setOrderItems(items);
+          return; // tempOrder 사용 시 장바구니 무시
+        }
+      } catch {}
+    } else {
+      // cart 경로에서 온 경우 tempOrder 무시 & 제거
+      try { localStorage.removeItem('tempOrder'); } catch {}
+    }
     // 2) 장바구니(localStorage)
     try {
       const raw = localStorage.getItem(`cart:user:${userId}`);
@@ -71,30 +79,6 @@ export default function Checkout() {
       setOrderItems([]);
     }
   }, [userId]);
-
-  // Toss 위젯 초기화 (결제수단 선택 또는 금액 변동 시)
-  useEffect(() => {
-    (async () => {
-      const amount = getTotalPrice();
-      if (!amount) return;
-      try {
-        const clientKey = import.meta.env.VITE_TOSS_CLIENT_KEY || 'test_client_key';
-        const brandpayRedirect = import.meta.env.VITE_TOSS_BRANDPAY_REDIRECT_URL;
-        let widget = tossWidget;
-        if (!widget) {
-          widget = await createPaymentWidget(clientKey, 'user-' + (userId || 'guest'), { brandpayRedirect });
-          setTossWidget(widget);
-        }
-        if (paymentMethodsRef.current) {
-          paymentMethodsRef.current.innerHTML = '';
-          await initPaymentMethods(widget, '#toss-payment-methods', amount);
-        }
-      } catch (e) {
-        console.warn('Toss 위젯 초기화 실패', e);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderItems]);
 
   const getTotalPrice = () => {
     return orderItems.reduce((total, item) => total + (item.price * item.quantity), 0);
@@ -181,24 +165,16 @@ export default function Checkout() {
 
     const newOrderId = 'ORD-' + crypto.randomUUID();
 
-    // Toss 결제 (유일한 결제수단)
-    const amount = getTotalPrice();
-    const orderId = newOrderId;
-    const orderName = orderItems.map((i) => i.name).slice(0, 1).join(', ');
-    try {
-      setIsProcessing(true);
-      if (!tossWidget) {
-        alert('결제 위젯이 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요.');
+
+    // 카카오 결제 분기(로그인/모달 유지, 결제만 미사용)
+    if (paymentMethod === 'kakao') {
+      if (!kakaoLogin.loggedIn) {
+        setKakaoLogin(prev => ({ ...prev, modal: true }));
         return;
       }
-      await requestTossPayment(tossWidget, { orderId, orderName, amount });
-    } catch (err) {
-      console.error(err);
-      alert('Toss 결제 요청 중 오류가 발생했습니다.');
-    } finally {
-      setIsProcessing(false);
+      alert('카카오페이 결제는 현재 지원하지 않습니다.');
+      return;
     }
-    return;
 
     // 그 외 결제수단: 처리 로딩 모사 후, 주문 생성 + 모달
     try {
@@ -236,7 +212,11 @@ export default function Checkout() {
         onClose={() => setOrderModal({ open: false, code: '' })}
         goDetailUrl={`/orders/${orderModal.code}`}
       />
-  {/* KakaoPay 로그인 모달 제거 */}
+      <KakaoLoginModal
+        open={kakaoLogin.modal}
+        onClose={() => setKakaoLogin(prev => ({ ...prev, modal: false }))}
+        onLoggedIn={(ku) => setKakaoLogin({ loggedIn: true, user: ku, modal: false })}
+      />
       {/* 결제 처리 로딩 오버레이 */}
       {isProcessing && (
         <div className="tw:fixed tw:inset-0 tw:z-[1200] tw:bg-black/30 tw:flex tw:items-center tw:justify-center">
@@ -386,18 +366,21 @@ export default function Checkout() {
                 </div>
               </div>
 
-              {/* 결제 방법 섹션 제거: Toss 단일 위젯 사용 */}
-
-              {/* Toss 위젯 영역 */}
+              {/* 결제 방법 */}
               <div className="tw:bg-white tw:rounded-lg tw:p-6 tw:shadow-sm tw:border" style={{ borderColor: '#FFE5E5' }}>
                 <h2 className="tw:text-xl tw:font-bold tw:mb-4 tw:flex tw:items-center tw:gap-2 tw:text-gray-700">
-                  <span>🧾</span> 결제 수단 상세
+                  <span>💳</span> 결제 방법
                 </h2>
-                <div>
-                  <div ref={paymentMethodsRef} id="toss-payment-methods" className="tw:min-h-[80px] tw:text-sm tw:text-gray-500">
-                    Toss 결제 위젯 로딩 중...
-                  </div>
-                  <div id="toss-agreement" className="tw:mt-4 tw:text-xs tw:text-gray-500" />
+                <div className="tw:space-y-3">
+                  {[{ id: 'card', name: '신용카드/체크카드', icon: 'fas fa-credit-card' }, { id: 'bank', name: '계좌이체', icon: 'fas fa-university' }, { id: 'phone', name: '휴대폰결제', icon: 'fas fa-mobile-alt' }].map(method => (
+                    <div key={method.id} onClick={() => setPaymentMethod(method.id)} className={`tw:border-2 tw:rounded-lg tw:p-4 tw:cursor-pointer tw:transition-all ${paymentMethod === method.id ? 'tw:bg-[#FFF0F0]' : 'tw:border-gray-200 tw:hover:bg-[#FFECEC]'}`} style={paymentMethod === method.id ? { borderColor: '#FF9999' } : {}}>
+                      <div className="tw:flex tw:items-center tw:gap-3">
+                        <input type="radio" name="paymentMethod" value={method.id} checked={paymentMethod === method.id} onChange={() => setPaymentMethod(method.id)} className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} />
+                        <i className={`${method.icon}`} style={{ color: '#FF9999' }}></i>
+                        <span className="tw:font-medium">{method.name}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 

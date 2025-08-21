@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 // products.js와 디렉터리 모두 존재하므로, 55개 Mock을 포함한 index.js를 명시적으로 사용
 import { fetchProducts, fetchCategories } from '../../apis/products/products.js';
 
+import { mockProductsDatabase } from '../../utils/products/mockDatabase';
+
 import SearchSection from '../../components/products/search/SearchSection';
 import ProductCard from '../../components/products/ProductCard';
 
@@ -97,24 +99,17 @@ export default function ProductList() {
       });
       
 
-      if (response && response.success) {
-        setProducts(response.products || []);
-        setTotalProducts(response.totalProducts || 0);
-        setTotalPages(response.totalPages || Math.ceil((response.totalProducts || 0) / 12));
-      } else {
-        // API 실패 시 더미 데이터 사용
-        const dummyProducts = generateDummyProducts();
-        setProducts(dummyProducts);
-        setTotalProducts(dummyProducts.length);
-        setTotalPages(1);
-      }
+  // 요청에 따라 API 결과와 무관하게 mockProductsDatabase 앞 54개만 사용
+  const fixedProducts = mockProductsDatabase.slice(0, 55);
+  setProducts(fixedProducts);
+  setTotalProducts(fixedProducts.length);
+  setTotalPages(1);
     } catch (error) {
       console.error('Failed to load products:', error);
-      // 에러 시 더미 데이터 사용
-      const dummyProducts = generateDummyProducts();
-      setProducts(dummyProducts);
-      setTotalProducts(dummyProducts.length);
-      setTotalPages(1);
+  const fixedProducts = mockProductsDatabase.slice(0, 55);
+  setProducts(fixedProducts);
+  setTotalProducts(fixedProducts.length);
+  setTotalPages(1);
 
     } finally {
       setLoading(false);
@@ -122,71 +117,7 @@ export default function ProductList() {
   };
 
 
-  const generateDummyProducts = () => {
-    const productTemplates = [
-      {
-        name: '강아지 사료',
-        description: '영양 만점 강아지 사료로 반려견의 건강한 성장을 도와줍니다.',
-        category: '사료',
-        price: 25000
-      },
-      {
-        name: '고양이 장난감 막대',
-        description: '고양이가 좋아하는 재미있는 깃털 장난감입니다.',
-        category: '장난감',
-        price: 12000
-      },
-      {
-        name: '펫 캐리어',
-        description: '반려동물을 안전하게 이동시킬 수 있는 캐리어입니다.',
-        category: '용품',
-        price: 35000
-      },
-      {
-        name: '강아지 산책용 리드줄',
-        description: '튼튼하고 편안한 강아지 산책용 리드줄입니다.',
-        category: '산책',
-        price: 18000
-      },
-      {
-        name: '고양이 사료',
-        description: '고양이 전용 영양가 높은 프리미엄 사료입니다.',
-        category: '사료',
-        price: 28000
-      },
-      {
-        name: '반려동물 급수기',
-        description: '자동으로 물을 공급하는 스마트 급수기입니다.',
-        category: '용품',
-        price: 45000
-      },
-      {
-        name: '강아지 공 장난감',
-        description: '탄력있고 안전한 재질의 강아지 놀이용 공입니다.',
-        category: '장난감',
-        price: 8000
-      },
-      {
-        name: '고양이 스크래처',
-        description: '고양이의 스트레스 해소에 도움이 되는 스크래처입니다.',
-        category: '용품',
-        price: 22000
-      }
-    ];
-
-    return productTemplates.map((template, index) => ({
-      no: index + 1,
-      name: template.name,
-      description: template.description,
-      price: template.price,
-      imageUrl: `https://picsum.photos/320/200?random=${index + 1}`,
-      isNew: index < 2,
-      views: 50 + index * 10,
-      likes: 5 + index,
-      favorites: 10 + index * 2,
-      category: template.category
-    }));
-  };
+  // (요청) 항상 mockProductsDatabase 앞 8개 고정 사용 -> 별도 함수 불필요
 
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);

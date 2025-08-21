@@ -265,7 +265,8 @@ export default function Cart() {
                 </div>
                 <button
                   className="checkout-btn"
-                  onClick={() => window.location.href = '/checkout'}
+                  // from=cart 쿼리로 Checkout이 tempOrder를 무시하고 장바구니 기반 주문 구성
+                  onClick={() => window.location.href = '/checkout?from=cart'}
                   disabled={updating || cartItems.length === 0}
                 >
                   <span className="checkout-icon">💳</span>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { mockProductsDatabase } from '../../utils/products/mockDatabase';
 import { useLoginContext } from '../../context/LoginContextProvider';
 // 상세도 55개 Mock DB를 사용하는 API 모듈을 명시적으로 사용
 import { fetchProductDetail } from '../../apis/products/products.js';
@@ -32,11 +33,26 @@ export default function ProductDetail() {
       console.log('API response:', response);
       
       if (response && response.success && response.product) {
-        console.log('Using API product:', response.product);
-        setProduct(response.product);
+        let apiProd = response.product;
+        // 1) URL 파라미터 no 우선
+        // 2) mock DB에서 동일 no 찾기
+        const mockByNo = mockProductsDatabase.find(p => String(p.no) === String(productId));
+        // 3) 이름으로도 매칭 (서버 no 불일치 대비)
+        const mockByName = !mockByNo && apiProd?.name ? mockProductsDatabase.find(p => p.name === apiProd.name) : null;
+        const finalProd = mockByNo || mockByName || apiProd;
+        // 최종 상품 no를 URL 파라미터로 강제 (mock과 동기화 목적)
+        const coerced = { ...finalProd, no: Number(productId) };
+        console.log('Final coerced product detail:', coerced);
+        setProduct(coerced);
       } else {
-        console.log('API response invalid, product is null');
-        setProduct(null);
+        // API 실패: mock DB에서 직접 로드
+        const mockByNo = mockProductsDatabase.find(p => String(p.no) === String(productId));
+        if (mockByNo) {
+          setProduct({ ...mockByNo });
+        } else {
+          console.log('API response invalid and no mock match');
+          setProduct(null);
+        }
       }
     } catch (error) {
       console.error('Failed to load product detail:', error);
@@ -62,7 +78,7 @@ export default function ProductDetail() {
 
     setAddingToCart(true);
     try {
-      const response = await addToCart(userId, product.no, quantity);
+  const response = await addToCart(userId, product.no, quantity);
       if (response && response.success) {
         const goToCart = window.confirm(`${product.name}이(가) 장바구니에 추가되었습니다.`);
         if (goToCart) {
@@ -90,20 +106,24 @@ export default function ProductDetail() {
   const handleBuyNow = () => {
 
     if (!product) return;
-    
+    // (요청) 바로결제 후 장바구니나 목록으로 이동할 때도 해당 상품이 장바구니에 존재하도록 장바구니에 먼저 추가
+    try {
+      addToCart(userId, product.no, quantity);
+    } catch (e) {
+      console.warn('Add to cart during buy now failed (ignored):', e);
+    }
+
     const orderData = {
       items: [{
         productId: product.no,
-
         productName: product.name,
         price: product.price,
         quantity: quantity,
         imageUrl: product.imageUrl
       }],
-      totalAmount: product.price * quantity
+      totalAmount: product.price * quantity,
+      mode: 'buyNow'
     };
-    
-
     localStorage.setItem('tempOrder', JSON.stringify(orderData));
     window.location.href = '/checkout';
   };
