@@ -60,9 +60,40 @@ export default function Update({
     onChange({ ...form, imagePath: '' })
   }
 
+  // 입력값을 "18,000 ~ 35,000" 같은 형태로 정리
+  function normalizeFeeRange(raw) {
+    if (!raw) return ''
+    const toNumber = (s) => {
+      const n = s.replace(/[^\d]/g, '')
+      return n ? String(parseInt(n, 10)) : ''
+    }
+    const toMoney = (n) => (n ? Number(n).toLocaleString('ko-KR') : '')
+    const parts = raw.split(/[~\-]/)
+    const a = toNumber(parts[0] || '')
+    const b = toNumber(parts[1] || '')
+    if (a && b) {
+      const n1 = Math.min(+a, +b)
+      const n2 = Math.max(+a, +b)
+      return `${toMoney(n1)} ~ ${toMoney(n2)}`
+    }
+    if (a) return toMoney(a)
+    return ''
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
+    if (!form.applyUrl && !form.homepageUrl) {
+      alert('가입/상담 링크 또는 상품/홈 링크 중 최소 하나는 입력해 주세요.')
+      return
+    }
     onSubmit()
+  }
+
+  const handleDelete = async () => {
+    if (!onDelete) return
+    if (confirm('정말 삭제하시겠어요? 이 동작은 되돌릴 수 없습니다.')) {
+      await onDelete()
+    }
   }
 
   return (
@@ -194,10 +225,18 @@ export default function Update({
               <input
                 name="monthlyFeeRange"
                 value={form.monthlyFeeRange || ''}
-                onChange={change('monthlyFeeRange')}
+                onChange={(e) => onChange({ ...form, monthlyFeeRange: e.target.value })}
+                onBlur={() => onChange({ ...form, monthlyFeeRange: normalizeFeeRange(form.monthlyFeeRange || '') })}
                 placeholder="예) 18,000 ~ 35,000"
-                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200 fee-range"
+                inputMode="numeric"
+                autoComplete="off"
+                pattern="^\\s*\\d{1,3}(?:,\\d{3})*(?:\\s*[~\\-]\\s*\\d{1,3}(?:,\\d{3})*)?\\s*$"
+                title="숫자·쉼표와 ~만 사용 (예: 18,000 ~ 35,000 또는 18000~35000)"
               />
+              <p className="tw:mt-1 tw:text-[11px] tw:text-gray-500">
+                숫자/쉼표/틸드(~)만 입력하세요. 단위(원)는 생략
+              </p>
             </Field>
 
             <Field label="월 최대 보장 한도(만원)">
@@ -350,7 +389,7 @@ export default function Update({
               <button
                 type="button"
                 disabled={deleting}
-                onClick={onDelete}
+                onClick={handleDelete}
                 className="tw:inline-flex tw:items-center tw:justify-center tw:rounded-lg tw:border tw:border-red-300 tw:px-4 tw:py-2 tw:text-sm tw:text-red-600 hover:tw:bg-red-50 disabled:tw:opacity-60"
               >
                 {deleting ? '삭제 중…' : '삭제'}
@@ -377,11 +416,16 @@ export default function Update({
         </div>
       </form>
 
-      {/* 모바일 1열 */}
+      {/* 모바일 1열 + invalid 스타일 */}
       <style>{`
         @media (max-width: 767px) {
           .upd-grid { grid-template-columns: 1fr !important; }
         }
+        /* 전역 invalid 보더 (모든 input) */
+        input:invalid { border-color: #fca5a5 !important; }
+        /* 특정 필드만 하고 싶다면 위 한 줄 대신 ↓ 사용하고,
+           해당 input에 className="fee-range" 유지 */
+        /* .fee-range:invalid { border-color: #fca5a5 !important; } */
       `}</style>
     </div>
   )

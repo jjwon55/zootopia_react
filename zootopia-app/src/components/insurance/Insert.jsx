@@ -53,7 +53,34 @@ export default function Insert({
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    if (!form.applyUrl && !form.homepageUrl) {
+      alert('가입/상담 링크 또는 상품/홈 링크 중 최소 하나는 입력해 주세요.')
+      return
+    }
     onSubmit()
+  }
+
+    function normalizeFeeRange(raw) {
+    if (!raw) return ''
+
+    const toNumber = (s) => {
+      const n = s.replace(/[^\d]/g, '')
+      return n ? String(parseInt(n, 10)) : ''
+    }
+    const toMoney = (n) => (n ? Number(n).toLocaleString('ko-KR') : '')
+
+    const parts = raw.split(/[~\-]/)
+    const a = toNumber(parts[0] || '')
+    const b = toNumber(parts[1] || '')
+
+    if (a && b) {
+      // 앞/뒤 숫자 모두 있으면 정렬해서 "a ~ b"
+      const n1 = Math.min(+a, +b)
+      const n2 = Math.max(+a, +b)
+      return `${toMoney(n1)} ~ ${toMoney(n2)}`
+    }
+    if (a) return toMoney(a)
+    return ''
   }
 
   return (
@@ -134,8 +161,22 @@ export default function Insert({
             </Field>
 
             <Field label="월 보험료(범위)">
-              <input name="monthlyFeeRange" value={form.monthlyFeeRange || ''} onChange={change('monthlyFeeRange')}
-                     placeholder="예) 18,000 ~ 35,000" className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200" />
+              <input
+                name="monthlyFeeRange"
+                value={form.monthlyFeeRange || ''}
+                onChange={(e) => onChange({ ...form, monthlyFeeRange: e.target.value })}
+                onBlur={() => onChange({ ...form, monthlyFeeRange: normalizeFeeRange(form.monthlyFeeRange || '') })}
+                placeholder="예) 18,000 ~ 35,000"
+                className="
+                  tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm
+                  tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200
+                  fee-range
+                "
+                inputMode="numeric"
+                autoComplete="off"
+                pattern="^\\s*\\d{1,3}(?:,\\d{3})*(?:\\s*[~\\-]\\s*\\d{1,3}(?:,\\d{3})*)?\\s*$"
+                title="숫자·쉼표와 ~만 사용 (예: 18,000 ~ 35,000 또는 18000~35000)"
+              />
               <p className="tw:mt-1 tw:text-[11px] tw:text-gray-500">숫자/쉼표/틸드(~)만 입력하세요. 단위(원)는 생략</p>
             </Field>
 
@@ -236,6 +277,8 @@ export default function Insert({
 
       <style>{`
         @media (max-width: 767px) { .ins-grid { grid-template-columns: 1fr !important; } }
+        /* 패턴 불일치 시 테두리 색상 (Tailwind invalid 변형과 함께 사용) */
+        .fee-range:invalid { border-color: #fca5a5 !important; }
       `}</style>
     </div>
   )

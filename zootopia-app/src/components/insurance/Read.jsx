@@ -1,11 +1,14 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import GlossaryHighlighter from '../insurance/GlossaryHighlighter'
 import QnaSection from '../../components/insurance/QnaSection'
+import { insuranceGlossary } from '../../apis/insurance/insuranceGlossary'
 
 const BTN =
   'tw:inline-flex tw:items-center tw:gap-1 tw:rounded-xl tw:px-3 tw:py-2 tw:text-white tw:bg-[#F27A7A] hover:tw:opacity-90 tw:shadow-sm tw:transition tw:duration-150 focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#F27A7A]/60'
+
 const BTN_OUTLINE =
-  'tw:border tw:rounded-xl tw:px-3 tw:py-2 hover:tw:bg-rose-50 tw:transition tw:duration-150'
+  'tw:inline-flex tw:items-center tw:gap-1 tw:rounded-xl tw:px-3 tw:py-2 tw:border tw:border-[#F27A7A] tw:text-[#F27A7A] hover:tw:bg-[#F27A7A]/10 focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#F27A7A]/30 tw:transition tw:duration-150'
 
 /** 간단한 아웃바운드 링크 (클릭 로그 + 새 탭 이동) */
 function OutboundLink({ href, productId, label = 'apply', sponsored = false, className = '', children }) {
@@ -105,8 +108,14 @@ export default function Read({
         {/* 우측: 상세 섹션 */}
         <div className="tw:space-y-6">
           <Section title="🐶 가입 조건" body={product.joinCondition} />
-          <Section title="📌 보장 항목" body={product.coverageItems} />
-          <Section title="⚠️ 유의사항" body={product.precautions} />
+          <Section
+            title="📌 보장 항목"
+            body={<GlossaryHighlighter text={product.coverageItems} glossary={insuranceGlossary} />}
+          />
+          <Section
+            title="⚠️ 유의사항"
+            body={<GlossaryHighlighter text={product.precautions} glossary={insuranceGlossary} />}
+          />
         </div>
       </div>
 
@@ -164,10 +173,13 @@ export default function Read({
 }
 
 function Section({ title, body }) {
+  const isString = typeof body === 'string'
   return (
     <div className="tw:bg-white tw:border tw:border-rose-100 tw:rounded-3xl tw:p-5 tw:shadow-sm">
       <h6 className="tw:font-bold tw:text-lg tw:mb-2 tw:text-[#333]">{title}</h6>
-      <p className="tw:text-sm tw:text-[#444] tw:whitespace-pre-wrap">{body}</p>
+      <div className={`tw:text-sm tw:text-[#444] ${isString ? 'tw:whitespace-pre-wrap' : ''}`}>
+        {body}
+      </div>
     </div>
   )
 }

@@ -1,21 +1,34 @@
-import React from 'react'
-
 export default function OutboundLink({
   href,
   productId,
-  label = 'apply',    // 'apply' | 'homepage'
+  label = 'apply',
   sponsored = false,
   className = '',
   children,
 }) {
-  const handleClick = () => {
+  const sendTrack = () => {
     try {
-      const payload = { productId, label, href, ts: Date.now() }
-      navigator.sendBeacon?.(
-        '/track/outbound/insurance',
-        new Blob([JSON.stringify(payload)], { type: 'application/json' })
-      )
+      const body = JSON.stringify({ productId, label, href, ts: Date.now() })
+      const url = '/api/track/outbound/insurance'
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }))
+      } else {
+        fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body,
+          keepalive: true,
+        }).catch(() => {})
+      }
     } catch {}
+  }
+
+  if (!href) {
+    return (
+      <button className={`${className} tw:opacity-50`} disabled aria-disabled>
+        이동 가능한 링크 없음
+      </button>
+    )
   }
 
   return (
@@ -23,8 +36,13 @@ export default function OutboundLink({
       href={href}
       target="_blank"
       rel={sponsored ? 'noopener noreferrer nofollow sponsored' : 'noopener noreferrer'}
-      onClick={handleClick}
+      onClick={sendTrack}
+      onMouseDown={sendTrack}     // 새탭(마우스다운) 선반영
+      onAuxClick={sendTrack}      // 가운데 클릭
+      onKeyDown={(e) => e.key === 'Enter' && sendTrack()}
       className={className}
+      aria-label="외부 사이트로 이동"
+      referrerPolicy="strict-origin-when-cross-origin"
     >
       {children}
     </a>
