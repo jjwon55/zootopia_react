@@ -322,6 +322,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
             }}
             className="tw:flex tw:gap-2 tw:mt-6"
           >
+
             <select name="type" className="tw:border tw:border-[#dee2e6] tw:rounded tw:px-2 tw:py-1 tw:w-[140px]">
               <option value="title">제목</option>
               <option value="titleContent">제목+내용</option>
@@ -341,6 +342,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
               검색
             </button>
           </form>
+
 
           {/* 광고 */}
           <div className="tw:my-6">

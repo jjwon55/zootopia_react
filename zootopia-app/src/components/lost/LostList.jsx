@@ -21,7 +21,7 @@ const LostList = ({ posts, pagination, keyword, type }) => {
   };
 
   return (
-    <section className="tw:max-w-[900px] tw:mx-auto tw:bg-white tw:p-6 tw:rounded-[10px] tw:shadow-[0_2px_5px_rgba(0,0,0,0.05)]">
+    <section className="tw:max-w-[900px] tw:my-8 tw:mx-auto tw:bg-white tw:p-6 tw:rounded-[10px] tw:shadow-[0_2px_5px_rgba(0,0,0,0.05)]">
       {/* 상단 헤더 */}
       <div className="tw:items-center tw:mb-4">
         <img src={lostMain} alt="유실동물" />
