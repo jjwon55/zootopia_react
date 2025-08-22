@@ -9,11 +9,32 @@ import Ppl from '../../assets/img/ppl2.jpg';
 import ReportModal from '../../components/admin/users/ReportsUserModal';
 
 /* =========================
+   태그 정규화 유틸
+   - post.tagList: [{name}, ...] / ["태그"] / "고양이, 강아지" 모두 대응
+   ========================= */
+const normalizeTags = (post) => {
+  const raw = post?.tagList ?? post?.tags ?? [];
+  if (Array.isArray(raw)) {
+    return raw
+      .map((t) => (typeof t === 'string' ? t : (t?.name ?? t?.tag ?? '')))
+      .map((s) => s.replace(/^#/, '').trim())
+      .filter(Boolean);
+  }
+  if (typeof raw === 'string') {
+    return raw
+      .split(/[,#\s]+/) // 쉼표/공백/# 구분
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
+/* =========================
    작성자 액션 드롭다운 메뉴
    ========================= */
 function AuthorMenu({ user, profileSrc, onMessage }) {
   const [open, setOpen] = useState(false);
-  const [reportOpen, setReportOpen] = useState(false); // 🚩 신고 모달
+  const [reportOpen, setReportOpen] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
@@ -106,12 +127,9 @@ function AuthorMenu({ user, profileSrc, onMessage }) {
         </div>
       )}
 
-      {/* 🚩 신고 모달 */}
+      {/* 신고 모달 */}
       {reportOpen && (
-        <ReportModal
-          targetUser={user}
-          onClose={() => setReportOpen(false)}
-        />
+        <ReportModal targetUser={user} onClose={() => setReportOpen(false)} />
       )}
     </div>
   );
@@ -137,18 +155,12 @@ const List = ({ posts, topList, pagination, keyword }) => {
   // 라우팅 핸들러
   const goMessage = (user) =>
     navigate(
-      `/messages/compose?to=${user.userId}&nick=${encodeURIComponent(
-        user.nickname || '',
-      )}`,
+      `/messages/compose?to=${user.userId}&nick=${encodeURIComponent(user.nickname || '')}`
     );
 
   // ✅ 화면 렌더링 시 숨김 게시글 제거
-  const visibleTopList = Array.isArray(topList)
-    ? topList.filter((p) => !p?.hidden)
-    : [];
-  const visiblePosts = Array.isArray(posts)
-    ? posts.filter((p) => !p?.hidden)
-    : [];
+  const visibleTopList = Array.isArray(topList) ? topList.filter((p) => !p?.hidden) : [];
+  const visiblePosts = Array.isArray(posts) ? posts.filter((p) => !p?.hidden) : [];
 
   return (
     <section className="tw:text-gray-800">
@@ -156,28 +168,26 @@ const List = ({ posts, topList, pagination, keyword }) => {
       <section className="tw:max-w-[900px] tw:mx-auto tw:my-8 tw:p-4 tw:bg-[#fffefb] tw:rounded-[10px] tw:border tw:border-[#eee]">
         <h2 className="tw:text-[#ff3c3c] tw:text-[18px] tw:mb-2">🔥 실시간 인기게시물</h2>
         <div className="tw:flex tw:gap-8">
-          {[visibleTopList.slice(0, 5), visibleTopList.slice(5, 10)].map(
-            (list, i) => (
-              <ol key={i} className="tw:space-y-2 tw:w-1/2 tw:pl-[19px] tw:text-[15px]">
-                {list.map((post, index) => (
-                  <li key={post.postId} className="tw:flex tw:items-center tw:gap-2">
-                    <span className="tw:text-red-400 tw:font-bold tw:w-6 tw:text-center">
-                      {index + 1 + i * 5}
-                    </span>
-                    <span className="tw:bg-[#a06697] tw:text-white tw:text-xs tw:px-2 tw:py-0.5 tw:rounded">
-                      {post.category || '카테고리'}
-                    </span>
-                    <Link
-                      className="tw:truncate tw:hover:underline tw:text-inherit tw:no-underline"
-                      to={`/posts/read/${post.postId}`}
-                    >
-                      {post.title || '제목없음'}
-                    </Link>
-                  </li>
-                ))}
-              </ol>
-            ),
-          )}
+          {[visibleTopList.slice(0, 5), visibleTopList.slice(5, 10)].map((list, i) => (
+            <ol key={i} className="tw:space-y-2 tw:w-1/2 tw:pl-[19px] tw:text-[15px]">
+              {list.map((post, index) => (
+                <li key={post.postId} className="tw:flex tw:items-center tw:gap-2">
+                  <span className="tw:text-red-400 tw:font-bold tw:w-6 tw:text-center">
+                    {index + 1 + i * 5}
+                  </span>
+                  <span className="tw:bg-[#a06697] tw:text-white tw:text-xs tw:px-2 tw:py-0.5 tw:rounded">
+                    {post.category || '카테고리'}
+                  </span>
+                  <Link
+                    className="tw:truncate tw:hover:underline tw:text-inherit tw:no-underline"
+                    to={`/posts/read/${post.postId}`}
+                  >
+                    {post.title || '제목없음'}
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          ))}
         </div>
       </section>
 
@@ -193,6 +203,11 @@ const List = ({ posts, topList, pagination, keyword }) => {
             <img src={chatIcon} className="tw:w-[24px] tw:h-[24px]" alt="채팅 아이콘" />
             <h2 className="tw:text-xl tw:font-semibold">커뮤니티</h2>
           </div>
+        </div>
+
+        {/* 정렬/글쓰기 */}
+        <div className="tw:flex tw:justify-between tw:items-center tw:mb-4">
+          <div />
           <div className="tw:flex tw:items-center tw:gap-[10px]">
             <select
               className="tw:border tw:border-[#ccc] tw:rounded tw:px-2 tw:py-1 tw:text-sm"
@@ -227,6 +242,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
                 }}
               />
             </div>
+
             <div className="tw:flex tw:flex-col tw:justify-between tw:flex-grow">
               <div>
                 <Link
@@ -235,9 +251,33 @@ const List = ({ posts, topList, pagination, keyword }) => {
                 >
                   {post.title || '제목없음'}
                 </Link>
+
+                {/* 카테고리 */}
                 <span className="tw:inline-block tw:bg-[#e0f2ff] tw:text-[#007acc] tw:px-[8px] tw:py-[3px] tw:rounded-[10px] tw:max-w-[65px] tw:h-[25px] tw:text-sm">
                   {post.category || '기타'}
                 </span>
+
+                {/* ✅ 태그 칩 */}
+                {(() => {
+                  const tags = normalizeTags(post);
+                  if (!tags.length) return null;
+                  return (
+                    <div className="tw:flex tw:flex-wrap tw:gap-1 tw:mt-2">
+                      {tags.slice(0, 5).map((tag) => (
+                        <Link
+                          key={`${post.postId}-${tag}`}
+                          to={buildQuery({ type: 'tag', keyword: tag, page: 1 })}
+                          className="tw:no-underline"
+                          title={`태그: ${tag}`}
+                        >
+                          <span className="tw:bg-[#f5f5f5] tw:text-[#555] tw:text-xs tw:px-2 tw:py-[2px] tw:rounded hover:tw:bg-[#eee]">
+                            #{tag}
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="tw:flex tw:justify-between tw:items-center tw:gap-[6px] tw:text-[14px] tw:text-[#666] tw:mt-1">
@@ -245,17 +285,21 @@ const List = ({ posts, topList, pagination, keyword }) => {
                 <AuthorMenu
                   user={post.user}
                   profileSrc={
-                    post.user?.profileImg
-                      ? `http://localhost:8080${post.user.profileImg}`
-                      : defaultProfile
+                    post.user?.profileImg ? `http://localhost:8080${post.user.profileImg}` : defaultProfile
                   }
                   onMessage={goMessage}
                 />
 
                 <div className="tw:text-[14px] tw:text-[#888] tw:flex tw:gap-[6px] tw:mt-[8px]">
-                  <span><i className="bi bi-eye"></i> {post.viewCount}</span>
-                  <span><i className="bi bi-chat-dots"></i> {post.commentCount}</span>
-                  <span><i className="bi bi-heart-fill tw:text-red-500"></i> {post.likeCount}</span>
+                  <span>
+                    <i className="bi bi-eye"></i> {post.viewCount}
+                  </span>
+                  <span>
+                    <i className="bi bi-chat-dots"></i> {post.commentCount}
+                  </span>
+                  <span>
+                    <i className="bi bi-heart-fill tw:text-red-500"></i> {post.likeCount}
+                  </span>
                 </div>
               </div>
             </div>
@@ -312,23 +356,19 @@ const List = ({ posts, topList, pagination, keyword }) => {
                   </Link>
                 </li>
               )}
-              {Array.from(
-                { length: pagination.end - pagination.start + 1 },
-                (_, idx) => pagination.start + idx,
-              ).map((pageNum) => (
-                <li key={pageNum}>
-                  <Link
-                    className={`tw:px-[13px] tw:py-[6px] tw:border tw:rounded-[6px] tw:text-[14px] tw:text-inherit tw:no-underline ${
-                      pagination.page === pageNum
-                        ? 'tw:bg-[#5b99f5] tw:text-white tw:border-[#5b99f5]'
-                        : ''
-                    }`}
-                    to={buildQuery({ page: pageNum })}
-                  >
-                    {pageNum}
-                  </Link>
-                </li>
-              ))}
+              {Array.from({ length: pagination.end - pagination.start + 1 }, (_, idx) => pagination.start + idx).map(
+                (pageNum) => (
+                  <li key={pageNum}>
+                    <Link
+                      className={`tw:px-[13px] tw:py-[6px] tw:border tw:rounded-[6px] tw:text-[14px] tw:text-inherit tw:no-underline ${pagination.page === pageNum ? 'tw:bg-[#5b99f5] tw:text-white tw:border-[#5b99f5]' : ''
+                        }`}
+                      to={buildQuery({ page: pageNum })}
+                    >
+                      {pageNum}
+                    </Link>
+                  </li>
+                )
+              )}
               {pagination.end < pagination.last && (
                 <li>
                   <Link
