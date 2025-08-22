@@ -32,9 +32,9 @@ export const sendMessage = async (messageData) => {
 };
 
 // 받은 쪽지 목록 조회
-export const getReceivedMessages = async () => {
+export const getReceivedMessages = async (pageNum = 1) => {
   try {
-    const response = await api.get(`${API_BASE_URL}/received`);
+    const response = await api.get(`${API_BASE_URL}/received`, { params: { pageNum } });
     return response.data;
   } catch (error) {
     console.error('받은 쪽지 목록 조회 실패:', error);
@@ -43,9 +43,9 @@ export const getReceivedMessages = async () => {
 };
 
 // 보낸 쪽지 목록 조회
-export const getSentMessages = async () => {
+export const getSentMessages = async (pageNum = 1) => {
   try {
-    const response = await api.get(`${API_BASE_URL}/sent`);
+    const response = await api.get(`${API_BASE_URL}/sent`, { params: { pageNum } });
     return response.data;
   } catch (error) {
     console.error('보낸 쪽지 목록 조회 실패:', error);

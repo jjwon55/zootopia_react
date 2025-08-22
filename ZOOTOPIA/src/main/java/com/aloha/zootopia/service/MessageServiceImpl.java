@@ -32,14 +32,25 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public List<MessageResponseDTO> getReceivedMessages(Long userId) {
-        System.out.println("서비스에서 받은 데이터: " + userId);
-        return messageMapper.findReceivedMessagesByUserId(userId);
+    public List<MessageResponseDTO> getReceivedMessages(Long userId, int pageNum, int pageSize) {
+        int offset = (pageNum - 1) * pageSize;
+        return messageMapper.findReceivedMessagesByUserId(userId, offset, pageSize);
     }
 
     @Override
-    public List<MessageSentResponseDTO> getSentMessages(Long userId) {
-        return messageMapper.findSentMessagesByUserId(userId);
+    public List<MessageSentResponseDTO> getSentMessages(Long userId, int pageNum, int pageSize) {
+        int offset = (pageNum - 1) * pageSize;
+        return messageMapper.findSentMessagesByUserId(userId, offset, pageSize);
+    }
+
+    @Override
+    public int countReceivedMessages(long userId) {
+        return messageMapper.countReceivedMessages(userId);
+    }
+
+    @Override
+    public int countSentMessages(long userId) {
+        return messageMapper.countSentMessages(userId);
     }
 
     @Override
