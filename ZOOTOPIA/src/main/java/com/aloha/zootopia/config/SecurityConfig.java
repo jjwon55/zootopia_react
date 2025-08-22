@@ -93,6 +93,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // CORS 프리플라이트
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/posts/create", "/showoff/create", "/lost/create").authenticated()
 
                 // 로그인/회원가입/인증 관련 공개
                 .requestMatchers("/login", "/api/login", "/join", "/users", "/auth/**").permitAll()
@@ -110,7 +111,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/payments/kakao/**").permitAll()
 
                 // 권한 영역
-                .requestMatchers("/admin/**").hasAnyRole("ADMIN","MANAGER","MOD")
+                .requestMatchers("/admin/**").hasAnyRole("ADMIN")
                 .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/products/create/**").hasRole("ADMIN")
 
