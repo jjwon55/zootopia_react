@@ -33,7 +33,7 @@ const List = ({ loading, posts = [], topList = [], pagination, keyword }) => {
   };
 
   return (
-    <section className="tw:text-gray-800">
+    <section className="tw:text-gray-800 tw:my-8">
 
       {/* 🔥 실시간 인기게시물 */}
       <section className="tw:max-w-[900px] tw:mx-auto tw:my-8 tw:p-4 tw:bg-[#fffefb] tw:rounded-[10px] tw:border tw:border-[#eee]">
