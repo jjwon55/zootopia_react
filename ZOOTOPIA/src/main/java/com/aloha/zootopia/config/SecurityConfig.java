@@ -70,11 +70,6 @@ public class SecurityConfig {
             throws Exception {
         AuthenticationManager authenticationManager = authConfig.getAuthenticationManager();
 
-        // 로그인 필터 생성 + 실패 핸들러 연결
-        var loginFilter = new JwtAuthenticationFilter(authenticationManager, jwtProvider);
-        loginFilter.setFilterProcessesUrl("/login");
-        loginFilter.setAuthenticationFailureHandler(new com.aloha.zootopia.config.CustomAuthFailureHandler());
-
         http
             .csrf(csrf -> csrf.disable())
             .formLogin(form -> form.disable())
@@ -125,12 +120,5 @@ public class SecurityConfig {
         return http.build();
     }
 }
-
-
-
-
-
-
-
 
 

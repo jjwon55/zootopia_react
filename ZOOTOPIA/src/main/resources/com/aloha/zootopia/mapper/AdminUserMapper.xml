@@ -9,11 +9,25 @@
     <result property="nickname" column="nickname"/>
     <result property="status" column="status"/>
     <result property="createdAt" column="created_at"/>
+     <result property="reportCount" column="report_count"/>
   </resultMap>
 
   <select id="findUsers" resultMap="UserSummaryMap">
-    SELECT u.user_id, u.email, u.nickname, u.status, u.created_at
-      FROM users u
+    SELECT
+      u.user_id,
+      u.email,
+      u.nickname,
+      u.status,
+      u.created_at,
+      <!-- /* 👇 신고 건수 컬럼 추가 (전체 건수) */ -->
+      (SELECT COUNT(1)
+        FROM user_report ur
+        WHERE ur.reported_user_id = u.user_id
+        <!-- /* 진행중만 보고 싶으면 ↓ 주석 해제
+          AND ur.status = 'PENDING'
+        */ -->
+      ) AS report_count
+    FROM users u
     <where>
       <if test="q != null and q != ''">
         AND (u.email LIKE CONCAT('%',#{q},'%') OR u.nickname LIKE CONCAT('%',#{q},'%'))
@@ -25,8 +39,8 @@
         AND EXISTS (
           SELECT 1
             FROM user_auth ua
-           WHERE ua.user_id = u.user_id
-             AND ua.auth = #{role}
+          WHERE ua.email = u.email
+            AND ua.auth  = #{role}
         )
       </if>
       <if test="from != null">AND u.created_at &gt;= #{from}</if>
@@ -36,6 +50,7 @@
     ORDER BY ${sortColumn} ${sortDir}
     LIMIT #{size} OFFSET #{offset}
   </select>
+
 
   <select id="countUsers" resultType="long">
     SELECT COUNT(*)
@@ -47,12 +62,13 @@
       <if test="status != null and status != ''">
         AND u.status = #{status}
       </if>
+      <!-- ✅ role 필터: email 기반으로 변경 -->
       <if test="role != null and role != ''">
         AND EXISTS (
           SELECT 1
             FROM user_auth ua
-           WHERE ua.user_id = u.user_id
-             AND ua.auth = #{role}
+           WHERE ua.email = u.email
+             AND ua.auth  = #{role}
         )
       </if>
       <if test="from != null">AND u.created_at &gt;= #{from}</if>
@@ -76,39 +92,55 @@
 
   <select id="findUserById" resultMap="UserDetailMap">
     SELECT u.user_id,
-          u.email,
-          u.nickname,
-          u.status,
-          u.memo,
-          u.created_at,
-          u.updated_at,
-          (SELECT COUNT(1)
+           u.email,
+           u.nickname,
+           u.status,
+           u.memo,
+           u.created_at,
+           u.updated_at,
+           (SELECT COUNT(1)
               FROM posts p
-            WHERE p.user_id = u.user_id) AS post_count,
-          (SELECT COUNT(1)
+             WHERE p.user_id = u.user_id) AS post_count,
+           (SELECT COUNT(1)
               FROM post_comments c
-            WHERE c.user_id = u.user_id
-              AND c.is_deleted = 0) AS comment_count
+             WHERE c.user_id = u.user_id
+               AND c.is_deleted = 0) AS comment_count
       FROM users u
-    WHERE u.user_id = #{userId}
-      AND u.is_deleted = 0
+     WHERE u.user_id = #{userId}
+       AND u.is_deleted = 0
   </select>
 
+  <!-- ======================= -->
+  <!--        Roles (email)    -->
+  <!-- ======================= -->
 
-  <!-- 역할(Role) -->
-  <select id="findRolesByUserId" resultType="string">
+  <!-- ✅ userId로 받은 뒤 내부에서 email join -->
+  <select id="findRolesByUserId" parameterType="int" resultType="string">
     SELECT ua.auth
       FROM user_auth ua
-     WHERE ua.user_id = #{userId}
+      JOIN users u ON u.email = ua.email
+     WHERE u.user_id = #{userId}
   </select>
 
-  <delete id="deleteRoles">
-    DELETE FROM user_auth WHERE user_id = #{userId}
+  <!-- ✅ 삭제도 email 기준으로 -->
+  <delete id="deleteRoles" parameterType="int">
+    DELETE FROM user_auth
+     WHERE email = (SELECT email FROM users WHERE user_id = #{userId})
   </delete>
 
+  <!-- ✅ 단건 추가 (userId -> email 서브쿼리) -->
   <insert id="insertRole">
-    INSERT INTO user_auth(user_id, auth)
-    VALUES(#{userId}, #{role})
+    INSERT INTO user_auth (email, auth)
+    VALUES ((SELECT email FROM users WHERE user_id = #{userId}), #{role})
+  </insert>
+
+  <!-- ✅ 배치 추가 (userId -> email 서브쿼리) -->
+  <insert id="insertRolesBatch">
+    INSERT INTO user_auth (email, auth)
+    VALUES
+    <foreach collection="roles" item="r" separator=",">
+      ((SELECT email FROM users WHERE user_id = #{userId}), #{r})
+    </foreach>
   </insert>
 
   <!-- 사용자 필드 업데이트 -->
@@ -116,21 +148,11 @@
     UPDATE users
        <set>
          <if test="fields.nickname != null"> nickname = #{fields.nickname}, </if>
-         <if test="fields.status != null"> status = #{fields.status}, </if>
-         <if test="fields.memo != null"> memo = #{fields.memo}, </if>
+         <if test="fields.status   != null"> status   = #{fields.status},   </if>
+         <if test="fields.memo     != null"> memo     = #{fields.memo},     </if>
          updated_at = NOW()
        </set>
      WHERE user_id = #{userId}
   </update>
-
-  <insert id="insertRolesBatch">
-    INSERT INTO user_auth(user_id, auth)
-    VALUES
-    <foreach collection="roles" item="r" separator=",">
-      (#{userId}, #{r})
-    </foreach>
-    <!-- 유니크 충돌 시 무시하고 싶다면(MySQL):
-        ON DUPLICATE KEY UPDATE auth = VALUES(auth) -->
-  </insert>
 
 </mapper>

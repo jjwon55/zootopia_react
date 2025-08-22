@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import defaultProfile from '../../assets/img/default-profile.png';
+import ReportModal from '../../components/admin/users/ReportsUserModal'; 
+
 
 /** 서버 경로를 안전한 이미지 URL로 변환 */
 const resolveImg = (src) => {
@@ -13,6 +15,8 @@ const resolveImg = (src) => {
 
 export default function UserInfo({ user, pets = [], myPosts = [] }) {
   if (!user) return null;
+
+  const [reportOpen, setReportOpen] = useState(false); // ✅ 추가
 
   const profileSrc = resolveImg(user.profileImg) || defaultProfile;
 
@@ -42,6 +46,15 @@ export default function UserInfo({ user, pets = [], myPosts = [] }) {
               <div className="tw:font-semibold">{user.nickname}</div>
               {user.intro && <div className="tw:mt-1">{user.intro}</div>}
             </div>
+
+            <button
+                type="button"
+                className="tw:btn tw:btn-error tw:btn-sm"
+                onClick={() => setReportOpen(true)}
+                title="이 유저 신고하기"
+              >
+                🚩 신고하기 
+              </button>
           </div>
         </section>
 
@@ -106,6 +119,16 @@ export default function UserInfo({ user, pets = [], myPosts = [] }) {
           )}
         </section>
       </div>
+
+      {/* 🚩 신고 모달 */}
+      {reportOpen && (
+        <ReportModal
+          targetUser={user}
+          onClose={() => setReportOpen(false)}
+          // 글/댓글 화면에서 재사용 시 아래처럼 컨텍스트 넘길 수 있어요:
+          // context={{ postId, commentId, lostPostId, lostCommentId }}
+        />
+      )}
     </div>
   );
 }

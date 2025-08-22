@@ -1,7 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './ProductCard.css';
 
 const ProductCard = ({ product, onClick }) => {
+  const navigate = useNavigate();
   const handleClick = () => {
     if (onClick) {
       onClick(product.no);
@@ -9,7 +11,8 @@ const ProductCard = ({ product, onClick }) => {
   };
 
   const handleDetailClick = (e) => {
-    e.stopPropagation();
+    // 상품 상세 이동 시 mockDatabase의 no를 사용
+    navigate(`/products/detail/${product.no}`);
     if (onClick) {
       onClick(product.no);
     }
@@ -87,6 +90,7 @@ const ProductCard = ({ product, onClick }) => {
         >
           상세보기
         </button>
+        <p className="product-id">상품번호: {product.no}</p>
       </div>
     </div>
   );

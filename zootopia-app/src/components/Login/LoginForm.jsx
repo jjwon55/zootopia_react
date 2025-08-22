@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { LoginContext } from '../../context/LoginContextProvider';
 import { useNavigate } from 'react-router-dom';
 import styles from './LoginForm.module.css';
+import * as Swal from '../../apis/posts/alert';
 
 const LoginForm = () => {
   const { login } = useContext(LoginContext);
@@ -9,6 +10,7 @@ const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberId, setRememberId] = useState(false);
+  const [loading, setLoading] = useState(false); // ✅ 로딩 상태
 
   useEffect(() => {
     const savedEmail = localStorage.getItem('savedEmail');
@@ -20,10 +22,31 @@ const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (rememberId) localStorage.setItem('savedEmail', email);
     else localStorage.removeItem('savedEmail');
 
-    await login(email, password);
+    try {
+      setLoading(true);
+      await login(email, password);
+
+      // ✅ SweetAlert로 성공 알림 후 이동
+      Swal.alert('로그인 성공', '메인 화면으로 이동합니다.', 'success', () => navigate('/'));
+    } catch (err) {
+      const status = err?.response?.status;
+      const serverMsg = err?.response?.data?.error;
+
+      // ✅ SweetAlert로 실패 알림
+      if (status === 403) {
+        Swal.alert('로그인 실패', serverMsg || '정지된 계정입니다.', 'error');
+      } else if (status === 401) {
+        Swal.alert('로그인 실패', serverMsg || '아이디 또는 비밀번호가 일치하지 않습니다.', 'error');
+      } else {
+        Swal.alert('로그인 실패', serverMsg || '로그인에 실패했습니다.', 'error');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -46,6 +69,7 @@ const LoginForm = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoFocus
+                disabled={loading}
               />
             </div>
 
@@ -58,6 +82,7 @@ const LoginForm = () => {
                 className="tw:w-full tw:rounded-lg tw:bg-zinc-100 tw:p-[14px] tw:text-[0.95rem] tw:transition-colors tw:outline-none tw:ring-0 focus:tw:bg-zinc-200"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
               />
             </div>
 
@@ -70,6 +95,7 @@ const LoginForm = () => {
                   className="tw:w-4 tw:h-4"
                   checked={rememberId}
                   onChange={(e) => setRememberId(e.target.checked)}
+                  disabled={loading}
                 />
                 아이디 저장
               </label>
@@ -89,9 +115,10 @@ const LoginForm = () => {
             {/* 로그인 버튼 */}
             <button
               type="submit"
-              className="tw:w-full tw:bg-[#ff7b7b] tw:hover:bg-[#ff6666] tw:text-white tw:rounded-lg tw:py-[14px] tw:font-semibold tw:text-base tw:transition-all tw:my-5"
+              className="tw:w-full tw:bg-[#ff7b7b] tw:hover:bg-[#ff6666] tw:text-white tw:rounded-lg tw:py-[14px] tw:font-semibold tw:text-base tw:transition-all tw:my-5 disabled:tw:opacity-60"
+              disabled={loading}
             >
-              로그인
+              {loading ? '로그인 중...' : '로그인'}
             </button>
 
             <div className="tw:text-center tw:mt-3">
@@ -103,7 +130,7 @@ const LoginForm = () => {
                 <i className="fas fa-comment"></i>
               </a>
               <a href="/api/oauth2/authorization/naver" className={`${styles.socialBtn} ${styles.naver}`}>
-                <span style={{ fontWeight: '900', fontSize: '20px', textShadow: '0 0 1px #fff, 0 0 2px #fff'}}></span>
+                <span style={{ fontWeight: '900', fontSize: '20px', textShadow: '0 0 1px #fff, 0 0 2px #fff' }}></span>
               </a>
               <a href="/api/oauth2/authorization/google" className={`${styles.socialBtn} ${styles.google}`}>
                 <i className="fab fa-google-f"></i>

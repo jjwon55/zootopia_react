@@ -19,6 +19,7 @@ import UserInfo from '../pages/mypage/UserInfo';
 import Map from '../pages/map/Map';
 import UsersPage from '../pages/admin/users/UsersPage';
 import Join from '../components/join/Join';
+import AdminPostsPage from '../pages/admin/post/AdminPostsPage';
 
 const JjwRoutes = () => {
   return (
@@ -41,8 +42,8 @@ const JjwRoutes = () => {
       <Route path="/mypage/edit" element={<MyPageEdit />} />
       <Route path="/mypage/:userId" element={<UserInfo />} />
       <Route path="/map" element={<Map />} />
-      {/* Admin Routes */}
       <Route path="/admin/users" element={<UsersPage />} />
+      <Route path="/admin/post" element={<AdminPostsPage />} />
     </Routes>
   </>
   );

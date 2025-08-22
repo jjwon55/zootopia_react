@@ -19,16 +19,31 @@
     <result property="precautions"      column="precautions"/>
     <result property="createdAt"        column="created_at"/>
     <result property="imagePath"        column="image_path"/>
+
+    <!-- ✅ [추가] 외부 이동 관련 필드 매핑 -->
+    <result property="sponsored" column="is_sponsored"/>
+    <result property="homepageUrl"      column="homepage_url"/>
+    <result property="applyUrl"         column="apply_url"/>
+    <result property="partnerCode"      column="partner_code"/>
+    <result property="utmSource"        column="utm_source"/>
+    <result property="utmMedium"        column="utm_medium"/>
+    <result property="utmCampaign"      column="utm_campaign"/>
+    <!-- 도메인 필드가 boolean isSponsored 라면, property="sponsored" 로 매핑(세터 setSponsored로 동작) -->
+    <result property="sponsored"        column="is_sponsored"/>
+    <result property="disclaimer"       column="disclaimer"/>
   </resultMap>
 
   <!-- insert/update에 company 컬럼을 쓰고 있다면 여기도 포함 -->
-  <insert id="insertProduct" parameterType="com.aloha.zootopia.domain.InsuranceProduct" useGeneratedKeys="true" keyProperty="productId">
+  <insert id="insertProduct" parameterType="com.aloha.zootopia.domain.InsuranceProduct"
+          useGeneratedKeys="true" keyProperty="productId">
     INSERT INTO insurance_product
     (name, company, slogan, coverage_percent, monthly_fee_range, max_coverage, species,
-     join_condition, coverage_items, precautions, image_path, created_at)
+    join_condition, coverage_items, precautions, image_path, created_at,
+    homepage_url, apply_url, partner_code, utm_source, utm_medium, utm_campaign, is_sponsored, disclaimer)
     VALUES
     (#{name}, #{company}, #{slogan}, #{coveragePercent}, #{monthlyFeeRange}, #{maxCoverage}, #{species},
-     #{joinCondition}, #{coverageItems}, #{precautions}, #{imagePath}, NOW())
+    #{joinCondition}, #{coverageItems}, #{precautions}, #{imagePath}, NOW(),
+    #{homepageUrl}, #{applyUrl}, #{partnerCode}, #{utmSource}, #{utmMedium}, #{utmCampaign}, #{sponsored}, #{disclaimer})
   </insert>
 
   <select id="selectProductById" resultMap="InsuranceProductMap">
@@ -47,7 +62,15 @@
         join_condition = #{joinCondition},
         coverage_items = #{coverageItems},
         precautions = #{precautions},
-        image_path = #{imagePath}
+        image_path = #{imagePath},
+        homepage_url = #{homepageUrl},
+        apply_url = #{applyUrl},
+        partner_code = #{partnerCode},
+        utm_source = #{utmSource},
+        utm_medium = #{utmMedium},
+        utm_campaign = #{utmCampaign},
+        is_sponsored = #{sponsored},
+        disclaimer = #{disclaimer}
     WHERE product_id = #{productId}
   </update>
 
@@ -66,26 +89,23 @@
     SELECT COUNT(*) FROM insurance_product
   </select>
 
-  <!-- ✅ 필터 + 페이징 -->
-<sql id="productFilterWhere">
-  <where>
-    <!-- species가 dog/cat일 때는 all도 함께 매칭 -->
-    <if test="species != null and species != '' and species != 'all'">
-      AND (species = #{species} OR species = 'all')
-    </if>
+  <!-- productFilterWhere -->
+  <sql id="productFilterWhere">
+    <where>
+      <if test="species != null and species != '' and species != 'all'">
+        AND (species = #{species} OR species = 'all')
+      </if>
 
-    <!-- 회사 필터 (정확 일치 버전) -->
-    <if test="company != null and company != ''">
-      AND company = #{company}
-    </if>
-    <!-- 부분 일치가 필요하면 위 대신 아래 사용
-    <if test="company != null and company != ''">
-      AND (company LIKE CONCAT('%', #{company}, '%')
-           OR name    LIKE CONCAT('%', #{company}, '%'))
-    </if>
-    -->
-  </where>
-</sql>
+      <if test="company != null and company != ''">
+        AND company = #{company}
+      </if>
+
+      <!-- 👇 추가: 스폰서 필터 (0/1), 파라미터 있으면 적용 -->
+      <if test="sponsored != null">
+        AND is_sponsored = #{sponsored}
+      </if>
+    </where>
+  </sql>
 
   <select id="selectFilteredProducts" resultMap="InsuranceProductMap">
     SELECT * FROM insurance_product
