@@ -1,14 +1,128 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import defaultThumbnail from '../../assets/img/default-thumbnail.png';
 import defaultProfile from '../../assets/img/default-profile.png';
 import chatIcon from '../../assets/img/chat.png';
 import writeIcon from '../../assets/img/write.png';
 import catPpl from '../../assets/img/catppl.jpg';
 import Ppl from '../../assets/img/ppl2.jpg';
+import ReportModal from '../../components/admin/users/ReportsUserModal';
 
+/* =========================
+   작성자 액션 드롭다운 메뉴
+   ========================= */
+function AuthorMenu({ user, profileSrc, onMessage }) {
+  const [open, setOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false); // 🚩 신고 모달
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const onDocClick = (e) => {
+      if (!ref.current || ref.current.contains(e.target)) return;
+      setOpen(false);
+    };
+    const onEsc = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onEsc);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onEsc);
+    };
+  }, []);
+
+  // 탈퇴/비공개 사용자 처리
+  if (!user) {
+    return (
+      <span className="tw:flex tw:items-center tw:gap-[6px] tw:text-[#999]">
+        <img
+          src={profileSrc || defaultProfile}
+          alt=""
+          className="tw:w-[24px] tw:h-[24px] tw:rounded-full tw:object-cover"
+        />
+        탈퇴회원
+      </span>
+    );
+  }
+
+  return (
+    <div className="tw:relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="tw:flex tw:items-center tw:gap-[6px] tw:hover:opacity-90 tw:focus:outline-none"
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        <img
+          src={profileSrc || defaultProfile}
+          alt="작성자 프로필"
+          className="tw:w-[24px] tw:h-[24px] tw:rounded-full tw:object-cover"
+        />
+        {user.nickname || '알 수 없음'}
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="tw:absolute tw:right-0 tw:z-50 tw:mt-2 tw:w-[180px] tw:bg-white tw:border tw:border-[#eee] tw:rounded-xl tw:shadow-xl tw:py-1"
+        >
+          {/* 프로필 보기 → 마이페이지로 이동 */}
+          <Link
+            to={`/mypage/${user.userId}`}
+            className="tw:block tw:w-full tw:text-left tw:px-3 tw:py-2 hover:tw:bg-gray-50 tw:no-underline"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+          >
+            프로필 보기
+          </Link>
+
+          {/* 쪽지 보내기 */}
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onMessage?.(user);
+            }}
+            className="tw:w-full tw:text-left tw:px-3 tw:py-2 hover:tw:bg-gray-50"
+            role="menuitem"
+          >
+            쪽지 보내기
+          </button>
+
+          {/* 신고하기 → 모달 오픈 */}
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              setReportOpen(true);
+            }}
+            className="tw:w-full tw:text-left tw:px-3 tw:py-2 hover:tw:bg-gray-50 tw:text-red-500"
+            role="menuitem"
+          >
+            신고하기
+          </button>
+        </div>
+      )}
+
+      {/* 🚩 신고 모달 */}
+      {reportOpen && (
+        <ReportModal
+          targetUser={user}
+          onClose={() => setReportOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* =========================
+   게시글 리스트
+   ========================= */
 const List = ({ posts, topList, pagination, keyword }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const query = new URLSearchParams(location.search);
   const sort = query.get('sort') || 'latest';
 
@@ -20,9 +134,21 @@ const List = ({ posts, topList, pagination, keyword }) => {
     return `/posts?${newQuery.toString()}`;
   };
 
+  // 라우팅 핸들러
+  const goMessage = (user) =>
+    navigate(
+      `/messages/compose?to=${user.userId}&nick=${encodeURIComponent(
+        user.nickname || '',
+      )}`,
+    );
+
   // ✅ 화면 렌더링 시 숨김 게시글 제거
-  const visibleTopList = Array.isArray(topList) ? topList.filter((p) => !p?.hidden) : [];
-  const visiblePosts   = Array.isArray(posts) ? posts.filter((p) => !p?.hidden) : [];
+  const visibleTopList = Array.isArray(topList)
+    ? topList.filter((p) => !p?.hidden)
+    : [];
+  const visiblePosts = Array.isArray(posts)
+    ? posts.filter((p) => !p?.hidden)
+    : [];
 
   return (
     <section className="tw:text-gray-800">
@@ -30,24 +156,28 @@ const List = ({ posts, topList, pagination, keyword }) => {
       <section className="tw:max-w-[900px] tw:mx-auto tw:my-8 tw:p-4 tw:bg-[#fffefb] tw:rounded-[10px] tw:border tw:border-[#eee]">
         <h2 className="tw:text-[#ff3c3c] tw:text-[18px] tw:mb-2">🔥 실시간 인기게시물</h2>
         <div className="tw:flex tw:gap-8">
-          {[visibleTopList.slice(0, 5), visibleTopList.slice(5, 10)].map((list, i) => (
-            <ol key={i} className="tw:space-y-2 tw:w-1/2 tw:pl-[19px] tw:text-[15px]">
-              {list.map((post, index) => (
-                <li key={post.postId} className="tw:flex tw:items-center tw:gap-2">
-                  <span className="tw:text-red-400 tw:font-bold tw:w-6 tw:text-center">{index + 1 + i * 5}</span>
-                  <span className="tw:bg-[#a06697] tw:text-white tw:text-xs tw:px-2 tw:py-0.5 tw:rounded">
-                    {post.category || '카테고리'}
-                  </span>
-                  <Link
-                    className="tw:truncate tw:hover:underline tw:text-inherit tw:no-underline"
-                    to={`/posts/read/${post.postId}`}
-                  >
-                    {post.title || '제목없음'}
-                  </Link>
-                </li>
-              ))}
-            </ol>
-          ))}
+          {[visibleTopList.slice(0, 5), visibleTopList.slice(5, 10)].map(
+            (list, i) => (
+              <ol key={i} className="tw:space-y-2 tw:w-1/2 tw:pl-[19px] tw:text-[15px]">
+                {list.map((post, index) => (
+                  <li key={post.postId} className="tw:flex tw:items-center tw:gap-2">
+                    <span className="tw:text-red-400 tw:font-bold tw:w-6 tw:text-center">
+                      {index + 1 + i * 5}
+                    </span>
+                    <span className="tw:bg-[#a06697] tw:text-white tw:text-xs tw:px-2 tw:py-0.5 tw:rounded">
+                      {post.category || '카테고리'}
+                    </span>
+                    <Link
+                      className="tw:truncate tw:hover:underline tw:text-inherit tw:no-underline"
+                      to={`/posts/read/${post.postId}`}
+                    >
+                      {post.title || '제목없음'}
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            ),
+          )}
         </div>
       </section>
 
@@ -109,19 +239,19 @@ const List = ({ posts, topList, pagination, keyword }) => {
                   {post.category || '기타'}
                 </span>
               </div>
+
               <div className="tw:flex tw:justify-between tw:items-center tw:gap-[6px] tw:text-[14px] tw:text-[#666] tw:mt-1">
-                <span className="tw:flex tw:items-center tw:gap-[6px]">
-                  <img
-                    src={
-                      post.user?.profileImg
-                        ? `http://localhost:8080${post.user.profileImg}`
-                        : defaultProfile
-                    }
-                    alt="작성자 프로필"
-                    className="tw:w-[24px] tw:h-[24px] tw:rounded-full tw:object-cover"
-                  />
-                  {post.user?.nickname || '알 수 없음'}
-                </span>
+                {/* 작성자 클릭 시 메뉴 */}
+                <AuthorMenu
+                  user={post.user}
+                  profileSrc={
+                    post.user?.profileImg
+                      ? `http://localhost:8080${post.user.profileImg}`
+                      : defaultProfile
+                  }
+                  onMessage={goMessage}
+                />
+
                 <div className="tw:text-[14px] tw:text-[#888] tw:flex tw:gap-[6px] tw:mt-[8px]">
                   <span><i className="bi bi-eye"></i> {post.viewCount}</span>
                   <span><i className="bi bi-chat-dots"></i> {post.commentCount}</span>
@@ -138,8 +268,8 @@ const List = ({ posts, topList, pagination, keyword }) => {
             e.preventDefault();
             const form = e.currentTarget;
             const type = form.type.value;
-            const keyword = form.keyword.value;
-            window.location.href = buildQuery({ type, keyword, page: 1 });
+            const keywordVal = form.keyword.value;
+            window.location.href = buildQuery({ type, keyword: keywordVal, page: 1 });
           }}
           className="tw:flex tw:gap-2 tw:mt-6"
         >
@@ -184,7 +314,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
               )}
               {Array.from(
                 { length: pagination.end - pagination.start + 1 },
-                (_, idx) => pagination.start + idx
+                (_, idx) => pagination.start + idx,
               ).map((pageNum) => (
                 <li key={pageNum}>
                   <Link
