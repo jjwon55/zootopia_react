@@ -3,7 +3,7 @@ package com.aloha.zootopia.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -17,168 +17,120 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Lazy;
 
 import com.aloha.zootopia.security.filter.JwtAuthenticationFilter;
 import com.aloha.zootopia.security.filter.JwtRequestFilter;
+import com.aloha.zootopia.security.handler.OAuth2LoginSuccessHandler;
 import com.aloha.zootopia.security.provider.JwtProvider;
 import com.aloha.zootopia.service.UserDetailServiceImpl;
-import com.aloha.zootopia.security.handler.OAuth2LoginSuccessHandler;
-import com.aloha.zootopia.security.handler.OAuth2LoginSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig {
 
+    @Autowired
+    private UserDetailServiceImpl userDetailServiceImpl;
+    @Autowired
+    private JwtProvider jwtProvider;
+    @Lazy
+    @Autowired
+    private CustomOAuth2UserService customOAuth2UserService;
+    @Autowired
+    private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
-  @Autowired
-  private UserDetailServiceImpl userDetailServiceImpl;
-  @Autowired
-  private JwtProvider jwtProvider;
-  @Lazy
-  @Autowired
-  private CustomOAuth2UserService customOAuth2UserService;
-  @Autowired
-  private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler; // Add this line
+    // ✅ PasswordEncoder 등록
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-  // ✅ PasswordEncoder 등록
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-  }
+    // ✅ AuthenticationManager 안전하게 주입
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
 
-  // ✅ AuthenticationManager 안전하게 주입
-  @Bean
-  public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-    return authConfig.getAuthenticationManager();
-  }
+    // ✅ CORS 설정
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("http://localhost:5173");
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 
-  // ✅ CORS 설정
-  @Bean
-  public CorsConfigurationSource corsConfigurationSource() {
-      CorsConfiguration configuration = new CorsConfiguration();
-      configuration.addAllowedOrigin("http://localhost:5173"); // Allow your frontend origin
-      configuration.addAllowedMethod("*"); // Allow all HTTP methods
-      configuration.addAllowedHeader("*"); // Allow all headers
-      configuration.setAllowCredentials(true); // Allow credentials (cookies, authorization headers)
-      UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-      source.registerCorsConfiguration("/**", configuration); // Apply CORS to all paths
-      return source;
-  }
+    // ✅ SecurityFilterChain 구성
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationConfiguration authConfig)
+            throws Exception {
+        AuthenticationManager authenticationManager = authConfig.getAuthenticationManager();
 
-  // ✅ SecurityFilterChain 구성
-  // @Bean
-  // public SecurityFilterChain securityFilterChain(HttpSecurity http,
-  // AuthenticationConfiguration authConfig) throws Exception {
+        // 로그인 필터 생성 + 실패 핸들러 연결
+        var loginFilter = new JwtAuthenticationFilter(authenticationManager, jwtProvider);
+        loginFilter.setFilterProcessesUrl("/login");
+        loginFilter.setAuthenticationFailureHandler(new com.aloha.zootopia.config.CustomAuthFailureHandler());
 
-  // AuthenticationManager authenticationManager =
-  // authConfig.getAuthenticationManager();
+        http
+            .csrf(csrf -> csrf.disable())
+            .formLogin(form -> form.disable())
+            .httpBasic(basic -> basic.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .userDetailsService(userDetailServiceImpl)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .oauth2Login(oauth2 -> oauth2
+                .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                .successHandler(oAuth2LoginSuccessHandler)
+                .failureUrl("/loginFailure"))
+            // ⬇️ 우리가 만든 loginFilter 등록
+            .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(new JwtRequestFilter(authenticationManager, jwtProvider),
+                    UsernamePasswordAuthenticationFilter.class)
+            .authorizeHttpRequests(auth -> auth
+                // CORS 프리플라이트
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
 
-  // http
-  // .csrf(csrf -> csrf.disable())
-  // .formLogin(form -> form.disable())
-  // .httpBasic(basic -> basic.disable())
-  // .sessionManagement(session ->
-  // session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-  // .userDetailsService(userDetailServiceImpl);
+                // 로그인/회원가입/인증 관련 공개
+                .requestMatchers("/login", "/api/login", "/join", "/users", "/auth/**").permitAll()
 
-  // // ✅ 권한 설정
-  // http.authorizeHttpRequests(auth -> auth
-  // .requestMatchers("/login").permitAll()
-  // .requestMatchers("/api/auth/**").permitAll() // 로그인/회원가입 허용
-  // .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**",
-  // "/img/**").permitAll()
-  // .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
-  // .requestMatchers(HttpMethod.GET,
-  // "/hospitals/{hospitalId}/reviews").permitAll()
+                // 정적 리소스
+                .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**", "/img/**").permitAll()
 
-  // .requestMatchers("/admin/**").hasRole("ADMIN")
-  // .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
-  // .requestMatchers("/products/create/**").hasRole("ADMIN")
-  // .requestMatchers("/comments/add").authenticated()
-  // .requestMatchers("/cart/**").authenticated()
-  // .requestMatchers("/mypage/**").authenticated()
+                // 공개 API
+                .requestMatchers("/posts/**", "/lost/**", "/showoff/**", "/insurance/**", "/service/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/parttime", "/parttime/**").permitAll()
+                .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/hospitals/{hospitalId}/reviews").permitAll()
+                .requestMatchers("/messages", "/messages/**").permitAll()
 
-  // .anyRequest().authenticated()
-  // );
+                // 결제 콜백
+                .requestMatchers("/api/payments/kakao/**").permitAll()
 
-  // // ✅ JWT 필터 등록 (정상적으로 주입된 authenticationManager 사용)
-  // http
-  // .addFilterAt(new JwtAuthenticationFilter(authenticationManager, jwtProvider),
-  // UsernamePasswordAuthenticationFilter.class)
-  // .addFilterBefore(new JwtRequestFilter(authenticationManager, jwtProvider),
-  // UsernamePasswordAuthenticationFilter.class);
+                // 권한 영역
+                .requestMatchers("/admin/**").hasAnyRole("ADMIN","MANAGER","MOD")
+                .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+                .requestMatchers("/products/create/**").hasRole("ADMIN")
 
-  // return http.build();
-  // }
+                // 인증 필요
+                .requestMatchers("/comments/**", "/cart/**", "/mypage/**").authenticated()
 
-  @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationConfiguration authConfig)
-      throws Exception {
+                // 그 외
+                .anyRequest().authenticated()
+            ); // 🔹 빠졌던 괄호 추가
 
-    AuthenticationManager authenticationManager = authConfig.getAuthenticationManager();
-
-    http
-        .csrf(csrf -> csrf.disable())
-        .formLogin(form -> form.disable())
-        .httpBasic(basic -> basic.disable())
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .userDetailsService(userDetailServiceImpl)
-        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        
-        .oauth2Login(oauth2 -> oauth2
-            .userInfoEndpoint(userInfo -> userInfo
-                .userService(customOAuth2UserService)
-            )
-            .successHandler(oAuth2LoginSuccessHandler)
-            .failureUrl("/loginFailure")
-        )
-        .addFilterAt(new JwtAuthenticationFilter(authenticationManager, jwtProvider),
-            UsernamePasswordAuthenticationFilter.class)
-        .addFilterBefore(new JwtRequestFilter(authenticationManager, jwtProvider),
-            UsernamePasswordAuthenticationFilter.class)
-        .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/parttime", "/parttime/**").permitAll()
-            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Add this line to permit OPTIONS requests globally
-            .requestMatchers("/posts/**").permitAll()
-            .requestMatchers("/lost/**").permitAll()
-            .requestMatchers("/mypage/**").permitAll()
-            .requestMatchers("/showoff/**").permitAll()
-            .requestMatchers("/insurance/**").permitAll()
-
-            // KakaoPay 개발용 공개 엔드포인트 (운영시 인증 적용 고려)
-            .requestMatchers("/api/payments/kakao/**").permitAll()
-
-            .requestMatchers("/admin/**").hasAnyRole("ADMIN","MANAGER","MOD")
-            .requestMatchers("/service/**").permitAll()
-            .requestMatchers( "/comments/**").authenticated()
-            .requestMatchers("/upload/**").permitAll()
-            .requestMatchers("/login").permitAll()
-            .requestMatchers("/join").permitAll()
-            .requestMatchers("/users").permitAll()
-            .requestMatchers("/auth/**").permitAll()
-            .requestMatchers("/auth/kakao/**").permitAll()
-            .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**", "/img/**").permitAll()
-            .requestMatchers(HttpMethod.GET, "/parttime", "/parttime/**").permitAll()
-            .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
-            .requestMatchers("/messages", "/messages/**").permitAll()
-                        // 개발 편의를 위해 제품/장바구니 API 임시 허용 (운영 전 삭제 필요)
-                        .requestMatchers("/products/api/**").permitAll()
-                        .requestMatchers("/api/cart/**").permitAll()
-            .requestMatchers(HttpMethod.GET, "/hospitals/{hospitalId}/reviews").permitAll()
-
-            .requestMatchers("/admin/**").hasRole("ADMIN")
-            .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
-            .requestMatchers("/products/create/**").hasRole("ADMIN")
-            .requestMatchers("/cart/**").authenticated()
-            .requestMatchers("/mypage/**").authenticated()
-            .requestMatchers(HttpMethod.POST, "/posts/*/like").authenticated()
-            .anyRequest().authenticated());
-
-    return http.build();
-  }
+        return http.build();
+    }
 }
+
+
+
+
+
+
+
 
 
