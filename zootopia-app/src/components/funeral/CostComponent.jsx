@@ -1,27 +1,32 @@
 import React, { useEffect } from 'react';
 import styles from './css/CostComponent.module.css';
+import funeralBackground from '../../assets/img/background/funeral_background1.jpg';
 
 const CostComponent = () => {
 
 
   return (
   <>
-    <div className={`${styles.costContainer} tw:flex tw:flex-col tw:items-center tw:bg-gray-50 tw:min-h-screen tw:py-10`}>
-      <div className={`${styles.mainContent} tw:w-full tw:max-w-4xl tw:bg-white tw:p-8 tw:rounded tw:shadow`}>
-        <div className={`${styles.side} tw:flex tw:flex-row tw:sm:flex-col tw:space-x-4 tw:sm:space-x-0 tw:mb-6`}>
-          <span className={`s1 ${styles.s1} tw:text-lg tw:sm:text-2xl tw:font-bold tw:text-gray-800`}>
+    <div className="tw:flex tw:justify-center tw:items-center tw:relative tw:w-full tw:pt-20 tw:min-h-screen tw:bg-cover tw:bg-center tw:bg-no-repeat tw:bg-fixed tw:overflow-hidden tw:z-[1]"
+            style={{ backgroundImage: `url(${funeralBackground})` }}>
+      <div className="tw:w-[730px] tw:pl-6 tw:pr-6 tw:pb-6 tw:mb-[150px] tw:shadow-md tw:bg-white/25 tw:select-none 
+        tw:flex tw:flex-col tw:justify-center tw:items-center tw:max-w-3xl tw:sm:max-w-4xl tw:md:max-w-5xl tw:mx-auto tw:px-4">
+        <div className="tw:relative tw:left-[-480px] tw:top-0 tw:flex tw:flex-col tw:justify-between tw:items-center tw:bg-black/5 tw:shadow-md tw:w-[130px] tw:h-[150px]">
+          <span className="tw:text-center tw:w-[130px] tw:h-[50px] tw:text-[15px] tw:rounded-bl-[20px] tw:bg-[rgba(255,242,147,0.3)] tw:font-bold tw:text-gray-800">
             Cross the<br />Rainbow Bridge
           </span>
-          <span className={`s2 ${styles.s2} tw:text-sm tw:sm:text-base tw:text-blue-700`}>
-            <a href="/procedure" className="tw:link tw:link-hover">장례 절차</a>
+          <span className="tw:text-center tw:w-[130px] tw:h-[50px] tw:leading-[50px] tw:text-[13px] tw:sm:text-base tw:hover:bg-[rgba(0,0,0,0.03)]">
+            <a href="/service/funeral/procedure" className="tw:link tw:link-hover">장례 절차</a>
           </span>
-          <span className={`s3 ${styles.s3} tw:text-sm sm:tw:text-base tw:text-blue-700`}>
-            <a href="/cost" className="link link-hover">장례 및 기타비용</a>
+          <span className="tw:text-center tw:w-[130px] tw:h-[50px] tw:leading-[50px] tw:text-[13px] tw:sm:text-base tw:bg-[rgba(0,0,0,0.03)]">
+            <a href="/service/funeral/cost" className="tw:link tw:link-hover">장례 및 기타비용</a>
           </span>
         </div>
-        <h1 className={`${styles.headline} tw:text-3xl tw:font-bold tw:mb-6 tw:text-gray-900`}>
-          장례 및 기타비용
-        </h1>
+        <span className="tw:relative tw:top-[-70px] tw:block tw:mb-6">
+          <h1 className="tw:text-2xl tw:sm:text-3xl tw:font-bold tw:text-gray-900">
+            장례 및 기타비용
+          </h1>
+        </span>
         <div className={`${styles.innerContent} tw:space-y-10`}>
           <div>
             <h5 className="tw:text-xl tw:font-semibold tw:text-gray-700">

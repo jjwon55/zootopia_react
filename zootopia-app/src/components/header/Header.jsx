@@ -3,27 +3,72 @@ import { Link } from 'react-router-dom';
 import { LoginContext } from '../../context/LoginContextProvider';
 import logo from '../../assets/img/zootopialogo.png';
 import logoutIcon from '../../assets/img/logout.png';
+import IconButton from '@mui/material/IconButton';
+import MenuIcon from '@mui/icons-material/Menu';
+import { MessageContext } from '../../context/MessageContextProvider';
 
 const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false)
+
   const { logout, isLogin, userInfo } = useContext(LoginContext);
+  const { unreadCount } = useContext(MessageContext);
 
   const nickname = userInfo?.nickname;
   const profileImage = userInfo?.profileImg || '/assets/img/default-profile.png';
 
+  const Menus = [
+  { to: '/', label: '홈' },
+  { to: '/products/listp', label: '스토어' },
+  { to: '/map', label: '내 주변 찾기' },
+  // 서브메뉴 추가 예시
+  {
+    label: '서비스',
+    submenu: [
+      { to: '/parttime/list', label: '아르바이트' },
+      { to: '/insurance/list', label: '펫 보험' },
+      { to: '/service/hospitals/hospitallist', label: '추천 병원' },
+      { to: '/service/funeral/procedure', label: 'Cross the Rainbow Bridge' },
+    ],
+  },
+  { to: '/posts', label: '커뮤니티',
+    submenu: [
+    { to:'/posts', label: '자유게시판'},
+    { to:'/showoff', label: '자랑게시판'},
+    { to:'/lost', label: '유실동물 게시판'},
+    ]
+  },
+];
+
+
+  // 뱃지 스타일 (추가)
+    const badgeStyle = {
+        backgroundColor: 'red',
+        color: 'white',
+        borderRadius: '50%',
+        padding: '2px 6px',
+        fontSize: '12px',
+        marginLeft: '5px',
+        verticalAlign: 'super',
+    };
+
+
   return (
-    <nav className="tw:bg-white tw:border-b tw:sticky tw:top-0 tw:z-[1000]">
+    <nav className="tw:bg-white tw:sticky tw:top-0 tw:z-[1000]">
       {/* 컨테이너 */}
       <div className="tw:container tw:mx-auto tw:px-4 tw:h-[100px] tw:flex tw:items-center tw:gap-4">
         {/* 모바일 토글 버튼 */}
-        <button
-          className="tw:ml-auto tw:lg:hidden tw:inline-flex tw:items-center tw:justify-center tw:w-10 tw:h-10 tw:rounded-md tw:border tw:border-gray-200"
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
           onClick={() => setIsMobileOpen(true)}
-          aria-label="Open menu"
+          sx={{ mr: 2, display: { sm: 'none' } }}
         >
-          <span className="tw:block tw:w-5 tw:h-[2px] tw:bg-gray-700 tw:relative before:tw:absolute before:tw:-top-2 before:tw:left-0 before:tw:w-5 before:tw:h-[2px] before:tw:bg-gray-700 after:tw:absolute after:tw:top-2 after:tw:left-0 after:tw:w-5 after:tw:h-[2px] after:tw:bg-gray-700"></span>
-        </button>
+          <MenuIcon />
+        </IconButton>
 
         {/* 로고 */}
         <Link to="/" className="tw:flex tw:items-center tw:no-underline">
@@ -37,30 +82,69 @@ const Header = () => {
         </Link>
 
         {/* 메인 메뉴 (데스크톱) */}
-        <div className="tw:flex-1 tw:hidden tw:lg:flex tw:justify-center">
-          <ul className="tw:flex tw:items-center tw:gap-6 xl:tw:gap-8">
-            {[
-              { to: '/', label: '홈' },
-              { to: '/products/listp', label: '스토어' },
-              { to: '/map', label: '내 주변 찾기' },
-              { to: '/parttime/list', label: '서비스' },
-              { to: '/posts', label: '커뮤니티' },
-            ].map((item) => (
-              <li key={item.to}>
-                <Link
-                  to={item.to}
-                  className="tw:text-[18px] tw:text-gray-700 tw:hover:text-[#ff6b6b] tw:no-underline tw:px-2 tw:py-1 tw:rounded-md tw:hover:bg-[#ff6b6b1a] tw:transition"
-                >
-                  {item.label}
-                </Link>
+        <div className="tw:flex-1 tw:hidden tw:lg:flex tw:justify-center tw:relative">
+          <ul className="tw:flex tw:items-center tw:gap-6 tw:xl:gap-8">
+            {Menus.map((item, idx) => (
+              <li
+                key={item.to || item.label}
+                className="tw:relative"
+                onMouseEnter={() => item.submenu && setHoveredIndex(idx)}
+                onMouseLeave={() => item.submenu && setHoveredIndex(null)}
+              >
+                {item.submenu ? (
+                  <>
+                    <span
+                      className="tw:text-[18px] tw:text-gray-700 tw:px-2 tw:py-1 tw:rounded-md tw:hover:text-[#ff6b6b] tw:hover:bg-[#ff6b6b1a] tw:cursor-pointer"
+                    >
+                      {item.label}
+                    </span>
+                    {/* 서브메뉴 패널 */}
+                    {hoveredIndex === idx && (
+                      <div
+                        className={`tw:absolute tw:top-[110%] tw:left-1/2 tw:-translate-x-1/2 tw:bg-white tw:shadow-lg tw:rounded-3xl tw:py-2 tw:min-w-[160px] tw:z-[100] 
+                        tw:transition-all tw:duration-300 tw:ease-in-out
+                        tw:opacity-100 tw:translate-y-0 tw:pointer-events-auto`}
+                      >
+                        {item.submenu.map((sub, subIdx) => (
+                          <Link
+                            key={sub.to}
+                            to={sub.to}
+                            className="tw:block tw:text-center tw:justify-center tw:px-4 tw:py-2 tw:text-[gray-700] tw:hover:text-[#ff6b6b] tw:hover:bg-[#ff6b6b1a] tw:rounded-3xl tw:no-underline tw:transition"
+                          >
+                            {sub.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    to={item.to}
+                    className="tw:text-[18px] tw:text-gray-700 tw:hover:text-[#ff6b6b] tw:no-underline tw:px-2 tw:py-1 tw:rounded-md tw:hover:bg-[#ff6b6b1a] tw:transition"
+                  >
+                    {item.label}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
+          {/* Fade-in 애니메이션 정의 */}
+          {/* <style>{`
+            @keyframes fadein {
+              from { opacity: 0; transform: translateY(-10px);}
+              to { opacity: 1; transform: translateY(0);}
+            }
+            .tw:animate-fadein {
+              animation: fadein 0.25s ease;
+              opacity: 1 !important;
+            }
+          `}</style> */}
         </div>
 
         {/* 로그인/회원가입 또는 사용자 메뉴 (데스크톱) */}
         <div className="tw:hidden tw:lg:flex tw:items-center tw:gap-3 tw:relative">
           {!isLogin ? (
+          
             <div className="tw:flex tw:items-center tw:gap-2">
               <Link
                 to="/login"
@@ -77,6 +161,10 @@ const Header = () => {
             </div>
           ) : (
             <div className="tw:flex tw:items-center tw:gap-2">
+              <Link to="/messages/received">쪽지함
+                {/* unreadCount가 0보다 클 때만 뱃지를 표시 (추가) */}
+                {unreadCount > 0 && <span style={badgeStyle}>{unreadCount}</span>}
+              </Link>
               {/* 유저 드롭다운 */}
               <div className="tw:relative">
                 <img

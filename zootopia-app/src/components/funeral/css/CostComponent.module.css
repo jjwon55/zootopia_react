@@ -8,12 +8,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 150px;
+  /* margin-top: 150px; */
   
   position: relative;
   width: 100%;
   min-height: 100vh;
-  background-image: url('src/assets/img/background/funeral_background1.jpg');
+  background-image: url('../../assets/img/background/funeral_background1.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -121,7 +121,7 @@
 }
 
 .s3 {
-  background-color: rgba(0, 0, 0, 0.2);
+  /* background-color: rgba(0, 0, 0, 0.2); */
 }
 
 .s2 a, .s3 a {

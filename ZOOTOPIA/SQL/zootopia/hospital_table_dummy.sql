@@ -127,8 +127,6 @@ INSERT INTO hospital_animal (hospital_id, animal_id) VALUES (27, 4);
 INSERT INTO hospital_animal (hospital_id, animal_id) VALUES (10, 1);
 INSERT INTO hospital_animal (hospital_id, animal_id) VALUES (26, 1);
 
--- INSERT INTO possible_animal (species) VALUES ('포유류'), ('파충류'), ('조류'), ('양서류'), ('설치류');
--- INSERT INTO specialty (category) VALUES ('내과'), ('외과'), ('치과'), ('안과'), ('영상의학과'), ('마취통증의학과'), ('중환자의학과');
 
 
 

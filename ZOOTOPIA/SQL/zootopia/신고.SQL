@@ -74,18 +74,14 @@ CREATE TABLE `post_report` (
   `admin_note` VARCHAR(500) DEFAULT NULL,  -- 관리자 메모
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `reviewed_at` DATETIME DEFAULT NULL,
-
   PRIMARY KEY (`report_id`),
-
   -- FK 연결
   CONSTRAINT `FK_post_report_posts` FOREIGN KEY (`post_id`) 
       REFERENCES `posts` (`post_id`) ON DELETE CASCADE,
   CONSTRAINT `FK_post_report_users` FOREIGN KEY (`reporter_user_id`) 
       REFERENCES `users` (`user_id`) ON DELETE CASCADE,
-
   -- 동일 게시글 중복 신고 방지
   UNIQUE KEY `UK_post_report_unique` (`post_id`, `reporter_user_id`),
-
   -- 조회 최적화
   KEY `IDX_post_report_status` (`status`),
   KEY `IDX_post_report_post` (`post_id`)

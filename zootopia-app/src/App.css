@@ -2,13 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 @import "tailwindcss" prefix(tw);
-@plugin "daisyui" {
-  themes: ;
-  include: all;
-  exclude: ;
-  prefix: 'da-';
-  logs: true;
-}
 
 /* 전체 페이지 배경 */
 body {
@@ -33,6 +26,7 @@ body {
     transform: translateY(0);
   }
 }
+
 
 /* 텍스트 자르기 유틸리티 */
 .line-clamp-1 {

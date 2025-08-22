@@ -70,7 +70,7 @@ public class SecurityConfig {
             throws Exception {
         AuthenticationManager authenticationManager = authConfig.getAuthenticationManager();
 
-        // 로그인 필터 생성 + 실패 핸들러 연결
+         // 로그인 필터 생성 + 실패 핸들러 연결
         var loginFilter = new JwtAuthenticationFilter(authenticationManager, jwtProvider);
         loginFilter.setFilterProcessesUrl("/login");
         loginFilter.setAuthenticationFailureHandler(new com.aloha.zootopia.config.CustomAuthFailureHandler());
@@ -106,6 +106,7 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/parttime", "/parttime/**").permitAll()
                 .requestMatchers("/hospitals", "/hospitals/detail/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/hospitals/{hospitalId}/reviews").permitAll()
+                .requestMatchers("/messages", "/messages/**").permitAll()
 
                 // 결제 콜백
                 .requestMatchers("/api/payments/kakao/**").permitAll()
@@ -125,3 +126,5 @@ public class SecurityConfig {
         return http.build();
     }
 }
+
+
