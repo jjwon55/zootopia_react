@@ -19,7 +19,6 @@ CREATE TABLE insurance_product (
   image_path           VARCHAR(255),
   company              VARCHAR(50) NOT NULL DEFAULT '',
   created_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
   -- 외부 이동/제휴 필드
   homepage_url         VARCHAR(500),
   apply_url            VARCHAR(500),

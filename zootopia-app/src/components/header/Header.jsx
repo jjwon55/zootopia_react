@@ -143,10 +143,8 @@ const Header = () => {
 
         {/* 로그인/회원가입 또는 사용자 메뉴 (데스크톱) */}
         <div className="tw:hidden tw:lg:flex tw:items-center tw:gap-3 tw:relative">
-          <Link to="/messages/received">쪽지함</Link>
-                {/* unreadCount가 0보다 클 때만 뱃지를 표시 (추가) */}
-                {isLogin && unreadCount > 0 && (<span style={badgeStyle}>{unreadCount}</span>)}
           {!isLogin ? (
+          
             <div className="tw:flex tw:items-center tw:gap-2">
               <Link
                 to="/login"
@@ -163,6 +161,10 @@ const Header = () => {
             </div>
           ) : (
             <div className="tw:flex tw:items-center tw:gap-2">
+              <Link to="/messages/received">쪽지함
+                {/* unreadCount가 0보다 클 때만 뱃지를 표시 (추가) */}
+                {unreadCount > 0 && <span style={badgeStyle}>{unreadCount}</span>}
+              </Link>
               {/* 유저 드롭다운 */}
               <div className="tw:relative">
                 <img

@@ -66,7 +66,7 @@ function SentMessagesListContainer() {
       ) : (
         messages.map((msg) => (
           // 상세 페이지로 이동하는 링크는 동일하게 사용
-          <div>
+          <div key={msg.id}>
             <Link to={`/messages/${msg.messageNo}`} key={msg.messageNo} style={{ textDecoration:'none', color: 'inherit' }}>
               <MessageCard message={msg} />
             </Link>
