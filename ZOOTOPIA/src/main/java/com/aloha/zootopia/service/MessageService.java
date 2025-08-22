@@ -11,8 +11,13 @@ import com.aloha.zootopia.dto.MessageSentResponseDTO;
 
 public interface MessageService {
     void sendMessage(MessageDTO messageDTO);
-    List<MessageResponseDTO> getReceivedMessages(Long userId);
-    List<MessageSentResponseDTO> getSentMessages(Long userId);
+    
+    // 페이지네이션을 위한 메소드들
+    List<MessageResponseDTO> getReceivedMessages(Long userId, int pageNum, int pageSize);
+    List<MessageSentResponseDTO> getSentMessages(Long userId, int pageNum, int pageSize);
+    int countReceivedMessages(long userId);
+    int countSentMessages(long userId);
+
     MessageDetailResponseDTO getMessageDetails(long messageNo, Long userId);
     void deleteMessage(long messageNo, Long userId) throws AccessDeniedException;
     int getUnreadMessageCount(long userId);     // 안읽은 쪽지 카운트

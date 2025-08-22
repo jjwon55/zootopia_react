@@ -12,6 +12,20 @@
             (#{senderId}, #{receiverId}, #{content})
     </insert>
 
+    <select id="countReceivedMessages" resultType="int">
+        SELECT COUNT(*)
+        FROM P2P_Message
+        WHERE receiver_id = #{userId}
+          AND deleted_by_receiver = 0
+    </select>
+
+    <select id="countSentMessages" resultType="int">
+        SELECT COUNT(*)
+        FROM P2P_Message
+        WHERE sender_id = #{userId}
+          AND deleted_by_sender = 0
+    </select>
+
     <select id="findReceivedMessagesByUserId" resultType="com.aloha.zootopia.dto.MessageResponseDTO">
         SELECT
             m.message_no    AS messageNo,        <!-- 쪽지 명단(m)에서 message_no를 가져와 messageNo 칸에 넣어줘 -->
@@ -28,6 +42,7 @@
             AND m.deleted_by_receiver = 0       <!-- 완전삭제시 이 줄 제거 -->
         ORDER BY
             m.send_time DESC
+        LIMIT #{pageSize} OFFSET #{offset}
     </select>
 
     <select id="findSentMessagesByUserId" resultType="com.aloha.zootopia.dto.MessageSentResponseDTO">
@@ -46,6 +61,7 @@
             AND m.deleted_by_sender = 0             <!-- 완전삭제시 이 줄 제거 -->
         ORDER BY
             m.send_time DESC
+        LIMIT #{pageSize} OFFSET #{offset}
     </select>
 
     <!-- is_read를 1로 업데이트하는 쿼리 -->
