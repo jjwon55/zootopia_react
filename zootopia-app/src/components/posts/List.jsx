@@ -163,7 +163,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
   const visiblePosts = Array.isArray(posts) ? posts.filter((p) => !p?.hidden) : [];
 
   return (
-    <section className="tw:text-gray-800">
+    <section className="tw:text-gray-800 tw:my-8">
       {/* ===== 실시간 인기 게시물 ===== */}
       <section className="tw:max-w-[900px] tw:mx-auto tw:my-8 tw:p-4 tw:bg-[#fffefb] tw:rounded-[10px] tw:border tw:border-[#eee]">
         <h2 className="tw:text-[#ff3c3c] tw:text-[18px] tw:mb-2">🔥 실시간 인기게시물</h2>
@@ -334,7 +334,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
             className="tw:bg-[#FF5E5E] tw:text-white tw:px-4 tw:py-1 tw:rounded-lg tw:hover:shadow-md transition-shadow"
           >
             검색
-          </button>
+          </button> 
         </form>
 
         {/* 광고 */}
