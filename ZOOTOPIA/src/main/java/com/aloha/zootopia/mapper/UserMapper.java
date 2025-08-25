@@ -17,6 +17,12 @@ public interface UserMapper {
     // 회원 권한 등록
     public int insertAuth(UserAuth userAuth) throws Exception;
 
+    // 🔹 이메일 중복 확인
+    int countByEmail(@Param("email") String email);
+
+    // 🔹 닉네임 중복 확인
+    int countByNickname(@Param("nickname") String nickname);
+
     // 회원 조회
     public Users select(@Param("email") String email) throws Exception;
 

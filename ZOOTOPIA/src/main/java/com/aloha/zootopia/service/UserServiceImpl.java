@@ -77,6 +77,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public boolean existsByEmail(String email) {
+        int count = userMapper.countByEmail(email);
+        return count > 0;
+    }
+
+    @Override
+    public boolean existsByNickname(String nickname) {
+        int count = userMapper.countByNickname(nickname);
+        return count > 0;
+    }
+
+    @Override
     public boolean login(Users user, HttpServletRequest request) {
         // 💍 토큰 생성
         String email = user.getEmail();

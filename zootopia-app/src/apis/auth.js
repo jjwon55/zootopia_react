@@ -18,7 +18,17 @@ export const login = (email, password) => {
   });
 };
 
+// 이메일 중복 확인
+export const checkEmail = (email) => {
+  if (!email) return Promise.reject("이메일을 입력해주세요.");
+  return api.get("/users/check", { params: { email } });
+};
 
+// 닉네임 중복 확인
+export const checkNickname = (nickname) => {
+  if (!nickname) return Promise.reject("닉네임을 입력해주세요.");
+  return api.get("/users/check", { params: { nickname } });
+};
 
 // 회원 정보
 export const info = () => api.get(`/users/info`)
@@ -28,5 +38,6 @@ export const update = (data) => api.put(`/users`, data)
 
 // 회원 탈퇴
 export const remove = (username) => api.delete(`/users/${username}`)
+
 
 
