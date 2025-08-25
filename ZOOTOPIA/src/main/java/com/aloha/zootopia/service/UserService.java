@@ -1,7 +1,5 @@
 package com.aloha.zootopia.service;
 
-import org.apache.ibatis.annotations.Param;
-
 import com.aloha.zootopia.domain.UserAuth;
 import com.aloha.zootopia.domain.Users;
 import com.aloha.zootopia.dto.SocialDTO;
@@ -40,6 +38,9 @@ public interface UserService {
 
     void deleteById(Long userId);
 
+    boolean existsByEmail(String email);
+    
+    boolean existsByNickname(String nickname);
     // 소셜 로그인 사용자 조회
     Users findOrCreateOAuthUser(SocialDTO dto) throws Exception;
 }
