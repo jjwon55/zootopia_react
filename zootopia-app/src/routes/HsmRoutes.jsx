@@ -10,6 +10,8 @@ import NotFound from '../pages/products/NotFound.jsx';
 import OrderDetail from '../pages/orders/OrderDetail.jsx';
 import TossSuccess from '../pages/payments/TossSuccess.jsx';
 import TossFail from '../pages/payments/TossFail.jsx';
+import BrandpayCheckout from '../pages/payments/BrandpayCheckout.jsx';
+import BrandpaySuccess from '../pages/payments/BrandpaySuccess.jsx';
 
 export default function HsmRoutes() {
   return (
@@ -30,6 +32,10 @@ export default function HsmRoutes() {
   {/* Toss 결제 결과 (추후 실제 Success 컴포넌트로 교체 가능) */}
   <Route path="/pay/toss/success" element={<TossSuccess />} />
   <Route path="/pay/toss/fail" element={<TossFail />} />
+
+  {/* Brandpay */}
+  <Route path="/brandpay/checkout" element={<BrandpayCheckout />} />
+  <Route path="/brandpay/success" element={<BrandpaySuccess />} />
 
   {/* 주문 상세 */}
   <Route path="/orders/:orderCode" element={<OrderDetail />} />

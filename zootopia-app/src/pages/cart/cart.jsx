@@ -265,13 +265,14 @@ export default function Cart() {
                 </div>
                 <button
                   className="checkout-btn"
-                  // from=cart 쿼리로 Checkout이 tempOrder를 무시하고 장바구니 기반 주문 구성
+                  // 장바구니에서 일반 결제 진입
                   onClick={() => window.location.href = '/checkout?from=cart'}
                   disabled={updating || cartItems.length === 0}
                 >
                   <span className="checkout-icon">💳</span>
                   주문하기
                 </button>
+                {/* Toss 결제(샌드박스) 버튼 제거 요청으로 삭제됨 */}
                 <button
                   className="clear-cart-btn"
                   onClick={clearAllItems}
