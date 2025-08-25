@@ -6,18 +6,24 @@ import com.aloha.zootopia.dto.MessageDTO;
 import com.aloha.zootopia.dto.MessageDetailResponseDTO;
 import com.aloha.zootopia.dto.MessageResponseDTO;
 import com.aloha.zootopia.dto.MessageSentResponseDTO;
+
 @Mapper
 public interface MessageMapper {
     int sendMessage(MessageDTO messageDTO);
-    List<MessageResponseDTO> findReceivedMessagesByUserId(long userId);
-    List<MessageSentResponseDTO> findSentMessagesByUserId(long userId);
+
+    // 페이지네이션을 위한 목록 조회
+    List<MessageResponseDTO> findReceivedMessagesByUserId(@Param("userId") long userId, @Param("offset") int offset, @Param("pageSize") int pageSize);
+    List<MessageSentResponseDTO> findSentMessagesByUserId(@Param("userId") long userId, @Param("offset") int offset, @Param("pageSize") int pageSize);
+
+    // 페이지네이션을 위한 개수 조회
+    int countReceivedMessages(long userId);
+    int countSentMessages(long userId);
+
     MessageDetailResponseDTO findMessageById(long messageNo);
     int updateReadStatus(@Param("messageNo") long messageNo, @Param("userId") long userId);
-    // 삭제 권한 확인용: messageNo로 쪽지 정보를 가져옵니다.
+    
+    // 삭제 권한 확인용
     MessageDTO findMessageForAuth(long messageNo);
-
-    // 삭제 실행용: messageNo로 쪽지를 삭제합니다. 완전삭제시 사용하는 메소드
-    // int deleteMessage(long messageNo);
 
     // 상대방 쪽지는 건드리지 않는 삭제
     int updateDeleteStatusBySender(long messageNo);

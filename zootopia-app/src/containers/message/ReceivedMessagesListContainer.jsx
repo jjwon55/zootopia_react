@@ -1,46 +1,46 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { getReceivedMessages, deleteMessage } from '../../apis/message/messageApi'; // 경로 확인
-import MessageCard from '../../components/message/MessageCard'; // 경로 확인
-import { Link } from 'react-router-dom';
+import { getReceivedMessages, deleteMessage } from '../../apis/message/messageApi';
+import MessageCard from '../../components/message/MessageCard';
 import { MessageContext } from '../../context/MessageContextProvider';
+import { Pagination, Box } from '@mui/material';
 
-
-
-
-function ReceivedMessagesListContainer() {
+function ReceivedMessagesListContainer({ onMessageClick }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [pageInfo, setPageInfo] = useState(null);
+  const [pageNum, setPageNum] = useState(1);
 
   const { fetchUnreadCount } = useContext(MessageContext);
 
   useEffect(() => {
     const fetchMessages = async () => {
+      setLoading(true);
       try {
-        const data = await getReceivedMessages();
-        setMessages(data || []);
+        const response = await getReceivedMessages(pageNum);
+        console.log('받은 쪽지함 API 응답:', response); // 응답 데이터 확인용 로그
+        const { messageList, pageInfo: newPageInfo } = response;
+        setMessages(messageList || []);
+        setPageInfo(newPageInfo || null);
       } catch (err) {
         setError('받은 쪽지 목록을 불러오는 데 실패했습니다.');
         console.error(err);
-        setMessages([]); // 에러가 발생했을 때도 빈 배열로 설정
+        setMessages([]);
       } finally {
         setLoading(false);
       }
     };
     fetchMessages();
-  }, []); // 컴포넌트가 처음 마운트될 때 한 번만 실행
+  }, [pageNum]);
 
-
-  // 목록에서 바로 삭제하는 함수 (추가)
-  const handleDelete = async (messageNo) => {
+  const handleDelete = async (e, messageNo) => {
+    e.stopPropagation();
     const isConfirmed = window.confirm("이 쪽지를 정말 삭제하시겠습니까?");
     if (isConfirmed) {
       try {
         await deleteMessage(messageNo);
         alert("쪽지가 삭제되었습니다.");
-        // 상태를 직접 갱신하여 화면에서 즉시 사라지게 함
         setMessages(currentMessages => currentMessages.filter(msg => msg.messageNo !== messageNo));
-        // 뱃지 카운트도 갱신
         await fetchUnreadCount();
       } catch (err) {
         alert(err.response?.data || '쪽지 삭제에 실패했습니다.');
@@ -48,6 +48,9 @@ function ReceivedMessagesListContainer() {
     }
   };
 
+  const handlePageChange = (event, value) => {
+    setPageNum(value);
+  };
 
   if (loading) {
     return <div>로딩 중...</div>;
@@ -56,23 +59,34 @@ function ReceivedMessagesListContainer() {
     return <div>{error}</div>;
   }
 
-
   return (
     <div>
       <h2>받은 쪽지 목록</h2>
       {messages.length === 0 ? (
         <p>받은 쪽지가 없습니다.</p>
       ) : (
-        messages.map((msg) => (
-          <div>
-            <Link to={`/messages/${msg.messageNo}`} key={msg.messageNo} style={{ textDecoration:'none', color: 'inherit' }}>
-              <MessageCard message={msg} />
-            </Link>
-            <button onClick={() => handleDelete(msg.messageNo)}>삭제</button>
-          </div>
-        ))
+        <>
+          {messages.map((msg) => (
+            <div key={msg.messageNo} style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+              <div onClick={() => onMessageClick(msg.messageNo)}>
+                <MessageCard message={msg} />
+              </div>
+              <button onClick={(e) => handleDelete(e, msg.messageNo)}>삭제</button>
+            </div>
+          ))}
+          {pageInfo && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <Pagination 
+                count={pageInfo.pages}
+                page={pageNum}
+                onChange={handlePageChange}
+              />
+            </Box>
+          )}
+        </>
       )}
     </div>
   );
 }
+
 export default ReceivedMessagesListContainer;

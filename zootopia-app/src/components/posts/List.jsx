@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import defaultThumbnail from '../../assets/img/default-thumbnail.png';
 import defaultProfile from '../../assets/img/default-profile.png';
 import chatIcon from '../../assets/img/chat.png';
@@ -7,6 +7,7 @@ import writeIcon from '../../assets/img/write.png';
 import catPpl from '../../assets/img/catppl.jpg';
 import Ppl from '../../assets/img/ppl2.jpg';
 import ReportModal from '../../components/admin/users/ReportsUserModal';
+import SendMessageModal from '../message/SendMessageModal';
 
 /* =========================
    태그 정규화 유틸
@@ -140,9 +141,12 @@ function AuthorMenu({ user, profileSrc, onMessage }) {
    ========================= */
 const List = ({ posts, topList, pagination, keyword }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const query = new URLSearchParams(location.search);
   const sort = query.get('sort') || 'latest';
+
+  // 쪽지 보내기 모달 상태 관리
+  const [messageModalOpen, setMessageModalOpen] = useState(false);
+  const [messageRecipient, setMessageRecipient] = useState(null);
 
   const buildQuery = (params) => {
     const newQuery = new URLSearchParams(query);
@@ -152,238 +156,249 @@ const List = ({ posts, topList, pagination, keyword }) => {
     return `/posts?${newQuery.toString()}`;
   };
 
-  // 라우팅 핸들러
-  const goMessage = (user) =>
-    navigate(
-      `/messages/compose?to=${user.userId}&nick=${encodeURIComponent(user.nickname || '')}`
-    );
+  // 라우팅 핸들러 -> 모달 핸들러로 변경
+  const handleSendMessage = (user) => {
+    setMessageRecipient(user);
+    setMessageModalOpen(true);
+  };
 
   // ✅ 화면 렌더링 시 숨김 게시글 제거
   const visibleTopList = Array.isArray(topList) ? topList.filter((p) => !p?.hidden) : [];
   const visiblePosts = Array.isArray(posts) ? posts.filter((p) => !p?.hidden) : [];
 
   return (
-    <section className="tw:text-gray-800 tw:my-8">
-      {/* ===== 실시간 인기 게시물 ===== */}
-      <section className="tw:max-w-[900px] tw:mx-auto tw:my-8 tw:p-4 tw:bg-[#fffefb] tw:rounded-[10px] tw:border tw:border-[#eee]">
-        <h2 className="tw:text-[#ff3c3c] tw:text-[18px] tw:mb-2">🔥 실시간 인기게시물</h2>
-        <div className="tw:flex tw:gap-8">
-          {[visibleTopList.slice(0, 5), visibleTopList.slice(5, 10)].map((list, i) => (
-            <ol key={i} className="tw:space-y-2 tw:w-1/2 tw:pl-[19px] tw:text-[15px]">
-              {list.map((post, index) => (
-                <li key={post.postId} className="tw:flex tw:items-center tw:gap-2">
-                  <span className="tw:text-red-400 tw:font-bold tw:w-6 tw:text-center">
-                    {index + 1 + i * 5}
-                  </span>
-                  <span className="tw:bg-[#a06697] tw:text-white tw:text-xs tw:px-2 tw:py-0.5 tw:rounded">
-                    {post.category || '카테고리'}
-                  </span>
+    <>
+      <section className="tw:text-gray-800">
+        {/* ===== 실시간 인기 게시물 ===== */}
+        <section className="tw:max-w-[900px] tw:mx-auto tw:my-8 tw:p-4 tw:bg-[#fffefb] tw:rounded-[10px] tw:border tw:border-[#eee]">
+          <h2 className="tw:text-[#ff3c3c] tw:text-[18px] tw:mb-2">🔥 실시간 인기게시물</h2>
+          <div className="tw:flex tw:gap-8">
+            {[visibleTopList.slice(0, 5), visibleTopList.slice(5, 10)].map((list, i) => (
+              <ol key={i} className="tw:space-y-2 tw:w-1/2 tw:pl-[19px] tw:text-[15px]">
+                {list.map((post, index) => (
+                  <li key={post.postId} className="tw:flex tw:items-center tw:gap-2">
+                    <span className="tw:text-red-400 tw:font-bold tw:w-6 tw:text-center">
+                      {index + 1 + i * 5}
+                    </span>
+                    <span className="tw:bg-[#a06697] tw:text-white tw:text-xs tw:px-2 tw:py-0.5 tw:rounded">
+                      {post.category || '카테고리'}
+                    </span>
+                    <Link
+                      className="tw:truncate tw:hover:underline tw:text-inherit tw:no-underline"
+                      to={`/posts/read/${post.postId}`}
+                    >
+                      {post.title || '제목없음'}
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            ))}
+          </div>
+        </section>
+
+        {/* ===== 광고 배너 ===== */}
+        <div className="tw:max-w-[900px] tw:mx-auto tw:my-4 tw:text-center">
+          <img src={catPpl} alt="광고배너" className="tw:w-full tw:rounded-[10px]" />
+        </div>
+
+        {/* ===== 커뮤니티 리스트 ===== */}
+        <section className="tw:max-w-[900px] tw:mx-auto tw:bg-white tw:p-6 tw:rounded-[10px] tw:shadow-[0_2px_5px_rgba(0,0,0,0.05)]">
+          <div className="tw:flex tw:justify-between tw:items-center tw:mb-4">
+            <div className="tw:flex tw:items-center tw:gap-[8px]">
+              <img src={chatIcon} className="tw:w-[24px] tw:h-[24px]" alt="채팅 아이콘" />
+              <h2 className="tw:text-xl tw:font-semibold">커뮤니티</h2>
+            </div>
+          </div>
+
+          {/* 정렬/글쓰기 */}
+          <div className="tw:flex tw:justify-between tw:items-center tw:mb-4">
+            <div />
+            <div className="tw:flex tw:items-center tw:gap-[10px]">
+              <select
+                className="tw:border tw:border-[#ccc] tw:rounded tw:px-2 tw:py-1 tw:text-sm"
+                value={sort}
+                onChange={(e) => (window.location.href = buildQuery({ sort: e.target.value, page: 1 }))}
+              >
+                <option value="latest">최신순</option>
+                <option value="popular">인기순</option>
+              </select>
+              <Link
+                to="/posts/create"
+                className="tw:flex tw:items-center tw:gap-[6px] tw:border tw:border-[#ccc] tw:rounded-[20px] tw:px-[13px] tw:py-[6px] tw:text-[14px] tw:bg-white tw:text-inherit tw:no-underline"
+              >
+                <img src={writeIcon} className="tw:w-[18px] tw:h-[18px]" alt="글쓰기 아이콘" /> 글쓰기
+              </Link>
+            </div>
+          </div>
+
+          {visiblePosts.map((post) => (
+            <div
+              key={post.postId}
+              className="tw:flex tw:gap-[16px] tw:py-[16px] tw:border-t tw:border-[#eee] tw:last:border-b"
+            >
+              <div className="tw:w-[80px] tw:h-[80px]">
+                <img
+                  src={post.thumbnailUrl ? `http://localhost:8080${post.thumbnailUrl}` : defaultThumbnail}
+                  alt="썸네일"
+                  className="tw:w-full tw:h-full tw:rounded-[10px] tw:object-cover"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = defaultThumbnail;
+                  }}
+                />
+              </div>
+
+              <div className="tw:flex tw:flex-col tw:justify-between tw:flex-grow">
+                <div>
                   <Link
-                    className="tw:truncate tw:hover:underline tw:text-inherit tw:no-underline"
                     to={`/posts/read/${post.postId}`}
+                    className="tw:text-[17px] tw:font-bold tw:mb-[5px] tw:block tw:hover:underline tw:text-inherit tw:no-underline"
                   >
                     {post.title || '제목없음'}
                   </Link>
-                </li>
-              ))}
-            </ol>
-          ))}
-        </div>
-      </section>
 
-      {/* ===== 광고 배너 ===== */}
-      <div className="tw:max-w-[900px] tw:mx-auto tw:my-4 tw:text-center">
-        <img src={catPpl} alt="광고배너" className="tw:w-full tw:rounded-[10px]" />
-      </div>
-
-      {/* ===== 커뮤니티 리스트 ===== */}
-      <section className="tw:max-w-[900px] tw:mx-auto tw:bg-white tw:p-6 tw:rounded-[10px] tw:shadow-[0_2px_5px_rgba(0,0,0,0.05)]">
-        <div className="tw:flex tw:justify-between tw:items-center tw:mb-4">
-          <div className="tw:flex tw:items-center tw:gap-[8px]">
-            <img src={chatIcon} className="tw:w-[24px] tw:h-[24px]" alt="채팅 아이콘" />
-            <h2 className="tw:text-xl tw:font-semibold">커뮤니티</h2>
-          </div>
-        </div>
-
-        {/* 정렬/글쓰기 */}
-        <div className="tw:flex tw:justify-between tw:items-center tw:mb-4">
-          <div />
-          <div className="tw:flex tw:items-center tw:gap-[10px]">
-            <select
-              className="tw:border tw:border-[#ccc] tw:rounded tw:px-2 tw:py-1 tw:text-sm"
-              value={sort}
-              onChange={(e) => (window.location.href = buildQuery({ sort: e.target.value, page: 1 }))}
-            >
-              <option value="latest">최신순</option>
-              <option value="popular">인기순</option>
-            </select>
-            <Link
-              to="/posts/create"
-              className="tw:flex tw:items-center tw:gap-[6px] tw:border tw:border-[#ccc] tw:rounded-[20px] tw:px-[13px] tw:py-[6px] tw:text-[14px] tw:bg-white tw:text-inherit tw:no-underline"
-            >
-              <img src={writeIcon} className="tw:w-[18px] tw:h-[18px]" alt="글쓰기 아이콘" /> 글쓰기
-            </Link>
-          </div>
-        </div>
-
-        {visiblePosts.map((post) => (
-          <div
-            key={post.postId}
-            className="tw:flex tw:gap-[16px] tw:py-[16px] tw:border-t tw:border-[#eee] tw:last:border-b"
-          >
-            <div className="tw:w-[80px] tw:h-[80px]">
-              <img
-                src={post.thumbnailUrl ? `http://localhost:8080${post.thumbnailUrl}` : defaultThumbnail}
-                alt="썸네일"
-                className="tw:w-full tw:h-full tw:rounded-[10px] tw:object-cover"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = defaultThumbnail;
-                }}
-              />
-            </div>
-
-            <div className="tw:flex tw:flex-col tw:justify-between tw:flex-grow">
-              <div>
-                <Link
-                  to={`/posts/read/${post.postId}`}
-                  className="tw:text-[17px] tw:font-bold tw:mb-[5px] tw:block tw:hover:underline tw:text-inherit tw:no-underline"
-                >
-                  {post.title || '제목없음'}
-                </Link>
-
-                {/* 카테고리 */}
-                <span className="tw:inline-block tw:bg-[#e0f2ff] tw:text-[#007acc] tw:px-[8px] tw:py-[3px] tw:rounded-[10px] tw:max-w-[65px] tw:h-[25px] tw:text-sm">
-                  {post.category || '기타'}
-                </span>
-
-                {/* ✅ 태그 칩 */}
-                {(() => {
-                  const tags = normalizeTags(post);
-                  if (!tags.length) return null;
-                  return (
-                    <div className="tw:flex tw:flex-wrap tw:gap-1 tw:mt-2">
-                      {tags.slice(0, 5).map((tag) => (
-                        <Link
-                          key={`${post.postId}-${tag}`}
-                          to={buildQuery({ type: 'tag', keyword: tag, page: 1 })}
-                          className="tw:no-underline"
-                          title={`태그: ${tag}`}
-                        >
-                          <span className="tw:bg-[#f5f5f5] tw:text-[#555] tw:text-xs tw:px-2 tw:py-[2px] tw:rounded hover:tw:bg-[#eee]">
-                            #{tag}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  );
-                })()}
-              </div>
-
-              <div className="tw:flex tw:justify-between tw:items-center tw:gap-[6px] tw:text-[14px] tw:text-[#666] tw:mt-1">
-                {/* 작성자 클릭 시 메뉴 */}
-                <AuthorMenu
-                  user={post.user}
-                  profileSrc={
-                    post.user?.profileImg ? `http://localhost:8080${post.user.profileImg}` : defaultProfile
-                  }
-                  onMessage={goMessage}
-                />
-
-                <div className="tw:text-[14px] tw:text-[#888] tw:flex tw:gap-[6px] tw:mt-[8px]">
-                  <span>
-                    <i className="bi bi-eye"></i> {post.viewCount}
+                  {/* 카테고리 */}
+                  <span className="tw:inline-block tw:bg-[#e0f2ff] tw:text-[#007acc] tw:px-[8px] tw:py-[3px] tw:rounded-[10px] tw:max-w-[65px] tw:h-[25px] tw:text-sm">
+                    {post.category || '기타'}
                   </span>
-                  <span>
-                    <i className="bi bi-chat-dots"></i> {post.commentCount}
-                  </span>
-                  <span>
-                    <i className="bi bi-heart-fill tw:text-red-500"></i> {post.likeCount}
-                  </span>
+
+                  {/* ✅ 태그 칩 */}
+                  {(() => {
+                    const tags = normalizeTags(post);
+                    if (!tags.length) return null;
+                    return (
+                      <div className="tw:flex tw:flex-wrap tw:gap-1 tw:mt-2">
+                        {tags.slice(0, 5).map((tag) => (
+                          <Link
+                            key={`${post.postId}-${tag}`}
+                            to={buildQuery({ type: 'tag', keyword: tag, page: 1 })}
+                            className="tw:no-underline"
+                            title={`태그: ${tag}`}
+                          >
+                            <span className="tw:bg-[#f5f5f5] tw:text-[#555] tw:text-xs tw:px-2 tw:py-[2px] tw:rounded hover:tw:bg-[#eee]">
+                              #{tag}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                <div className="tw:flex tw:justify-between tw:items-center tw:gap-[6px] tw:text-[14px] tw:text-[#666] tw:mt-1">
+                  {/* 작성자 클릭 시 메뉴 */}
+                  <AuthorMenu
+                    user={post.user}
+                    profileSrc={
+                      post.user?.profileImg ? `http://localhost:8080${post.user.profileImg}` : defaultProfile
+                    }
+                    onMessage={handleSendMessage}
+                  />
+
+                  <div className="tw:text-[14px] tw:text-[#888] tw:flex tw:gap-[6px] tw:mt-[8px]">
+                    <span>
+                      <i className="bi bi-eye"></i> {post.viewCount}
+                    </span>
+                    <span>
+                      <i className="bi bi-chat-dots"></i> {post.commentCount}
+                    </span>
+                    <span>
+                      <i className="bi bi-heart-fill tw:text-red-500"></i> {post.likeCount}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {/* 검색 폼 */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const form = e.currentTarget;
-            const type = form.type.value;
-            const keywordVal = form.keyword.value;
-            window.location.href = buildQuery({ type, keyword: keywordVal, page: 1 });
-          }}
-          className="tw:flex tw:gap-2 tw:mt-6"
-        >
-          <select name="type" className="tw:border tw:border-[#dee2e6] tw:rounded tw:px-2 tw:py-1 tw:w-[140px]">
-            <option value="title">제목</option>
-            <option value="titleContent">제목+내용</option>
-            <option value="tag">태그</option>
-          </select>
-          <input
-            type="text"
-            name="keyword"
-            placeholder="검색어 입력"
-            defaultValue={keyword}
-            className="tw:flex-grow tw:border tw:border-[#dee2e6] tw:rounded tw:px-2 tw:py-1 tw:w-[70%]"
-          />
-          <button
-            type="submit"
-            className="tw:bg-[#FF5E5E] tw:text-white tw:px-4 tw:py-1 tw:rounded-lg tw:hover:shadow-md transition-shadow"
+          {/* 검색 폼 */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const form = e.currentTarget;
+              const type = form.type.value;
+              const keywordVal = form.keyword.value;
+              window.location.href = buildQuery({ type, keyword: keywordVal, page: 1 });
+            }}
+            className="tw:flex tw:gap-2 tw:mt-6"
           >
-            검색
-          </button> 
-        </form>
 
-        {/* 광고 */}
-        <div className="tw:my-6">
-          <img src={Ppl} alt="광고배너" className="tw:w-full tw:rounded-[10px]" />
-        </div>
+            <select name="type" className="tw:border tw:border-[#dee2e6] tw:rounded tw:px-2 tw:py-1 tw:w-[140px]">
+              <option value="title">제목</option>
+              <option value="titleContent">제목+내용</option>
+              <option value="tag">태그</option>
+            </select>
+            <input
+              type="text"
+              name="keyword"
+              placeholder="검색어 입력"
+              defaultValue={keyword}
+              className="tw:flex-grow tw:border tw:border-[#dee2e6] tw:rounded tw:px-2 tw:py-1 tw:w-[70%]"
+            />
+            <button
+              type="submit"
+              className="tw:bg-[#FF5E5E] tw:text-white tw:px-4 tw:py-1 tw:rounded-lg tw:hover:shadow-md transition-shadow"
+            >
+              검색
+            </button>
+          </form>
 
-        {/* 페이지네이션 */}
-        {pagination && (
-          <nav className="tw:mt-8">
-            <ul className="tw:flex tw:justify-center tw:gap-2">
-              {pagination.start > 1 && (
-                <li>
-                  <Link
-                    className="tw:px-[13px] tw:py-[6px] tw:border tw:rounded-[6px] tw:text-[14px] tw:text-inherit tw:no-underline"
-                    to={buildQuery({ page: pagination.start - 1 })}
-                  >
-                    이전
-                  </Link>
-                </li>
-              )}
-              {Array.from({ length: pagination.end - pagination.start + 1 }, (_, idx) => pagination.start + idx).map(
-                (pageNum) => (
-                  <li key={pageNum}>
+
+          {/* 광고 */}
+          <div className="tw:my-6">
+            <img src={Ppl} alt="광고배너" className="tw:w-full tw:rounded-[10px]" />
+          </div>
+
+          {/* 페이지네이션 */}
+          {pagination && (
+            <nav className="tw:mt-8">
+              <ul className="tw:flex tw:justify-center tw:gap-2">
+                {pagination.start > 1 && (
+                  <li>
                     <Link
-                      className={`tw:px-[13px] tw:py-[6px] tw:border tw:rounded-[6px] tw:text-[14px] tw:text-inherit tw:no-underline ${pagination.page === pageNum ? 'tw:bg-[#5b99f5] tw:text-white tw:border-[#5b99f5]' : ''
-                        }`}
-                      to={buildQuery({ page: pageNum })}
+                      className="tw:px-[13px] tw:py-[6px] tw:border tw:rounded-[6px] tw:text-[14px] tw:text-inherit tw:no-underline"
+                      to={buildQuery({ page: pagination.start - 1 })}
                     >
-                      {pageNum}
+                      이전
                     </Link>
                   </li>
-                )
-              )}
-              {pagination.end < pagination.last && (
-                <li>
-                  <Link
-                    className="tw:px-[13px] tw:py-[6px] tw:border tw:rounded-[6px] tw:text-[14px] tw:text-inherit tw:no-underline"
-                    to={buildQuery({ page: pagination.end + 1 })}
-                  >
-                    다음
-                  </Link>
-                </li>
-              )}
-            </ul>
-          </nav>
-        )}
+                )}
+                {Array.from({ length: pagination.end - pagination.start + 1 }, (_, idx) => pagination.start + idx).map(
+                  (pageNum) => (
+                    <li key={pageNum}>
+                      <Link
+                        className={`tw:px-[13px] tw:py-[6px] tw:border tw:rounded-[6px] tw:text-[14px] tw:text-inherit tw:no-underline ${pagination.page === pageNum ? 'tw:bg-[#5b99f5] tw:text-white tw:border-[#5b99f5]' : ''
+                          }`}
+                        to={buildQuery({ page: pageNum })}
+                      >
+                        {pageNum}
+                      </Link>
+                    </li>
+                  )
+                )}
+                {pagination.end < pagination.last && (
+                  <li>
+                    <Link
+                      className="tw:px-[13px] tw:py-[6px] tw:border tw:rounded-[6px] tw:text-[14px] tw:text-inherit tw:no-underline"
+                      to={buildQuery({ page: pagination.end + 1 })}
+                    >
+                      다음
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            </nav>
+          )}
+        </section>
       </section>
-    </section>
+      
+      {/* 쪽지 보내기 모달 */}
+      <SendMessageModal
+        open={messageModalOpen}
+        onClose={() => setMessageModalOpen(false)}
+        recipient={messageRecipient}
+      />
+    </>
   );
 };
 

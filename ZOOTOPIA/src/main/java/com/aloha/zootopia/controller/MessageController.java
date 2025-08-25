@@ -24,6 +24,11 @@ import com.aloha.zootopia.dto.MessageSendRequestDTO;
 import com.aloha.zootopia.dto.MessageSentResponseDTO;
 import com.aloha.zootopia.service.MessageService;
 
+import org.springframework.web.bind.annotation.RequestParam;
+import com.aloha.zootopia.domain.PageInfo;
+import java.util.Map;
+import java.util.HashMap;
+
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -56,25 +61,82 @@ public class MessageController {
     }
 
     @GetMapping("/received")
-    public ResponseEntity<List<MessageResponseDTO>> getReceivedMessages(
-            @AuthenticationPrincipal CustomUser customUser) {
+    public ResponseEntity<Map<String, Object>> getReceivedMessages(
+            @AuthenticationPrincipal CustomUser customUser,
+            @RequestParam(value = "pageNum", defaultValue = "1") int pageNum) {
         // 1. 로그인한 사용자의 ID를 가져옵니다.
         long userId = customUser.getUserId();
     
-        // 2. Service에게 "이 사용자의 받은 쪽지 목록을 다 줘" 라고 요청합니다.
-        List<MessageResponseDTO> messages = messageService.getReceivedMessages(userId);
+        // 2. Service에게 페이지 정보와 함께 "이 사용자의 받은 쪽지 목록을 줘" 라고 요청합니다.
+        int pageSize = 10; // 페이지 당 10개로 고정
+        int total = messageService.countReceivedMessages(userId);
+        List<MessageResponseDTO> messages = messageService.getReceivedMessages(userId, pageNum, pageSize);
 
-        // 3. 받은 쪽지 목록(List)을 ResponseEntity에 담아서 클라이언트에게 반환합니다.
-        return new ResponseEntity<>(messages, HttpStatus.OK);
+        // 3. 페이지네이션을 위한 PageInfo 객체를 생성하고 값을 설정합니다.
+        PageInfo pageInfo = new PageInfo();
+        pageInfo.setPageNum(pageNum);
+        pageInfo.setPageSize(pageSize);
+        pageInfo.setTotal(total);
+        int pages = (int) Math.ceil((double) total / pageSize);
+        pageInfo.setPages(pages);
+
+        int navSize = 5;
+        int startPage = ((pageNum - 1) / navSize) * navSize + 1;
+        int endPage = Math.min(startPage + navSize - 1, pages);
+        pageInfo.setStartPage(startPage);
+        pageInfo.setEndPage(endPage);
+        pageInfo.setHasPreviousPage(pageNum > 1);
+        pageInfo.setHasNextPage(pageNum < pages);
+        pageInfo.setHasFirstPage(pages > 1);
+        pageInfo.setHasLastPage(endPage < pages);
+
+        // 4. 응답 데이터를 Map에 담습니다.
+        Map<String, Object> response = new HashMap<>();
+        response.put("messageList", messages);
+        response.put("pageInfo", pageInfo);
+
+        // 5. 받은 쪽지 목록과 페이지 정보를 ResponseEntity에 담아서 클라이언트에게 반환합니다.
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/sent")
-    public ResponseEntity<List<MessageSentResponseDTO>> getSentMessages(
-        @AuthenticationPrincipal CustomUser customUser) {
+    public ResponseEntity<Map<String, Object>> getSentMessages(
+        @AuthenticationPrincipal CustomUser customUser,
+        @RequestParam(value = "pageNum", defaultValue = "1") int pageNum) {
     
+        // 1. 로그인한 사용자의 ID를 가져옵니다.
         long userId = customUser.getUserId();
-        List<MessageSentResponseDTO> sentMessages = messageService.getSentMessages(userId);
-        return new ResponseEntity<>(sentMessages, HttpStatus.OK);
+
+        // 2. Service에게 페이지 정보와 함께 "이 사용자의 보낸 쪽지 목록을 줘" 라고 요청합니다.
+        int pageSize = 10; // 페이지 당 10개로 고정
+        int total = messageService.countSentMessages(userId);
+        List<MessageSentResponseDTO> sentMessages = messageService.getSentMessages(userId, pageNum, pageSize);
+        
+        // 3. 페이지네이션을 위한 PageInfo 객체를 생성하고 값을 설정합니다.
+        PageInfo pageInfo = new PageInfo();
+        pageInfo.setPageNum(pageNum);
+        pageInfo.setPageSize(pageSize);
+        pageInfo.setTotal(total);
+        int pages = (int) Math.ceil((double) total / pageSize);
+        pageInfo.setPages(pages);
+
+        int navSize = 5;
+        int startPage = ((pageNum - 1) / navSize) * navSize + 1;
+        int endPage = Math.min(startPage + navSize - 1, pages);
+        pageInfo.setStartPage(startPage);
+        pageInfo.setEndPage(endPage);
+        pageInfo.setHasPreviousPage(pageNum > 1);
+        pageInfo.setHasNextPage(pageNum < pages);
+        pageInfo.setHasFirstPage(pages > 1);
+        pageInfo.setHasLastPage(endPage < pages);
+
+        // 4. 응답 데이터를 Map에 담습니다.
+        Map<String, Object> response = new HashMap<>();
+        response.put("messageList", sentMessages);
+        response.put("pageInfo", pageInfo);
+
+        // 5. 보낸 쪽지 목록과 페이지 정보를 ResponseEntity에 담아서 클라이언트에게 반환합니다.
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/{messageNo}")
