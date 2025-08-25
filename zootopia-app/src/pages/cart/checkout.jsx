@@ -16,7 +16,15 @@ export default function Checkout() {
   const { userInfo } = useLoginContext();
   const userId = userInfo?.userId || 1;
   const [orderItems, setOrderItems] = useState([]);
-  const [paymentMethod, setPaymentMethod] = useState('card'); // card | bank | phone | toss
+  // URL 파라미터(pm=toss)로 Toss 선선택 허용
+  const initialPM = (() => {
+    try {
+      const search = typeof window !== 'undefined' ? window.location.search : '';
+      const pm = new URLSearchParams(search).get('pm');
+      return pm === 'toss' ? 'toss' : 'card';
+    } catch { return 'card'; }
+  })();
+  const [paymentMethod, setPaymentMethod] = useState(initialPM); // card | bank | phone | toss
   const tossWidgetRef = useRef(null); // (미사용 예정) 컨테이너 접근용 참조
   const tossInstanceRef = useRef(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -33,7 +41,7 @@ export default function Checkout() {
   });
   const detailAddressRef = useRef(null);
 
-  // 결제 동의 상태
+  // 결제 동의 상태 (Toss는 자체 약관 위젯을 제공하므로 로컬 동의는 제외)
   const [agreements, setAgreements] = useState({
     all: false,
     terms: false,
@@ -41,7 +49,8 @@ export default function Checkout() {
     pg: false,
     marketing: false
   });
-  const requiredAgreed = agreements.terms && agreements.privacy && agreements.pg;
+  // Toss 선택 시 로컬 동의는 요구하지 않음
+  const requiredAgreed = paymentMethod === 'toss' ? true : (agreements.terms && agreements.privacy && agreements.pg);
   const canPay = orderItems.length > 0 && requiredAgreed;
 
   // Toss 위젯 자동 초기화 & 금액 갱신
@@ -54,8 +63,13 @@ export default function Checkout() {
       setTossLoading(true);
       try {
         const total = getTotalPrice();
-        if (!tossInstanceRef.current) {
-          const widget = await createPaymentWidget(import.meta.env.VITE_TOSS_CLIENT_KEY || 'test_ck_Ba5PzR0ArnLnBXnl0OYx3vmYnNeD');
+        const clientKey = import.meta.env.VITE_TOSS_CLIENT_KEY;
+        if (!clientKey) {
+          throw new Error('VITE_TOSS_CLIENT_KEY is not set. Please add a test_gck_... key in .env');
+        }
+        const needsRecreate = !tossInstanceRef.current || tossInstanceRef.current.__mock === true;
+        if (needsRecreate) {
+          const widget = await createPaymentWidget(clientKey, undefined, { force: true });
           if (cancelled) return;
             tossInstanceRef.current = widget;
           await initPaymentMethods(widget, '#toss-payment-methods', total);
@@ -216,15 +230,21 @@ export default function Checkout() {
       return;
     }
 
-    // Toss 결제
+    // Toss 결제: 페이지 내 위젯으로 직접 결제
     if (paymentMethod === 'toss') {
       try {
         setIsProcessing(true);
         // 위젯 초기화가 아직 안 된 경우 초기화
-        if (!tossInstanceRef.current) {
-          const widget = await createPaymentWidget(import.meta.env.VITE_TOSS_CLIENT_KEY || 'test_ck_Ba5PzR0ArnLnBXnl0OYx3vmYnNeD');
+        const clientKey = import.meta.env.VITE_TOSS_CLIENT_KEY;
+        if (!clientKey) {
+          throw new Error('VITE_TOSS_CLIENT_KEY is not set. Please add a test_gck_... key in .env');
+        }
+        const isMock = !tossInstanceRef.current || tossInstanceRef.current.__mock === true;
+        if (isMock) {
+          const widget = await createPaymentWidget(clientKey, undefined, { force: true });
           tossInstanceRef.current = widget;
           await initPaymentMethods(widget, '#toss-payment-methods', getTotalPrice());
+          try { await widget.renderAgreement?.({ selector: '#toss-agreement', variantKey: 'AGREEMENT' }); } catch {}
         } else {
           // 금액 갱신
           await tossSetAmount(tossInstanceRef.current, getTotalPrice());
@@ -232,7 +252,8 @@ export default function Checkout() {
         await requestTossPayment(tossInstanceRef.current, {
           orderId: newOrderId,
           orderName: orderItems[0]?.name || '주문상품',
-          amount: getTotalPrice()
+          amount: getTotalPrice(),
+          preferWidget: true
         });
         return;
       } catch (err) {
@@ -440,7 +461,7 @@ export default function Checkout() {
                   <span>💳</span> 결제 방법
                 </h2>
                 <div className="tw:space-y-3">
-                  {[{ id: 'card', name: '신용카드/체크카드', icon: 'fas fa-credit-card' }, { id: 'bank', name: '계좌이체', icon: 'fas fa-university' }, { id: 'phone', name: '휴대폰결제', icon: 'fas fa-mobile-alt' }, { id: 'toss', name: 'Toss 결제(샌드박스)', icon: 'fas fa-wallet' }].map(method => (
+                  {[{ id: 'card', name: '신용카드/체크카드', icon: 'fas fa-credit-card' }, { id: 'bank', name: '계좌이체', icon: 'fas fa-university' }, { id: 'phone', name: '휴대폰결제', icon: 'fas fa-mobile-alt' }, { id: 'toss', name: 'Toss 결제', icon: 'fas fa-wallet' }].map(method => (
                     <div key={method.id} onClick={() => setPaymentMethod(method.id)} className={`tw:border-2 tw:rounded-lg tw:p-4 tw:cursor-pointer tw:transition-all ${paymentMethod === method.id ? 'tw:bg-[#FFF0F0]' : 'tw:border-gray-200 tw:hover:bg-[#FFECEC]'}`} style={paymentMethod === method.id ? { borderColor: '#FF9999' } : {}}>
                       <div className="tw:flex tw:items-center tw:gap-3">
                         <input type="radio" name="paymentMethod" value={method.id} checked={paymentMethod === method.id} onChange={() => setPaymentMethod(method.id)} className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} />
@@ -466,6 +487,7 @@ export default function Checkout() {
                         <div className="tw:text-xs tw:text-red-500">Toss 위젯 오류: {tossError} (데모 키일 경우 정상입니다)</div>
                       )}
                     </div>
+                    {/* Toss 자체 약관 영역 (로컬 동의 UI 대신 사용) */}
                     <div id="toss-agreement" className="tw:text-xs tw:text-gray-500"></div>
                     {tossInstanceRef.current && tossInstanceRef.current.__mock && !tossLoading && (
                       <div className="tw:text-xs tw:text-gray-600 tw:bg-[#FFF5F5] tw:border tw:rounded tw:p-3 tw:space-y-1" style={{borderColor:'#FFD1D1'}}>
@@ -480,36 +502,38 @@ export default function Checkout() {
                 )}
               </div>
 
-              {/* 결제 동의 */}
-              <div className="tw:bg-white tw:rounded-lg tw:p-6 tw:shadow-sm tw:border tw:border-pink-100">
-                <h2 className="tw:text-xl tw:font-bold tw:mb-4 tw:flex tw:items-center tw:gap-2 tw:text-gray-700">
-                  <span>✅</span> 결제 동의
-                </h2>
-                <div className="tw:space-y-3 tw:text-sm">
-                  <label className="tw:flex tw:items-center tw:gap-2">
-                    <input type="checkbox" className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} checked={agreements.all} onChange={toggleAllAgreements} />
-                    <span className="tw:font-medium">전체 약관에 동의합니다</span>
-                  </label>
-                  <div className="tw:pl-6 tw:space-y-2 tw:text-gray-700">
+              {/* 결제 동의 – Toss 선택 시 숨김 (Toss 위젯 내에서 동의 처리) */}
+              {paymentMethod !== 'toss' && (
+                <div className="tw:bg-white tw:rounded-lg tw:p-6 tw:shadow-sm tw:border tw:border-pink-100">
+                  <h2 className="tw:text-xl tw:font-bold tw:mb-4 tw:flex tw:items-center tw:gap-2 tw:text-gray-700">
+                    <span>✅</span> 결제 동의
+                  </h2>
+                  <div className="tw:space-y-3 tw:text-sm">
                     <label className="tw:flex tw:items-center tw:gap-2">
-                      <input type="checkbox" className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} checked={agreements.terms} onChange={() => toggleAgreement('terms')} />
-                      [필수] 이용약관 동의
+                      <input type="checkbox" className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} checked={agreements.all} onChange={toggleAllAgreements} />
+                      <span className="tw:font-medium">전체 약관에 동의합니다</span>
                     </label>
-                    <label className="tw:flex tw:items-center tw:gap-2">
-                      <input type="checkbox" className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} checked={agreements.privacy} onChange={() => toggleAgreement('privacy')} />
-                      [필수] 개인정보 처리방침 동의
-                    </label>
-                    <label className="tw:flex tw:items-center tw:gap-2">
-                      <input type="checkbox" className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} checked={agreements.pg} onChange={() => toggleAgreement('pg')} />
-                      [필수] 결제대행 서비스 약관 동의
-                    </label>
-                    <label className="tw:flex tw:items-center tw:gap-2">
-                      <input type="checkbox" className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} checked={agreements.marketing} onChange={() => toggleAgreement('marketing')} />
-                      [선택] 마케팅 정보 수신 동의
-                    </label>
+                    <div className="tw:pl-6 tw:space-y-2 tw:text-gray-700">
+                      <label className="tw:flex tw:items-center tw:gap-2">
+                        <input type="checkbox" className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} checked={agreements.terms} onChange={() => toggleAgreement('terms')} />
+                        [필수] 이용약관 동의
+                      </label>
+                      <label className="tw:flex tw:items-center tw:gap-2">
+                        <input type="checkbox" className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} checked={agreements.privacy} onChange={() => toggleAgreement('privacy')} />
+                        [필수] 개인정보 처리방침 동의
+                      </label>
+                      <label className="tw:flex tw:items-center tw:gap-2">
+                        <input type="checkbox" className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} checked={agreements.pg} onChange={() => toggleAgreement('pg')} />
+                        [필수] 결제대행 서비스 약관 동의
+                      </label>
+                      <label className="tw:flex tw:items-center tw:gap-2">
+                        <input type="checkbox" className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} checked={agreements.marketing} onChange={() => toggleAgreement('marketing')} />
+                        [선택] 마케팅 정보 수신 동의
+                      </label>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </form>
           </div>
 

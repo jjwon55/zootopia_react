@@ -17,7 +17,7 @@ export default function TossSuccess() {
     }
     (async () => {
       try {
-        const res = await api.post('/payments/toss/confirm', { paymentKey, orderId, amount: Number(amount) });
+        const res = await api.post('/payments/confirm', { paymentKey, orderId, amount: Number(amount) });
         setStatus('결제 성공');
         setDetail(res.data);
       } catch (e) {
