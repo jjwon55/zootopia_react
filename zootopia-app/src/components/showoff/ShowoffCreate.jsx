@@ -11,7 +11,7 @@ const ShowoffCreate = ({
   handleImageUpload,
 }) => {
   return (
-    <div className="tw:min-h-screen tw:bg-[#fffdf9] tw:py-10 tw:px-4">
+    <div className="tw:min-h-screen tw:py-10 tw:px-4">
       <div className="tw:max-w-3xl tw:mx-auto tw:bg-white tw:rounded-2xl tw:p-6 md:tw:p-8 tw:shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
         <form onSubmit={onSubmit}>
 
