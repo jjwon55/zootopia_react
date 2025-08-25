@@ -44,7 +44,7 @@ const List = ({
   onCommentDelete,
 }) => {
   return (
-    <div className="tw:bg-gradient-to-b tw:from-rose-50 tw:to-white tw:min-h-screen">
+    <div className="tw:to-white tw:min-h-screen">
       <div className="tw:mx-auto tw:px-4 tw:py-8">
         {/* 헤더 */}
         <div className="tw:max-w-5xl tw:mx-auto tw:mb-8">

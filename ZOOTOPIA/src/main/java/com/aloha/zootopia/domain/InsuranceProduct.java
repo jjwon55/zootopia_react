@@ -27,10 +27,6 @@ public class InsuranceProduct {
     // ── [추가] 외부 이동(보험사) 관련
     private String homepageUrl;           // 보험사 상품/상담 메인 페이지
     private String applyUrl;              // 상담/가입 시작 URL(없으면 homepageUrl 사용)
-    private String partnerCode;           // 제휴코드/추천인 코드(선택)
-    private String utmSource;             // 캠페인 트래킹용(선택)
-    private String utmMedium;             // "
-    private String utmCampaign;           // "
     private boolean isSponsored;          // 제휴/광고 여부
     private String disclaimer;            // 개별 면책 문구(TEXT)
 

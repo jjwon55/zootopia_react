@@ -22,10 +22,6 @@ CREATE TABLE insurance_product (
   -- 외부 이동/제휴 필드
   homepage_url         VARCHAR(500),
   apply_url            VARCHAR(500),
-  partner_code         VARCHAR(100),
-  utm_source           VARCHAR(50),
-  utm_medium           VARCHAR(50),
-  utm_campaign         VARCHAR(80),
   is_sponsored         TINYINT(1) NOT NULL DEFAULT 0,
   disclaimer           TEXT,
 

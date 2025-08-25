@@ -4,7 +4,10 @@ export function getCookie(name) {
 }
 
 export function makeAuthHeaders() {
-  const token = localStorage.getItem('accessToken') || ''
+  const token =
+    sessionStorage.getItem('accessToken') ||
+    localStorage.getItem('accessToken') ||
+    ''
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 

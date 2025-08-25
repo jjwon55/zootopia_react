@@ -39,11 +39,11 @@
     INSERT INTO insurance_product
     (name, company, slogan, coverage_percent, monthly_fee_range, max_coverage, species,
     join_condition, coverage_items, precautions, image_path, created_at,
-    homepage_url, apply_url, partner_code, utm_source, utm_medium, utm_campaign, is_sponsored, disclaimer)
+    homepage_url, apply_url, is_sponsored, disclaimer)
     VALUES
     (#{name}, #{company}, #{slogan}, #{coveragePercent}, #{monthlyFeeRange}, #{maxCoverage}, #{species},
     #{joinCondition}, #{coverageItems}, #{precautions}, #{imagePath}, NOW(),
-    #{homepageUrl}, #{applyUrl}, #{partnerCode}, #{utmSource}, #{utmMedium}, #{utmCampaign}, #{sponsored}, #{disclaimer})
+    #{homepageUrl}, #{applyUrl}, #{sponsored}, #{disclaimer})
   </insert>
 
   <select id="selectProductById" resultMap="InsuranceProductMap">
@@ -65,10 +65,6 @@
         image_path = #{imagePath},
         homepage_url = #{homepageUrl},
         apply_url = #{applyUrl},
-        partner_code = #{partnerCode},
-        utm_source = #{utmSource},
-        utm_medium = #{utmMedium},
-        utm_campaign = #{utmCampaign},
         is_sponsored = #{sponsored},
         disclaimer = #{disclaimer}
     WHERE product_id = #{productId}
