@@ -9,8 +9,8 @@ const Update = ({ form, onChange, onSubmit }) => {
     <form onSubmit={onSubmit}>
       <input type="hidden" name="jobId" value={form?.jobId ?? ''} />
 
-      <div className="tw:w-full tw:px-4 tw:py-12 tw:bg-gradient-to-b tw:from-rose-50 tw:to-white">
-        <div className="tw:max-w-3xl tw:mx-auto tw:bg-white tw:rounded-2xl tw:shadow-lg tw:p-6 md:tw:p-10">
+       <div className="tw:w-full tw:px-4 tw:py-12"> {/* 투명 */}
+         <div className="tw:max-w-3xl tw:mx-auto tw:bg-white/85 tw:backdrop-blur-sm tw:border tw:border-pink-100 tw:rounded-2xl tw:shadow-lg tw:p-6 md:tw:p-10">
           <h2 className="tw:text-3xl tw:font-extrabold tw:text-center tw:text-[#F27A7A] tw:mb-12">
             🐾 아르바이트 수정
           </h2>
