@@ -39,168 +39,162 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class JwtProvider {
 
-  @Autowired
-  private JwtProps jwtProps;
+    @Autowired
+    private JwtProps jwtProps;
 
-  @Autowired
-  private UserMapper userMapper;
+    @Autowired
+    private UserMapper userMapper;
 
-  /**
-   * 👩‍💼 ➡ 💍 토큰 생성
-   * @param id
-   * @param username
-   * @param roles
-   * @return
-   */
-  public String createToken(String email, Long userId, List<String> roles) {
+    /** 👩‍💼 ➡ 💍 토큰 생성 */
+    public String createToken(String email, Long userId, List<String> roles) {
+        SecretKey shaKey = getShaKey();
+        int exp = 1000 * 60 * 60 * 24 * 5; // 5일
 
-    SecretKey shaKey = getShaKey();
+        String jwt = Jwts.builder()
+                .signWith(shaKey, Jwts.SIG.HS512)
+                .header().add("typ", SecurityConstants.TOKEN_TYPE).and()
+                .expiration(new Date(System.currentTimeMillis() + exp))
+                .claim("email", email)
+                .claim("userId", userId)
+                .claim("rol", roles)
+                .compact();
 
-    int exp = 1000 * 60 * 60 * 24 * 5;  // 토큰 만료시간 설정 (5일)
-    // JWT 토큰 생성
-    String jwt = Jwts.builder()
-                      .signWith(shaKey, Jwts.SIG.HS512)            // 시그니처 비밀키, 알고리즘 설정
-                      .header()
-                          .add("typ", SecurityConstants.TOKEN_TYPE) // typ: jwt
-                      .and()
-                      .expiration( new Date( System.currentTimeMillis() + exp ) ) // 토큰만료시간설정 (5일)
-                      .claim("email", email)                        // id       : 사용자 식별키
-                      .claim("userId", userId)            // username : 사용자 아이디
-                      .claim("rol", roles)                    // rol      : 회원 권한 목록
-                      .compact();
+        log.info("jwt : {}", jwt);
+        return jwt;
+    }
 
-    log.info("jwt : " + jwt);
-    return jwt;
-  }
+    /** 💍 ➡ 🔐🍩 토큰 해석 */
+    public UsernamePasswordAuthenticationToken getAuthenticationToken(String tokenOrHeader) {
+        if (tokenOrHeader == null || tokenOrHeader.isEmpty()) return null;
 
-  /**
-   * 💍 ➡ 🔐🍩 토큰 해석
-   * @param authorization
-   * @return
-   */
-  public UsernamePasswordAuthenticationToken getAuthenticationToken(String authorization) {
-      if( authorization == null || authorization.length() == 0 )
-          return null;
+        // Bearer 있으면 제거
+        String jwt = tokenOrHeader.startsWith(SecurityConstants.TOKEN_PREFIX)
+                ? tokenOrHeader.replace(SecurityConstants.TOKEN_PREFIX, "")
+                : tokenOrHeader;
 
-      // Authorizaion : "Bearer {jwt}"
-      try {
-          // jwt 추출
-          String jwt = authorization.replace(SecurityConstants.TOKEN_PREFIX, "");
-          log.info("jwt : " + jwt);
-
-          SecretKey shaKey = getShaKey();
-
-          // 💍 ➡ 👩‍💼 JWT 파싱
-          Jws<Claims> parsedToken = Jwts.parser()
+        try {
+            SecretKey shaKey = getShaKey();
+            Jws<Claims> parsedToken = Jwts.parser()
                                           .verifyWith(shaKey)
                                           .build()
                                           .parseSignedClaims(jwt);
-          log.info("parsedToken : " + parsedToken);
 
-          // 사용자 식별키(id)
-          Long userId = Long.parseLong(parsedToken.getPayload().get("userId").toString());
-          // 사용자 아이디
-          String email = parsedToken.getPayload().get("email").toString();
-          // 회원 권한
-          Object roles = parsedToken.getPayload().get("rol");
+            Long userId = Long.parseLong(parsedToken.getPayload().get("userId").toString());
+            String email = parsedToken.getPayload().get("email").toString();
+            Object roles = parsedToken.getPayload().get("rol");
 
-          Users user = new Users();
-          user.setUserId(userId);
-          user.setEmail(email);
-          List<UserAuth> authList = ((List<?>) roles)
-                                      .stream()
-                                      .map( auth -> UserAuth.builder()
-                                                          .email(email)
-                                                          .auth(auth.toString())
-                                                          .build()  
-                                          ) 
-                                      .collect( Collectors.toList() )
-                                      ;
-          user.setAuthList(authList);
+            Users user = new Users();
+            user.setUserId(userId);
+            user.setEmail(email);
 
-          // 시큐리티 권한 목록
-          List<SimpleGrantedAuthority> authorities 
-                  = ((List<?>) roles)
-                      .stream()
-                      .map( auth -> new SimpleGrantedAuthority(auth.toString()) ) 
-                      .collect( Collectors.toList() );
-          
-          // 추가 유저정보 가져오기
-          try {
-              Users userInfo = userMapper.select(email);
-              if( userInfo != null ) {
-                user.setNickname(userInfo.getNickname());
-                user.setProfileImg(userInfo.getProfileImg());
-                user.setEnabled(userInfo.getEnabled());
-              }
-          } catch (Exception e) {
-              log.error(e.getMessage());
-              log.error("토큰 해석 중, 회원 추가 정보 조회시 에러 발생");
-          }
+            // 권한
+            List<SimpleGrantedAuthority> authorities =
+                    ((List<?>) roles).stream()
+                            .map(r -> new SimpleGrantedAuthority(r.toString()))
+                            .collect(Collectors.toList());
 
-          UserDetails userDetails = new CustomUser(user);
+            List<UserAuth> authList =
+                    ((List<?>) roles).stream()
+                            .map(r -> UserAuth.builder().email(email).auth(r.toString()).build())
+                            .collect(Collectors.toList());
+            user.setAuthList(authList);
 
-          // new UsernamePasswordAuthenticationToken( 사용자정보객체, 비밀번호, 권한목록 )
-          return new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+            // ✅ 추가 유저정보 로드 (status 포함!)
+            try {
+                Users userInfo = userMapper.select(email);
+                if (userInfo != null) {
+                    user.setNickname(userInfo.getNickname());
+                    user.setProfileImg(userInfo.getProfileImg());
+                    user.setEnabled(userInfo.getEnabled());
+                    user.setStatus(userInfo.getStatus()); // ⬅⬅ 중요!
+                }
+            } catch (Exception e) {
+                log.error("토큰 해석 중 회원 정보 조회 에러", e);
+            }
 
-      } catch (ExpiredJwtException exception) {
-          log.warn("Request to parse expired JWT : {} failed : {}", authorization, exception.getMessage());
-      } catch (UnsupportedJwtException exception) {
-          log.warn("Request to parse unsupported JWT : {} failed : {}", authorization, exception.getMessage());
-      } catch (MalformedJwtException exception) {
-          log.warn("Request to parse invalid JWT : {} failed : {}", authorization, exception.getMessage());
-      } catch (IllegalArgumentException exception) {
-          log.warn("Request to parse empty or null JWT : {} failed : {}", authorization, exception.getMessage());
-      }
+            UserDetails userDetails = new CustomUser(user);
+            return new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
 
-      return null;
-      
-  }
-
-
-    /**
-     * 💍❓ 토큰 검증
-     * @param jwt
-     * @return
-     */
-    public boolean validateToken(String jwt) {
-      try {
-          // 💍 ➡ 👩‍💼 토큰 파싱
-          Jws<Claims> claims = Jwts.parser()
-                                  .verifyWith(getShaKey())
-                                  .build()
-                                  .parseSignedClaims(jwt);
-          // 만료기한 추출
-          Date expiration = claims.getPayload().getExpiration();
-          log.info("만료기간 : " + expiration.toString());
-
-          // 날짜A.after( 날짜B )
-          // : 날짜A가 날짜B 보다 더 뒤에 있으면 true
-          boolean result = expiration.after( new Date() );
-          return result;
-      } catch (ExpiredJwtException e) {
-          log.error("토큰 만료");
-      } catch (JwtException e) {
-          log.error("토큰 손상");
-      } catch (NullPointerException e) {
-          log.error("토큰 없음");
-      } catch (Exception e) {
-          log.error("토큰 검증 시 예외");
-      }
-      return false;
+        } catch (ExpiredJwtException e) {
+            log.warn("만료된 JWT: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            log.warn("지원하지 않는 JWT: {}", e.getMessage());
+        } catch (MalformedJwtException e) {
+            log.warn("손상된 JWT: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.warn("비어있는 JWT: {}", e.getMessage());
+        }
+        return null;
     }
 
+    /** 💍❓ 토큰 검증 */
+    public boolean validateToken(String jwt) {
+        try {
+            Jws<Claims> claims = Jwts.parser()
+                                     .verifyWith(getShaKey())
+                                     .build()
+                                     .parseSignedClaims(jwt);
 
+            Date expiration = claims.getPayload().getExpiration();
+            return expiration.after(new Date());
+        } catch (ExpiredJwtException e) {
+            log.error("토큰 만료");
+        } catch (JwtException e) {
+            log.error("토큰 손상");
+        } catch (Exception e) {
+            log.error("토큰 검증 시 예외", e);
+        }
+        return false;
+    }
 
-  /**
-   * "secret-key" ➡ byte[] ➡ SecretKey
-   * @return
-   */
-  public SecretKey getShaKey() {
-    String secretKey = jwtProps.getSecretKey();
-    byte[] signingKey = secretKey.getBytes();
-    SecretKey shaKey = Keys.hmacShaKeyFor(signingKey);
-    return shaKey;
-  }
-  
+    /** "secret-key" ➡ SecretKey */
+    public SecretKey getShaKey() {
+        String secretKey = jwtProps.getSecretKey();
+        return Keys.hmacShaKeyFor(secretKey.getBytes());
+    }
+
+    /** JWT에서 email 추출 */
+    public String getEmail(String token) {
+        try {
+            Claims claims = parseClaims(token);
+            return claims.get("email", String.class);
+        } catch (Exception e) {
+            log.warn("getEmail() 실패: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /** JWT에서 userId 추출 */
+    public Long getUserId(String token) {
+        try {
+            Claims claims = parseClaims(token);
+            Object v = claims.get("userId");
+            return v == null ? null : Long.valueOf(v.toString());
+        } catch (Exception e) {
+            log.warn("getUserId() 실패: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /** 공통 claims 파싱 */
+    private Claims parseClaims(String token) {
+        Jws<Claims> jws = Jwts.parser()
+                              .verifyWith(getShaKey())
+                              .build()
+                              .parseSignedClaims(token);
+        return jws.getPayload();
+    }
+
+    /** (옵션) 토큰 기준 정지 계정 여부 체크 */
+    public boolean isSuspended(String token) {
+        try {
+            String email = getEmail(token);
+            if (email == null) return false;
+            Users u = userMapper.select(email);
+            return u != null && "SUSPENDED".equalsIgnoreCase(u.getStatus());
+        } catch (Exception e) {
+            log.warn("isSuspended() 확인 중 문제: {}", e.getMessage());
+            return false;
+        }
+    }
 }

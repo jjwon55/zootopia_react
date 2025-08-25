@@ -9,13 +9,15 @@ import {
 } from "../../apis/hospitals/hospitalApi";
 import defaultHospitalImg from "../../assets/img/default-thumbnail.png";
 import defaultHospImg from "../../assets/img/default-hospital.png";
+import { MousePointerClick, Star, UserPen } from 'lucide-react';
 
 const HospitalDetail = ({
   hospitalId,
   isAdmin = false,
   isAuthenticated,
   currentUserId,
-  hospitalData
+  hospitalData,
+  searchMap
 }) => {
   console.log("HospitalDetail - isAuthenticated:", isAuthenticated);
   console.log("HospitalDetail - hospitalData:", hospitalData);
@@ -25,6 +27,7 @@ const HospitalDetail = ({
   const [content, setContent] = useState("");
   const [reviewId, setReviewId] = useState(null);
   const [previewUrl, setpreviewUrl] = useState(defaultHospImg)
+  const [reviewAvg, setReviewAvg] = useState()
   const navigate = useNavigate();
 
   const hospital = hospitalData;
@@ -109,6 +112,17 @@ const HospitalDetail = ({
       });
     }
   };
+
+  // 리뷰 평점 평균
+  useEffect(() => {
+    if (reviews.length > 0) {
+      const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+      setReviewAvg((totalRating / reviews.length).toFixed(1));
+    } else {
+      setReviewAvg(0);
+    }
+  }, [reviews]);
+
 
   // 리뷰 수정
   const editReview = (id, rate, txt) => {
@@ -224,14 +238,14 @@ const HospitalDetail = ({
                 </tr>
                 <tr>
                   <td className="info-label tw:bg-[#f8f9fa] tw:font-semibold tw:p-2">병원 주소</td>
-                  <td className="info-value tw:p-2">{hospital.address || "-"}</td>
+                  <td className="info-value tw:p-2 tw:cursor-pointer tw:no-underline tw:flex tw:gap-2" onClick={() => navigate(`/map?address=${encodeURIComponent(hospital.address)}`)}>{hospital.address || "-"}<MousePointerClick className="tw:text-[#ff6b6b]" /></td>
                 </tr>
                 <tr>
                   <td className="info-label tw:bg-[#f8f9fa] tw:font-semibold tw:p-2">홈페이지</td>
                   <td className="info-value tw:p-2">
                     {hospital.homepage ? (
-                      <a href={hospital.homepage} target="_blank" rel="noopener noreferrer" className="tw:underline">
-                        {hospital.homepage}
+                      <a href={hospital.homepage} target="_blank" rel="noopener noreferrer" className="tw:no-underline tw:flex tw:gap-2">
+                        {hospital.homepage}<MousePointerClick className="tw:text-[#ff6b6b]" />
                       </a>
                     ) : "-"}
                   </td>
@@ -268,9 +282,10 @@ const HospitalDetail = ({
 
       {/* 리뷰 섹션 */}
       <div className="review-section tw:mt-10">
-        <div className="review-header tw:flex tw:items-center tw:gap-2">
+        <div className="review-header tw:flex tw:items-center tw:gap-3">
           <h3 className="tw:text-lg tw:font-semibold">이 병원 어때요?</h3>
-          <span className="tw:text-sm tw:text-gray-500">등록된 리뷰 : ({reviews.length}개)</span>
+          <span className="tw:text-sm tw:flex tw:text-gray-500"><UserPen className="tw:text-[#ff6b6b]" />&nbsp; ({reviews.length}개의 리뷰가 있습니다.)</span>
+          <span className="tw:text-sm tw:flex tw:text-gray-500"><Star className="tw:text-[rgb(236,221,0)]" />&nbsp; ({reviewAvg} / 5)</span>
         </div>
 
         {/* 리뷰 목록 */}

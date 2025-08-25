@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { formatDate } from '../../utils/format';
 import defaultProfile from '../../assets/img/default-profile.png';
 import pinkArrow from '../../assets/img/pinkarrow.png';
@@ -7,6 +7,24 @@ import Share from '../../assets/img/share.png';
 import CommentSection from './CommentSection';
 import { toastSuccess, toastInfo, toastError } from '../../apis/posts/alert';
 import { toggleLike } from '../../apis/posts/posts';
+
+// --- 태그 정규화: string / string[] / [{name}] 모두 지원
+const normalizeTags = (post) => {
+  const raw = post?.tagList ?? post?.tags ?? [];
+  if (Array.isArray(raw)) {
+    return raw
+      .map(t => typeof t === 'string' ? t : (t?.name ?? t?.tag ?? ''))
+      .map(s => s.replace(/^#/, '').trim())
+      .filter(Boolean);
+  }
+  if (typeof raw === 'string') {
+    return raw
+      .split(/[,#\s]+/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
 
 // /api 프록시 환경에서 이미지 경로 정규화
 const resolveImg = (src) => {
@@ -34,6 +52,10 @@ const Read = ({
   // ✅ 추가: 댓글 변경 시 상위에서 재조회
   onCommentsChange,
 }) => {
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const ownerId = post?.user?.userId ?? post?.userId;
   const isOwner =
     typeof isOwnerFromApi === 'boolean'
@@ -58,9 +80,11 @@ const Read = ({
   const [liking, setLiking] = React.useState(false);
   const handleLike = async () => {
     if (!loginUserId) {
-      toastError('로그인이 필요합니다.');
+      // 로그인 후 돌아오도록 현재 위치 전달
+      navigate('/login', { state: { from: location }, replace: true });
       return;
     }
+
     if (liking) return;
     setLiking(true);
 
@@ -89,6 +113,7 @@ const Read = ({
   };
 
   const processedContent = normalizeContentImgSrc(post.content);
+  const tags = React.useMemo(() => normalizeTags(post), [post]);
 
   return (
     <div className="tw:max-w-[720px] tw:mx-auto tw:my-7 tw:bg-white tw:border-2 tw:border-[#ccc] tw:rounded-xl tw:p-6">
@@ -116,11 +141,17 @@ const Read = ({
             </Link>
 
             <button
-              onClick={onDelete}
+              onClick={() => {
+                if (!loginUserId) {
+                  navigate('/login', { state: { from: location }, replace: true });
+                  return;
+                }
+                onDelete?.();
+              }}
               className="tw:flex tw:items-center tw:gap-1 tw:px-3 tw:py-1.5 tw:text-sm
-                        tw:bg-red-50 tw:text-red-600 tw:rounded-lg
-                        tw:border tw:border-red-200 tw:hover:bg-red-100
-                        tw:shadow-sm tw:hover:shadow transition tw:cursor-pointer"
+             tw:bg-red-50 tw:text-red-600 tw:rounded-lg
+             tw:border tw:border-red-200 tw:hover:bg-red-100
+             tw:shadow-sm tw:hover:shadow transition tw:cursor-pointer"
             >
               <i className="bi bi-trash-fill" />
               삭제
@@ -172,9 +203,27 @@ const Read = ({
 
       {/* 본문 */}
       <div
-        className="toastui-editor-contents tw:text-[16px] tw:leading-[1.6] tw:mb-6 tw:min-h-[220px]"
+        className="toastui-editor-contents tw:text-[16px] tw:leading-[1.6] tw:mb-4 tw:min-h-[220px]"
         dangerouslySetInnerHTML={{ __html: processedContent }}
       />
+
+      {/* ✅ 본문 하단 태그 (작게) */}
+      {tags.length > 0 && (
+        <div className="tw:flex tw:flex-wrap tw:gap-1 tw:mb-6 tw:text-xs">
+          {tags.map((tag) => (
+            <Link
+              key={tag}
+              to={`/posts?type=tag&keyword=${encodeURIComponent(tag)}&page=1`}
+              className="tw:no-underline"
+              title={`태그: ${tag}`}
+            >
+              <span className="tw:inline-block tw:bg-[#f5f5f5] tw:text-[#666] tw:px-2 tw:py-[2px] tw:rounded hover:tw:bg-[#eee]">
+                #{tag}
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* 공유 & 좋아요 */}
       <div className="tw:flex tw:justify-center tw:gap-2 tw:mb-6">

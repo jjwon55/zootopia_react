@@ -15,6 +15,7 @@ export default function Update({
 }) {
   const navigate = useNavigate()
   const fileRef = useRef(null)
+  const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 
   const companies = [
     '삼성화재',
@@ -30,11 +31,28 @@ export default function Update({
     const v = e.target.value
     onChange({ ...form, [k]: v === '' ? '' : Number(v) })
   }
+  const changeUrl = (k) => (e) => onChange({ ...form, [k]: e.target.value.trim() })
+  const toggleSponsored = (e) => onChange({ ...form, sponsored: e.target.checked ? 1 : 0 })
 
   const onPickImage = async (e) => {
     const f = e.target.files?.[0]
     if (!f) return
-    await onUploadImage(f)
+    if (f.size > MAX_SIZE) {
+      alert('최대 5MB까지 업로드할 수 있어요.')
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
+    try {
+      const res = await onUploadImage(f)
+      const path = typeof res === 'string' ? res : res?.imagePath
+      if (!path) throw new Error('NO_IMAGE_PATH')
+      onChange({ ...form, imagePath: path })
+    } catch (err) {
+      console.error(err)
+      alert('이미지 업로드에 실패했습니다.')
+    } finally {
+      if (fileRef.current) fileRef.current.value = ''
+    }
   }
 
   const removeImage = () => {
@@ -42,9 +60,40 @@ export default function Update({
     onChange({ ...form, imagePath: '' })
   }
 
+  // 입력값을 "18,000 ~ 35,000" 같은 형태로 정리
+  function normalizeFeeRange(raw) {
+    if (!raw) return ''
+    const toNumber = (s) => {
+      const n = s.replace(/[^\d]/g, '')
+      return n ? String(parseInt(n, 10)) : ''
+    }
+    const toMoney = (n) => (n ? Number(n).toLocaleString('ko-KR') : '')
+    const parts = raw.split(/[~\-]/)
+    const a = toNumber(parts[0] || '')
+    const b = toNumber(parts[1] || '')
+    if (a && b) {
+      const n1 = Math.min(+a, +b)
+      const n2 = Math.max(+a, +b)
+      return `${toMoney(n1)} ~ ${toMoney(n2)}`
+    }
+    if (a) return toMoney(a)
+    return ''
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
+    if (!form.applyUrl && !form.homepageUrl) {
+      alert('가입/상담 링크 또는 상품/홈 링크 중 최소 하나는 입력해 주세요.')
+      return
+    }
     onSubmit()
+  }
+
+  const handleDelete = async () => {
+    if (!onDelete) return
+    if (confirm('정말 삭제하시겠어요? 이 동작은 되돌릴 수 없습니다.')) {
+      await onDelete()
+    }
   }
 
   return (
@@ -82,7 +131,7 @@ export default function Update({
             </div>
 
             <div className="tw:mt-3 tw:flex tw:flex-wrap tw:items-center tw:gap-2">
-              <label className="tw:inline-flex tw:cursor-pointer tw:items-center tw:justify-center tw:rounded-lg tw:bg-[#F27A7A] tw:text-white tw:px-3 tw:py-1.5 tw:text-sm hover:tw:opacity-90">
+              <label className={`tw:inline-flex tw:cursor-pointer tw:items-center tw:justify-center tw:rounded-lg tw:bg-[#F27A7A] tw:text-white tw:px-3 tw:py-1.5 tw:text-sm hover:tw:opacity-90 ${uploading ? 'tw:opacity-60 tw:pointer-events-none' : ''}`}>
                 파일 선택
                 <input
                   ref={fileRef}
@@ -120,7 +169,7 @@ export default function Update({
               />
             </Field>
 
-            {/* ✅ 보험사 */}
+            {/* 보험사 */}
             <Field label="보험사" required>
               <select
                 name="company"
@@ -176,10 +225,18 @@ export default function Update({
               <input
                 name="monthlyFeeRange"
                 value={form.monthlyFeeRange || ''}
-                onChange={change('monthlyFeeRange')}
+                onChange={(e) => onChange({ ...form, monthlyFeeRange: e.target.value })}
+                onBlur={() => onChange({ ...form, monthlyFeeRange: normalizeFeeRange(form.monthlyFeeRange || '') })}
                 placeholder="예) 18,000 ~ 35,000"
-                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200 fee-range"
+                inputMode="numeric"
+                autoComplete="off"
+                pattern="^\\s*\\d{1,3}(?:,\\d{3})*(?:\\s*[~\\-]\\s*\\d{1,3}(?:,\\d{3})*)?\\s*$"
+                title="숫자·쉼표와 ~만 사용 (예: 18,000 ~ 35,000 또는 18000~35000)"
               />
+              <p className="tw:mt-1 tw:text-[11px] tw:text-gray-500">
+                숫자/쉼표/틸드(~)만 입력하세요. 단위(원)는 생략
+              </p>
             </Field>
 
             <Field label="월 최대 보장 한도(만원)">
@@ -196,7 +253,7 @@ export default function Update({
         </div>
 
         {/* 상세 입력 */}
-        <div className="tw:rounded-xl tw:border tw:bg-gray-50 tw:p-4">
+        <div className="tw:rounded-xl tw:border tw:bg-gray-50 tw:p-4 tw:mb-6">
           <h4 className="tw:mb-3 tw:text-sm tw:font-semibold tw:text-gray-700">상세 정보</h4>
           <div className="tw:grid tw:grid-cols-1 tw:gap-4">
             <Field label="가입조건">
@@ -233,6 +290,98 @@ export default function Update({
           </div>
         </div>
 
+        {/* 🔗 링크/제휴 설정 */}
+        <div className="tw:rounded-xl tw:border tw:bg-gray-50 tw:p-4">
+          <h4 className="tw:mb-3 tw:text-sm tw:font-semibold tw:text-gray-700">링크/제휴 설정</h4>
+
+          <div className="tw:grid md:tw:grid-cols-2 tw:gap-4">
+            <Field label="가입/상담 링크 (applyUrl)">
+              <input
+                type="url"
+                name="applyUrl"
+                value={form.applyUrl || ''}
+                onChange={changeUrl('applyUrl')}
+                placeholder="https://example.com/pet/apply"
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+              />
+            </Field>
+
+            <Field label="상품/홈 링크 (homepageUrl)">
+              <input
+                type="url"
+                name="homepageUrl"
+                value={form.homepageUrl || ''}
+                onChange={changeUrl('homepageUrl')}
+                placeholder="https://example.com/pet"
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+              />
+            </Field>
+
+            <Field label="파트너 코드 (partnerCode)">
+              <input
+                name="partnerCode"
+                value={form.partnerCode || ''}
+                onChange={change('partnerCode')}
+                placeholder="예) ZOOTOPIA123"
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+              />
+            </Field>
+
+            <div className="tw:grid tw:grid-cols-3 tw:gap-4">
+              <Field label="utm_source">
+                <input
+                  name="utmSource"
+                  value={form.utmSource || ''}
+                  onChange={change('utmSource')}
+                  placeholder="zootopia"
+                  className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+                />
+              </Field>
+              <Field label="utm_medium">
+                <input
+                  name="utmMedium"
+                  value={form.utmMedium || ''}
+                  onChange={change('utmMedium')}
+                  placeholder="referral"
+                  className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+                />
+              </Field>
+              <Field label="utm_campaign">
+                <input
+                  name="utmCampaign"
+                  value={form.utmCampaign || ''}
+                  onChange={change('utmCampaign')}
+                  placeholder="pet_insurance"
+                  className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+                />
+              </Field>
+            </div>
+
+            <Field label="광고/제휴 표기">
+              <label className="tw:inline-flex tw:items-center tw:gap-2 tw:text-sm">
+                <input type="checkbox" checked={!!form.sponsored} onChange={toggleSponsored} />
+                <span>스폰서(광고/제휴) 표시</span>
+              </label>
+            </Field>
+
+            <Field label="면책 문구 (disclaimer)">
+              <textarea
+                name="disclaimer"
+                value={form.disclaimer || ''}
+                onChange={change('disclaimer')}
+                rows={3}
+                placeholder="※ 본 페이지는 상품 소개 목적이며, 가입·상담은 보험사 사이트에서 진행됩니다. ..."
+                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
+              />
+            </Field>
+          </div>
+
+          <p className="tw:mt-2 tw:text-xs tw:text-gray-500">
+            * applyUrl이 있으면 applyUrl을, 없으면 homepageUrl을 사용해 최종 이동 링크(outboundApplyUrl)를 자동 생성합니다.
+            파라미터는 ref/utm_*가 자동으로 붙습니다.
+          </p>
+        </div>
+
         {/* 액션 */}
         <div className="tw:mt-8 tw:flex tw:flex-wrap tw:items-center tw:justify-between">
           <div className="tw:flex tw:gap-2">
@@ -240,7 +389,7 @@ export default function Update({
               <button
                 type="button"
                 disabled={deleting}
-                onClick={onDelete}
+                onClick={handleDelete}
                 className="tw:inline-flex tw:items-center tw:justify-center tw:rounded-lg tw:border tw:border-red-300 tw:px-4 tw:py-2 tw:text-sm tw:text-red-600 hover:tw:bg-red-50 disabled:tw:opacity-60"
               >
                 {deleting ? '삭제 중…' : '삭제'}
@@ -258,20 +407,25 @@ export default function Update({
             </button>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || uploading}
               className="tw:inline-flex tw:items-center tw:justify-center tw:rounded-lg tw:bg-[#F27A7A] tw:px-4 tw:py-2 tw:text-sm tw:font-medium tw:text-white hover:tw:opacity-90 disabled:tw:opacity-60"
             >
-              {submitting ? '수정 중…' : '수정'}
+              {submitting ? '수정 중…' : (uploading ? '이미지 업로드 중…' : '수정')}
             </button>
           </div>
         </div>
       </form>
 
-      {/* 모바일 1열 */}
+      {/* 모바일 1열 + invalid 스타일 */}
       <style>{`
         @media (max-width: 767px) {
           .upd-grid { grid-template-columns: 1fr !important; }
         }
+        /* 전역 invalid 보더 (모든 input) */
+        input:invalid { border-color: #fca5a5 !important; }
+        /* 특정 필드만 하고 싶다면 위 한 줄 대신 ↓ 사용하고,
+           해당 input에 className="fee-range" 유지 */
+        /* .fee-range:invalid { border-color: #fca5a5 !important; } */
       `}</style>
     </div>
   )

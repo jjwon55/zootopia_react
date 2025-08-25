@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import * as Swal from '../../apis/alert';
 
 const CreateHospitalPage = () => {
-  const { roles, isLoading } = useContext(LoginContext);
+  const { isLogin, roles, isLoading } = useContext(LoginContext);
   const navigate = useNavigate();
 
   useEffect(() => {

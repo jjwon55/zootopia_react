@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Map from '../../components/map/Map';
+import { useLocation } from 'react-router-dom';
 
 // Kakao SDK 로더 (services + clusterer)
 function useKakaoLoader(appKey) {
@@ -206,6 +207,16 @@ useEffect(() => {
     );
   }, [compositeKeyword, radiusKm, applyMarkers, clearMarkers]);
 
+
+  // 병원주소 받아오기
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const address = params.get('address') || ''; // 주소값 받아옴
+  // 해당 address로 카카오맵 검색 로직 실행
+  // 예: geocoding API 호출 → 좌표 얻기 → 지도에 표시
+  // setMapCenter, setMarker 등으로 구현
+
+
   // 초기화
   useEffect(() => {
     if (!kakaoReady || !mapRef.current) return;
@@ -222,6 +233,19 @@ useEffect(() => {
       doSearch();
     });
 
+    if (!window.kakao || !address) return;
+    const geocoder = new window.kakao.maps.services.Geocoder();
+    geocoder.addressSearch(address, (result, status) => {
+      if (status === window.kakao.maps.services.Status.OK) {
+        const { y, x } = result[0];
+        const map = mapObjRef.current;
+        if (map) {
+          const latlng = new window.kakao.maps.LatLng(y, x);
+          map.setCenter(latlng);
+        }
+        // doSearch(latlng); // 필요시 주변 장소도 검색
+      }
+    });
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -240,7 +264,11 @@ useEffect(() => {
       if (clustererRef.current) clustererRef.current.clear();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kakaoReady]);
+  }, [address, kakaoReady]);
+
+//   useEffect(() => {
+// }, [address, kakaoReady]);
+
 
   // 최근 검색어
   const pushRecent = useCallback((kw) => {
@@ -321,6 +349,8 @@ useEffect(() => {
     setTimeout(() => doSearch(), 0);
   }, [doSearch]);
 
+  
+
   return (
     <Map
       // 지도/데이터
@@ -345,6 +375,8 @@ useEffect(() => {
       onToggleList={() => setListOpen(v => !v)}
       // 액션
       onMyLocation={onMyLocation}
+      // 병원주소 받아오기
+      address={address}
     />
   );
 }

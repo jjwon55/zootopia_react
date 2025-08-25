@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.aloha.zootopia.mapper.MessageMapper">
+
+    <insert id="sendMessage" parameterType="com.aloha.zootopia.dto.MessageDTO">
+        INSERT INTO P2P_Message
+            (sender_id, receiver_id, content)
+        VALUES
+            (#{senderId}, #{receiverId}, #{content})
+    </insert>
+
+    <select id="countReceivedMessages" resultType="int">
+        SELECT COUNT(*)
+        FROM P2P_Message
+        WHERE receiver_id = #{userId}
+          AND deleted_by_receiver = 0
+    </select>
+
+    <select id="countSentMessages" resultType="int">
+        SELECT COUNT(*)
+        FROM P2P_Message
+        WHERE sender_id = #{userId}
+          AND deleted_by_sender = 0
+    </select>
+
+    <select id="findReceivedMessagesByUserId" resultType="com.aloha.zootopia.dto.MessageResponseDTO">
+        SELECT
+            m.message_no    AS messageNo,        <!-- 쪽지 명단(m)에서 message_no를 가져와 messageNo 칸에 넣어줘 -->
+            u.nickname      AS senderNickname,   <!-- 회원 명단(u)에서 user_nickname을 가져와 senderNickname 칸에 넣어줘 -->
+            m.content,                           <!-- 쪽지 명단(m)에서 content를 가져와 content 칸에 넣어줘 -->
+            m.send_time     AS sendTime,
+            m.is_read       AS isRead
+        FROM
+            P2P_Message m                       <!-- "쪽지 명단"을 이제부터 m 이라고 부를게 -->
+        JOIN
+            users u ON m.sender_id = u.user_id  <!-- "회원 명단"을 u 라고 부를게. 두 명단은 m의 sender_id와 u의 user_no가 같은 것끼리 짝이야. -->
+        WHERE
+            m.receiver_id = #{userId}           <!-- 받는사람ID가 #{userId}인 쪽지만 골라줘 -->
+            AND m.deleted_by_receiver = 0       <!-- 완전삭제시 이 줄 제거 -->
+        ORDER BY
+            m.send_time DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="findSentMessagesByUserId" resultType="com.aloha.zootopia.dto.MessageSentResponseDTO">
+        SELECT
+            m.message_no      AS messageNo,
+            u.nickname        AS receiverNickname,  <!-- 받는 사람의 닉네임을 조회 -->
+            m.content,
+            m.send_time       AS sendTime,
+            m.is_read         AS isRead
+        FROM
+            P2P_Message m
+        JOIN
+            users u ON m.receiver_id = u.user_id    <!-- receiver_id로 JOIN -->
+        WHERE
+            m.sender_id = #{userId}                 <!-- 내가 보낸 쪽지 -->
+            AND m.deleted_by_sender = 0             <!-- 완전삭제시 이 줄 제거 -->
+        ORDER BY
+            m.send_time DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <!-- is_read를 1로 업데이트하는 쿼리 -->
+    <update id="updateReadStatus" parameterType="long">
+        UPDATE P2P_Message
+        SET is_read = 1
+        WHERE message_no = #{messageNo}
+            AND receiver_id = #{userId}   <!-- 받은사람이 읽었을때만 읽음표시 -->
+    </update>
+    <!-- 특정 쪽지 하나의 모든 정보를 조회하는 쿼리 -->
+    <select id="findMessageById" parameterType="long" resultType="com.aloha.zootopia.dto.MessageDetailResponseDTO">
+        SELECT
+            m.message_no        AS messageNo,
+            s.user_id           AS senderId,         <!-- 답장하기 자동 정보 입력용 추가 -->
+            s.nickname          AS senderNickname,   <!-- "보낸사람 정보용(s)" 테이블에서 닉네임을 가져옴 -->
+            r.nickname          AS receiverNickname, <!-- "받는사람 정보용(r)" 테이블에서 닉네임을 가져옴 -->
+            m.content,
+            m.send_time         AS sendTime
+        FROM
+            P2P_Message m
+        JOIN
+            users s ON m.sender_id = s.user_id     <!-- 쪽지의 sender_id를 "보낸사람 정보(s)"와 JOIN -->
+        JOIN
+            users r ON m.receiver_id = r.user_id   <!-- 쪽지의 receiver_id를 "받는사람 정보(r)"와 JOIN -->
+        WHERE
+            m.message_no = #{messageNo}
+    </select>
+
+    <!-- 권한 확인용 쿼리 -->
+    <select id="findMessageForAuth" parameterType="long" resultType="com.aloha.zootopia.dto.MessageDTO">
+        SELECT sender_id AS senderId, receiver_id AS receiverId
+        FROM P2P_Message
+        WHERE message_no = #{messageNo}
+    </select>
+
+    <!-- 완전 삭제 쿼리 (보낸사람이든 받은사람이든 둘중 하나가 삭제하면 상대방것도 같이 삭제됨) -->
+    <!-- <delete id="deleteMessage" parameterType="long">
+        DELETE FROM P2P_Message
+        WHERE message_no = #{messageNo}
+    </delete> -->
+
+
+    <!-- 삭제 -->
+    <!-- 보낸 사람에 의해 삭제됨으로 표시 -->
+    <update id="updateDeleteStatusBySender" parameterType="long">
+        UPDATE P2P_Message
+        SET deleted_by_sender = 1
+        WHERE message_no = #{messageNo}
+    </update>
+    <!-- 받는 사람에 의해 삭제됨으로 표시 -->
+    <update id="updateDeleteStatusByReceiver" parameterType="long">
+        UPDATE P2P_Message
+        SET deleted_by_receiver = 1
+        WHERE message_no = #{messageNo}
+    </update>
+
+
+    <!-- 안 읽은 쪽지 개수 조회 쿼리 -->
+    <select id="getUnreadMessageCount" parameterType="long" resultType="int">
+        SELECT COUNT(*)
+        FROM P2P_Message
+        WHERE receiver_id = #{userId}
+            AND is_read = 0
+            AND deleted_by_receiver = 0     <!-- 내가 삭제한 쪽지는 개수에서 제외하기 위해 `deleted_by_receiver = 0` 조건을 추가 -->
+    </select>
+
+
+</mapper>

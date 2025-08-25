@@ -174,29 +174,32 @@ const JobFilter = ({
             focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#FFCABF]
           "
         />
-        <button
-          type="submit"
-          className="
-            tw:border tw:border-[#F27A7A] tw:bg-[#F27A7A] tw:text-white
-            tw:rounded-xl tw:px-4 tw:py-2 tw:text-sm
-            hover:tw:bg-[#e86e6e] focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#FFCABF]
-          "
-        >
-          검색
-        </button>
-        {onReset && (
+          <button
+            type="submit"
+            className="
+              tw:border tw:border-[#F27A7A] tw:bg-[#F27A7A] tw:text-white
+              tw:rounded-xl tw:px-4 tw:py-2 tw:text-sm tw:font-semibold
+              tw:shadow-sm hover:tw:shadow-md
+              hover:tw:bg-[#e86e6e] hover:tw:-translate-y-0.5 active:tw:translate-y-0.5
+              tw:transition tw:duration-200
+            "
+          >
+            🔍 검색
+          </button>
+
           <button
             type="button"
             onClick={onReset}
             className="
               tw:border tw:border-[#F27A7A] tw:text-[#F27A7A] tw:bg-white
-              tw:rounded-xl tw:px-4 tw:py-2 tw:text-sm
-              hover:tw:bg-[#FFECEA] focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#FFCABF]
+              tw:rounded-xl tw:px-4 tw:py-2 tw:text-sm tw:font-semibold
+              tw:shadow-sm hover:tw:shadow-md
+              hover:tw:bg-[#FFECEA] hover:tw:-translate-y-0.5 active:tw:translate-y-0.5
+              tw:transition tw:duration-200
             "
           >
-            초기화
+            ♻ 초기화
           </button>
-        )}
       </div>
     </form>
   )

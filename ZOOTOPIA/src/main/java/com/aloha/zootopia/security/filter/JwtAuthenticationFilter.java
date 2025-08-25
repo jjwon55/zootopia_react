@@ -8,12 +8,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.aloha.zootopia.domain.AuthenticationRequest;
 import com.aloha.zootopia.domain.CustomUser;
 import com.aloha.zootopia.domain.Users;
 import com.aloha.zootopia.security.contants.SecurityConstants;
@@ -44,29 +46,53 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
    * : /login 경로로 (username, password) 요청하면 이 필터에서 로그인 인증을 시도합니다.
    */
   @Override
-  public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
-      throws AuthenticationException {
+public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
+        throws AuthenticationException {
 
-    String email = request.getParameter("email");
-    String password = request.getParameter("password");
-
-    log.info("email : " + email);
-    log.info("password : " + password);
-
-    // 인증토큰 객체 생성
-    Authentication authentication = new UsernamePasswordAuthenticationToken(email, password);
-
-    // 인증 시도
-    try {
-      authentication = authenticationManager.authenticate(authentication);
-    } catch (AuthenticationException e) {
-      log.warn("인증 실패: {}", e.getMessage());
-      throw e; // ❗ 반드시 예외를 다시 던져야 Security가 실패 처리함
+    if (!"POST".equalsIgnoreCase(request.getMethod())) {
+        throw new AuthenticationServiceException("Authentication method not supported: " + request.getMethod());
     }
 
-    log.info("authentication : " + authentication);
-    return authentication;
-  }
+    String contentType = request.getContentType();
+    String email = null;
+    String password = null;
+
+    try {
+        if (contentType != null && contentType.startsWith("application/json")) {
+            // JSON 요청 처리
+            ObjectMapper mapper = new ObjectMapper();
+            AuthenticationRequest dto = mapper.readValue(request.getInputStream(), AuthenticationRequest.class);
+            email = dto != null ? dto.getEmail() : null;
+            password = dto != null ? dto.getPassword() : null;
+        } else {
+            // x-www-form-urlencoded 등 파라미터 처리
+            email = request.getParameter("email");
+            password = request.getParameter("password");
+        }
+    } catch (IOException e) {
+        log.error("Error reading authentication request body", e);
+        throw new AuthenticationServiceException("Error reading authentication request body", e);
+    }
+
+    if (email == null || password == null) {
+        // 명확한 실패 사유 반환
+        throw new AuthenticationServiceException("email/password required");
+    }
+
+    log.info("email : {}", email);
+    log.info("password : {}", password);
+
+    UsernamePasswordAuthenticationToken authRequest =
+            new UsernamePasswordAuthenticationToken(email, password);
+
+    try {
+        return authenticationManager.authenticate(authRequest);
+    } catch (AuthenticationException e) {
+        log.warn("인증 실패: {}", e.getMessage());
+        throw e;
+    }
+}
+
 
   /**
    * ✅ 인증 성공 메소드
@@ -117,26 +143,6 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     log.info("✅ JWT 및 사용자 정보 응답 완료");
   }
 
-  @Override
-  protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-      AuthenticationException failed)
-      throws IOException, ServletException {
 
-    log.warn("❌ 로그인 인증 실패: {}", failed.getMessage());
-
-    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-    response.setContentType("application/json");
-    response.setCharacterEncoding("UTF-8");
-
-    Map<String, Object> result = new HashMap<>();
-    result.put("error", "아이디 또는 비밀번호가 일치하지 않습니다");
-
-    ObjectMapper objectMapper = new ObjectMapper();
-    String json = objectMapper.writeValueAsString(result);
-
-    PrintWriter writer = response.getWriter();
-    writer.write(json);
-    writer.flush();
-  }
 
 }

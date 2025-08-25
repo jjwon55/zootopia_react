@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.aloha.zootopia.mapper.AdminPostMapper">
+
+  <!-- 결과 매핑 -->
+  <resultMap id="AdminPostMap" type="com.aloha.zootopia.domain.AdminPost">
+    <id     property="postId"       column="post_id"/>
+    <result property="category"     column="category"/>
+    <result property="title"        column="title"/>
+    <result property="content"      column="content"/>
+    <result property="viewCount"    column="view_count"/>
+    <result property="likeCount"    column="like_count"/>
+    <result property="commentCount" column="comment_count"/>
+    <result property="createdAt"    column="created_at"/>
+    <result property="updatedAt"    column="updated_at"/>
+    <result property="userId"       column="user_id"/>
+    <result property="thumbnailUrl" column="thumbnail_url"/>
+    <result property="hidden"       column="hidden"/>
+
+    <result property="userEmail"    column="user_email"/>
+    <result property="userNickname" column="user_nickname"/>
+  </resultMap>
+
+  <!-- 정렬 분기 -->
+  <sql id="orderBy">
+    ORDER BY
+    <choose>
+      <when test="sort == 'createdAt'">p.created_at</when>
+      <when test="sort == 'updatedAt'">p.updated_at</when>
+      <when test="sort == 'viewCount'">p.view_count</when>
+      <when test="sort == 'likeCount'">p.like_count</when>
+      <when test="sort == 'commentCount'">p.comment_count</when>
+      <when test="sort == 'title'">p.title</when>
+      <otherwise>p.created_at</otherwise>
+    </choose>
+    <choose>
+      <when test="dir == 'asc'">ASC</when>
+      <otherwise>DESC</otherwise>
+    </choose>
+  </sql>
+
+  <!-- 조건 공통 -->
+  <sql id="whereClause">
+    <where>
+      <if test="category != null and category != ''">
+        AND p.category = #{category}
+      </if>
+      <if test="hidden != null and hidden != ''">
+        <choose>
+          <when test="hidden == true or hidden == 'true'">
+            AND p.hidden = 1
+          </when>
+          <when test="hidden == false or hidden == 'false'">
+            AND p.hidden = 0
+          </when>
+        </choose>
+      </if>
+      <if test="q != null and q != ''">
+        AND (
+          p.title   LIKE CONCAT('%', #{q}, '%')
+          OR p.content LIKE CONCAT('%', #{q}, '%')
+          OR u.email LIKE CONCAT('%', #{q}, '%')
+          OR u.nickname LIKE CONCAT('%', #{q}, '%')
+        )
+      </if>
+    </where>
+  </sql>
+
+  <!-- 개수 -->
+  <select id="countByFilter" resultType="int">
+    SELECT COUNT(1)
+    FROM posts p
+    LEFT JOIN users u ON u.user_id = p.user_id
+    <include refid="whereClause"/>
+  </select>
+
+  <!-- 목록 -->
+  <select id="findByFilter" resultMap="AdminPostMap">
+    SELECT
+      p.*,
+      u.email    AS user_email,
+      u.nickname AS user_nickname
+    FROM posts p
+    LEFT JOIN users u ON u.user_id = p.user_id
+    <include refid="whereClause"/>
+    <include refid="orderBy"/>
+    LIMIT #{offset}, #{size}
+  </select>
+
+  <!-- 단건 -->
+  <select id="selectOne" resultMap="AdminPostMap">
+    SELECT
+      p.*,
+      u.email    AS user_email,
+      u.nickname AS user_nickname
+    FROM posts p
+    LEFT JOIN users u ON u.user_id = p.user_id
+    WHERE p.post_id = #{postId}
+  </select>
+
+  <!-- 숨김/해제 -->
+  <update id="updateHidden">
+    UPDATE posts
+    SET hidden = #{hidden},
+        updated_at = NOW()
+    WHERE post_id = #{postId}
+  </update>
+
+  <!-- 삭제 -->
+  <delete id="delete">
+    DELETE FROM posts
+    WHERE post_id = #{postId}
+  </delete>
+
+</mapper>

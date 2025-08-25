@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export default function Map({
   // 지도
@@ -26,9 +27,23 @@ export default function Map({
 
   // 액션
   onMyLocation,
+
+  // 병원주소 받아오기
+  address
 }) {
   // 헤더 높이(프로젝트에 맞게 조정: 64 → 72/80 등)
   const headerH = '64px';
+
+  const [internalKeyword, setInternalKeyword] = useState(address || '');
+
+  // address prop이 바뀔 때 internalKeyword 업데이트
+  useEffect(() => {
+    if (address) {
+      setInternalKeyword(address);
+      onChangeKeyword(address);  // 부모 함수가 있다면 호출해서 검색어 업데이트
+    }
+  }, [address, onChangeKeyword]);
+
 
   return (
     <div
@@ -52,7 +67,7 @@ export default function Map({
             </button>
             <input
               type="text"
-              value={keyword}
+              value={ keyword || address}
               placeholder="장소, 검색"
               onChange={(e) => onChangeKeyword(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') onSearchClick(); }}

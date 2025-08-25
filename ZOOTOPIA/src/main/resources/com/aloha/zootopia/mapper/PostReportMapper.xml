@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.aloha.zootopia.mapper.PostReportMapper">
+
+  <resultMap id="PostReportMap" type="com.aloha.zootopia.domain.PostReport">
+    <id     property="reportId" column="report_id"/>
+    <result property="postId" column="post_id"/>
+    <result property="reporterUserId" column="reporter_user_id"/>
+    <result property="reasonCode" column="reason_code"/>
+    <result property="reasonText" column="reason_text"/>
+    <result property="status" column="status"/>
+    <result property="adminNote" column="admin_note"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="reviewedAt" column="reviewed_at"/>
+    <result property="reporterEmail" column="reporter_email"/>
+  </resultMap>
+
+  <insert id="insert" parameterType="com.aloha.zootopia.domain.PostReport">
+    INSERT INTO post_report
+    (post_id, reporter_user_id, reason_code, reason_text, status)
+    VALUES
+    (#{postId}, #{reporterUserId}, #{reasonCode}, #{reasonText}, 'PENDING')
+  </insert>
+
+  <!-- 24시간 내 동일 게시글 신고 여부 -->
+  <select id="existsRecentSame" resultType="int">
+    SELECT COUNT(1)
+    FROM post_report
+    WHERE reporter_user_id = #{reporterUserId}
+      AND post_id = #{postId}
+      AND created_at >= DATE_SUB(NOW(), INTERVAL #{hours} HOUR)
+  </select>
+
+  <sql id="orderBy">
+    ORDER BY
+    <choose>
+      <when test="sort == 'post'">pr.post_id</when>
+      <when test="sort == 'reason'">pr.reason_code</when>
+      <otherwise>pr.created_at</otherwise>
+    </choose>
+    <choose>
+      <when test="dir == 'asc'">ASC</when>
+      <otherwise>DESC</otherwise>
+    </choose>
+  </sql>
+
+  <select id="findByFilter" resultMap="PostReportMap">
+    SELECT pr.*,
+           r.email AS reporter_email
+    FROM post_report pr
+    LEFT JOIN users r ON r.user_id = pr.reporter_user_id
+    LEFT JOIN posts p ON p.post_id = pr.post_id
+    <where>
+      <if test="status != null"> pr.status = #{status} </if>
+      <if test="reason != null"> AND pr.reason_code = #{reason} </if>
+      <if test="postId != null"> AND pr.post_id = #{postId} </if>
+      <if test="q != null and q != ''">
+        AND (p.title LIKE CONCAT('%',#{q},'%')
+         OR p.content LIKE CONCAT('%',#{q},'%')
+         OR r.email LIKE CONCAT('%',#{q},'%'))
+      </if>
+    </where>
+    <include refid="orderBy"/>
+    LIMIT #{offset}, #{size}
+  </select>
+
+  <select id="countByFilter" resultType="int">
+    SELECT COUNT(1)
+    FROM post_report pr
+    LEFT JOIN users r ON r.user_id = pr.reporter_user_id
+    LEFT JOIN posts p ON p.post_id = pr.post_id
+    <where>
+      <if test="status != null"> pr.status = #{status} </if>
+      <if test="reason != null"> AND pr.reason_code = #{reason} </if>
+      <if test="postId != null"> AND pr.post_id = #{postId} </if>
+      <if test="q != null and q != ''">
+        AND (p.title LIKE CONCAT('%',#{q},'%')
+         OR p.content LIKE CONCAT('%',#{q},'%')
+         OR r.email LIKE CONCAT('%',#{q},'%'))
+      </if>
+    </where>
+  </select>
+
+  <update id="updateStatus">
+    UPDATE post_report
+    SET status = #{status},
+        admin_note = #{adminNote},
+        reviewed_at = CASE
+          WHEN #{status} IN ('REVIEWED','REJECTED','ACTION_TAKEN') THEN NOW()
+          ELSE reviewed_at
+        END
+    WHERE report_id = #{reportId}
+  </update>
+</mapper>
