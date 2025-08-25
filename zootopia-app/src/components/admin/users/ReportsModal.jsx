@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { listReportsByUser, updateReportStatus } from "../../../apis/posts/report";
+import { toastSuccess, toastError, confirm } from "../../../apis/posts/alert";
 
 const STATUS_LABEL = {
   PENDING: "대기",
@@ -43,17 +44,24 @@ export default function ReportsModal({ user, onClose }) {
 
   const onChangeStatus = async (r, next) => {
     if (!r?.reportId) return;
-    if (!window.confirm(`이 신고를 '${STATUS_LABEL[next] ?? next}' 상태로 변경할까요?`)) return;
+
+    // ✅ SweetAlert confirm 적용
+    const res = await confirm(
+      "상태 변경",
+      `이 신고를 '${STATUS_LABEL[next] ?? next}' 상태로 변경할까요?`,
+      "warning"
+    );
+    if (!res?.isConfirmed) return;
+
     try {
       setSaving(r.reportId);
       await updateReportStatus(r.reportId, { status: next, adminNote: r.adminNote || "" });
       await fetch();
-      // 토스트 쓰면 교체: toastSuccess("상태가 변경되었습니다.");
-      alert("상태가 변경되었습니다.");
+      // ✅ SweetAlert toast 적용
+      toastSuccess("상태가 변경되었습니다.");
     } catch (e) {
       console.error(e);
-      // toastError("상태 변경 실패");
-      alert("상태 변경 실패");
+      toastError("상태 변경 실패");
     } finally {
       setSaving(null);
     }
