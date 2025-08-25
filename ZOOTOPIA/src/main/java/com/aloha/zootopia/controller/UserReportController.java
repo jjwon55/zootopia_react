@@ -3,14 +3,7 @@ package com.aloha.zootopia.controller;
 import java.util.Map;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.aloha.zootopia.domain.CustomUser;
 import com.aloha.zootopia.domain.ReportReason;
@@ -26,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 public class UserReportController {
 
     private final UserReportService userReportService;
+
+    /** ✅ 신고 목록 조회 */
     @GetMapping
     public Map<String, Object> list(
         @RequestParam(name = "q", required = false) String q,
@@ -40,21 +35,28 @@ public class UserReportController {
         return userReportService.list(q, status, reason, reportedUserId, page, size, sort, dir);
     }
 
+    /** ✅ 신고 생성 */
     @PostMapping
-    public void create(@RequestBody UserReport report,
-                    @AuthenticationPrincipal CustomUser loginUser) {
+    public void create(
+        @RequestBody UserReport report,
+        @AuthenticationPrincipal CustomUser loginUser
+    ) {
         if (loginUser == null) throw new RuntimeException("로그인이 필요합니다.");
         userReportService.create(report, loginUser.getUserId().intValue());
     }
+
+    /** ✅ 신고 상태 변경 (관리자 전용) */
     @PutMapping("/{reportId}/status")
     public void updateStatus(
-            @PathVariable Integer reportId,
-            @RequestBody Map<String, Object> body
+        @PathVariable("reportId") Integer reportId,   // ❗ 이름 지정
+        @RequestBody Map<String, Object> body
     ) {
         String statusStr = (String) body.get("status");
         String adminNote = (String) body.get("adminNote");
 
-        userReportService.updateStatus(reportId, ReportStatus.valueOf(statusStr), adminNote);
-    }
+        if (statusStr == null) throw new IllegalArgumentException("status 값이 필요합니다.");
 
+        ReportStatus status = ReportStatus.valueOf(statusStr);
+        userReportService.updateStatus(reportId, status, adminNote);
+    }
 }
