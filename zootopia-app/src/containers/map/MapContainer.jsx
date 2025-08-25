@@ -2,61 +2,43 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Map from '../../components/map/Map';
 import { useLocation } from 'react-router-dom';
 
-// Kakao SDK 로더 (services + clusterer)
+/* =========================
+   Kakao SDK 로더 (보강)
+========================= */
 function useKakaoLoader(appKey) {
   const [ready, setReady] = useState(!!window.kakao?.maps);
 
   useEffect(() => {
     if (window.kakao?.maps) { setReady(true); return; }
-    const exist = document.querySelector('script[data-kakao-sdk="true"]');
-    if (exist) return;
 
-    const script = document.createElement('script');
+    let script = document.querySelector('script[data-kakao-sdk="true"]');
+    const onScriptLoad = () => {
+      if (!window.kakao?.maps) return;
+      window.kakao.maps.load(() => setReady(true));
+    };
+
+    if (script) {
+      script.addEventListener('load', onScriptLoad, { once: true });
+      return () => script.removeEventListener('load', onScriptLoad);
+    }
+
+    script = document.createElement('script');
     script.setAttribute('data-kakao-sdk', 'true');
     script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&autoload=false&libraries=services,clusterer`;
     script.async = true;
-    script.onload = () => window.kakao.maps.load(() => setReady(true));
+    script.onload = onScriptLoad;
+    script.onerror = () => console.error('[KakaoMaps] SDK load error');
     document.head.appendChild(script);
+
+    return () => { script.onload = null; };
   }, [appKey]);
 
   return ready;
 }
 
-
-
-function radiusByLevel(level) {
-  if (level <= 3) return 1000;
-  if (level === 4) return 2000;
-  if (level === 5) return 3000;
-  if (level === 6) return 5000;
-  if (level === 7) return 8000;
-  if (level === 8) return 10000;
-  if (level === 9) return 15000;
-  return 20000;
-}
-
-const CATEGORY_PRESETS = [
-  { key: '동물병원', label: '동물병원' },
-  { key: '애견카페', label: '애견카페' },
-  { key: '애견용품', label: '애견용품' },
-  { key: '공원', label: '공원' },
-];
-
-function markerImageFor(category) {
-  const colorMap = {
-    동물병원: '#EF4444', 애견카페: '#8B5CF6', 애견용품: '#10B981', 공원: '#3B82F6', default: '#6B7280',
-  };
-  const color = colorMap[category] || colorMap.default;
-  const svg = encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><circle cx='16' cy='16' r='10' fill='${color}' /></svg>`
-  );
-  return new window.kakao.maps.MarkerImage(
-    `data:image/svg+xml;charset=utf-8,${svg}`,
-    new window.kakao.maps.Size(32, 32),
-    { offset: new window.kakao.maps.Point(16, 16) }
-  );
-}
-
+/* =========================
+   컴포넌트
+========================= */
 export default function MapContainer() {
   const appKey = import.meta.env.VITE_KAKAO_MAP_KEY || 'YOUR_KAKAO_APP_KEY';
   const kakaoReady = useKakaoLoader(appKey);
@@ -71,8 +53,6 @@ export default function MapContainer() {
 
   const [keyword, setKeyword] = useState('동물병원');
   const [places, setPlaces] = useState([]);
-  const [radiusKm, setRadiusKm] = useState(0);
-  const [selectedCats, setSelectedCats] = useState(['동물병원']);
   const [favorites, setFavorites] = useState(() => {
     try { return JSON.parse(localStorage.getItem('favPlaces') || '[]'); } catch { return []; }
   });
@@ -80,30 +60,18 @@ export default function MapContainer() {
     try { return JSON.parse(localStorage.getItem('recentKeywords') || '[]'); } catch { return []; }
   });
 
-  // 컴포넌트 시작부 (export default function MapContainer() { ... ) 안쪽
-useEffect(() => {
-  // 팝업 오픈 함수 (전역으로 노출)
-  window.openKakaoMapPopup = (url) => {
-    if (!url) return;
-    window.open(
-      url,
-      'kakaoMapPopup',
-      'width=800,height=700,scrollbars=yes,resizable=yes'
-    );
-  };
-}, []);
+  // 상태/가드
+  const selectedIdRef = useRef(null);
+  const idleTimerRef = useRef(null);
+  const searchSeqRef = useRef(0);
+  const searchingRef = useRef(false);
 
-  // ▼▼ UI 상태 (신규) ▼▼
-  const [filtersOpen, setFiltersOpen] = useState(false);   // 왼쪽 드로어
-  const [listOpen, setListOpen] = useState(true);          // 오른쪽 패널/바텀시트
-  useEffect(() => { setListOpen(window.innerWidth >= 1024); }, []); // 모바일 초기값: 닫힘
+  // URL ?address=
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const address = params.get('address') || '';
 
-  const debounceTimer = useRef();
-
-  const compositeKeyword = useMemo(() => {
-    const cats = selectedCats.join(' ');
-    return [cats, keyword].filter(Boolean).join(' ');
-  }, [selectedCats, keyword]);
+  const compositeKeyword = useMemo(() => keyword, [keyword]);
 
   const clearMarkers = useCallback(() => {
     markersRef.current.forEach(m => m.setMap(null));
@@ -148,7 +116,7 @@ useEffect(() => {
         localStorage.setItem('favPlaces', JSON.stringify(next));
         return next;
       });
-      setTimeout(() => showOverlay(place), 0);
+      setTimeout(() => { showOverlay(place); }, 0);
     };
 
     const ov = new kakao.maps.CustomOverlay({
@@ -157,8 +125,11 @@ useEffect(() => {
     });
     ov.setMap(mapObjRef.current);
     overlayRef.current = ov;
+
+    selectedIdRef.current = place.id;
   }, [closeOverlay, favorites]);
 
+  // ✅ 기본 마커 사용: image 옵션 제거
   const applyMarkers = useCallback((data) => {
     const { kakao } = window;
     const map = mapObjRef.current;
@@ -166,58 +137,52 @@ useEffect(() => {
 
     const markers = data.map((place) => {
       const coords = new kakao.maps.LatLng(place.y, place.x);
-      const marker = new kakao.maps.Marker({
-        position: coords,
-        image: markerImageFor(place.category_group_name || selectedCats[0] || 'default'),
-      });
+      const marker = new kakao.maps.Marker({ position: coords }); // ← 기본 마커
       kakao.maps.event.addListener(marker, 'click', () => showOverlay(place));
       marker.__pid = place.id;
+      marker.__place = place;
       return marker;
     });
     markersRef.current = markers;
 
     if (!clustererRef.current) {
-      clustererRef.current = new kakao.maps.MarkerClusterer({
-        map, averageCenter: true, minLevel: 6,
+      // ✅ 기본 클러스터 스타일 사용 (styles 제거)
+      clustererRef.current = new window.kakao.maps.MarkerClusterer({
+        map,
+        averageCenter: true,
+        minLevel: 6,
       });
     }
     clustererRef.current.addMarkers(markers);
-  }, [clearMarkers, selectedCats, showOverlay]);
+  }, [clearMarkers, showOverlay]);
 
-  const doSearch = useCallback((centerLatLng) => {
+  // 검색: 화면영역(bounds) 기반
+  const doSearch = useCallback(() => {
     const { kakao } = window;
     const map = mapObjRef.current;
     const svc = placesSvcRef.current;
     if (!map || !svc || !compositeKeyword) return;
 
-    const center = centerLatLng || map.getCenter();
-    const radius = radiusKm > 0 ? radiusKm * 1000 : radiusByLevel(map.getLevel());
-    map.setCenter(center);
+    const seq = ++searchSeqRef.current;
+    searchingRef.current = true;
 
     svc.keywordSearch(
       compositeKeyword,
       (data, status) => {
+        if (seq !== searchSeqRef.current) return;
+        searchingRef.current = false;
+
         if (status !== kakao.maps.services.Status.OK) {
           setPlaces([]); clearMarkers(); return;
         }
         setPlaces(data);
         applyMarkers(data);
       },
-      { location: center, radius },
+      { bounds: map.getBounds() }
     );
-  }, [compositeKeyword, radiusKm, applyMarkers, clearMarkers]);
+  }, [compositeKeyword, applyMarkers, clearMarkers]);
 
-
-  // 병원주소 받아오기
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const address = params.get('address') || ''; // 주소값 받아옴
-  // 해당 address로 카카오맵 검색 로직 실행
-  // 예: geocoding API 호출 → 좌표 얻기 → 지도에 표시
-  // setMapCenter, setMarker 등으로 구현
-
-
-  // 초기화
+  // 지도/서비스 초기화
   useEffect(() => {
     if (!kakaoReady || !mapRef.current) return;
     const { kakao } = window;
@@ -228,49 +193,49 @@ useEffect(() => {
 
     placesSvcRef.current = new kakao.maps.services.Places();
 
+    // idle 디바운스 (팬/줌 멈춘 뒤 검색)
     kakao.maps.event.addListener(map, 'idle', () => {
       if (!compositeKeyword) return;
-      doSearch();
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(() => {
+        if (!searchingRef.current) doSearch();
+      }, 400);
     });
 
-    if (!window.kakao || !address) return;
-    const geocoder = new window.kakao.maps.services.Geocoder();
-    geocoder.addressSearch(address, (result, status) => {
-      if (status === window.kakao.maps.services.Status.OK) {
+    // 최초 위치: address 우선 → 없으면 현재위치 → 기본
+    if (address) {
+      const geocoder = new kakao.maps.services.Geocoder();
+      geocoder.addressSearch(address, (result, status) => {
+        if (status !== kakao.maps.services.Status.OK) { doSearch(); return; }
         const { y, x } = result[0];
-        const map = mapObjRef.current;
-        if (map) {
-          const latlng = new window.kakao.maps.LatLng(y, x);
-          map.setCenter(latlng);
-        }
-        // doSearch(latlng); // 필요시 주변 장소도 검색
-      }
-    });
-    if (navigator.geolocation) {
+        const latlng = new kakao.maps.LatLng(y, x);
+        map.setCenter(latlng);
+        doSearch();
+      });
+    } else if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const latlng = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
           myLocRef.current = latlng;
           map.setCenter(latlng);
-          doSearch(latlng);
+          doSearch();
         },
-        () => doSearch(),
+        () => doSearch()
       );
-    } else doSearch();
+    } else {
+      doSearch();
+    }
 
     return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       clearMarkers();
       if (overlayRef.current) overlayRef.current.setMap(null);
       if (clustererRef.current) clustererRef.current.clear();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [address, kakaoReady]);
+  }, [kakaoReady, address]);
 
-//   useEffect(() => {
-// }, [address, kakaoReady]);
-
-
-  // 최근 검색어
+  // 최근 검색어: 추가/개별삭제/전체삭제
   const pushRecent = useCallback((kw) => {
     if (!kw) return;
     setRecent(prev => {
@@ -281,7 +246,21 @@ useEffect(() => {
     });
   }, []);
 
-  // 디바운스 제안
+  const removeRecent = useCallback((kw) => {
+    setRecent(prev => {
+      const next = prev.filter(v => v !== kw);
+      localStorage.setItem('recentKeywords', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const clearRecent = useCallback(() => {
+    localStorage.removeItem('recentKeywords');
+    setRecent([]);
+  }, []);
+
+  // 입력 디바운스 프리뷰(가벼운 2km) — 결과 미리보기
+  const debounceTimer = useRef();
   const onChangeKeywordDebounced = useCallback((v) => {
     setKeyword(v);
     if (!placesSvcRef.current) return;
@@ -290,13 +269,16 @@ useEffect(() => {
       if (!v) return;
       const map = mapObjRef.current;
       const center = map?.getCenter();
-      placesSvcRef.current.keywordSearch(
+      const svc = placesSvcRef.current;
+      const seq = ++searchSeqRef.current;
+      svc.keywordSearch(
         v,
         (data, status) => {
+          if (seq !== searchSeqRef.current) return;
           if (status !== window.kakao.maps.services.Status.OK) return;
           setPlaces(data);
         },
-        { location: center, radius: 2000 },
+        { location: center, radius: 2000 }
       );
     }, 250);
   }, []);
@@ -304,7 +286,6 @@ useEffect(() => {
   const onSearchClick = useCallback(() => {
     pushRecent(compositeKeyword);
     doSearch();
-    setListOpen(true); // 검색하면 리스트 열기
   }, [doSearch, pushRecent, compositeKeyword]);
 
   const onPlaceClick = useCallback((place) => {
@@ -312,44 +293,29 @@ useEffect(() => {
     const map = mapObjRef.current;
     if (!map) return;
     const coords = new kakao.maps.LatLng(place.y, place.x);
-    map.setCenter(coords);
-    showOverlay(place);
+    map.setCenter(coords); // 의도된 이동
     const marker = markersRef.current.find(m => m.__pid === place.id);
     if (marker) { marker.setZIndex(999); setTimeout(() => marker.setZIndex(undefined), 1200); }
+    showOverlay(place);
   }, [showOverlay]);
 
   const onMyLocation = useCallback(() => {
     if (myLocRef.current) {
       mapObjRef.current.setCenter(myLocRef.current);
-      doSearch(myLocRef.current);
+      doSearch();
       return;
     }
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) { doSearch(); return; }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const latlng = new window.kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
         myLocRef.current = latlng;
         mapObjRef.current.setCenter(latlng);
-        doSearch(latlng);
+        doSearch();
       },
       () => doSearch(),
     );
   }, [doSearch]);
-
-  const onChangeRadiusKm = useCallback((km) => {
-    setRadiusKm(km); doSearch();
-  }, [doSearch]);
-
-  const onToggleCategory = useCallback((key) => {
-    setSelectedCats(prev => {
-      const has = prev.includes(key);
-      const next = has ? prev.filter(k => k !== key) : [...prev, key];
-      return next.length === 0 ? prev : next;
-    });
-    setTimeout(() => doSearch(), 0);
-  }, [doSearch]);
-
-  
 
   return (
     <Map
@@ -358,24 +324,19 @@ useEffect(() => {
       places={places}
       favorites={favorites}
       onPlaceClick={onPlaceClick}
-      // 검색/필터
+
+      // 검색
       keyword={keyword}
       onChangeKeyword={onChangeKeywordDebounced}
       onSearchClick={onSearchClick}
-      categories={CATEGORY_PRESETS}
-      selectedCats={selectedCats}
-      onToggleCategory={onToggleCategory}
-      radiusKm={radiusKm}
-      onChangeRadiusKm={onChangeRadiusKm}
       recentKeywords={recent}
-      // UI 상태
-      filtersOpen={filtersOpen}
-      onToggleFilters={() => setFiltersOpen(v => !v)}
-      listOpen={listOpen}
-      onToggleList={() => setListOpen(v => !v)}
+      onDeleteRecent={removeRecent}
+      onClearRecent={clearRecent}
+
       // 액션
       onMyLocation={onMyLocation}
-      // 병원주소 받아오기
+
+      // placeholder
       address={address}
     />
   );

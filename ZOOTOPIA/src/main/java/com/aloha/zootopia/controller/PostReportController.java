@@ -2,8 +2,10 @@ package com.aloha.zootopia.controller;
 
 import java.util.Map;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +17,7 @@ import com.aloha.zootopia.domain.PostReport;
 import com.aloha.zootopia.domain.ReportReason;
 import com.aloha.zootopia.domain.ReportStatus;
 import com.aloha.zootopia.service.PostReportService;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import lombok.RequiredArgsConstructor;
 
@@ -52,5 +55,19 @@ public class PostReportController {
                              @RequestParam(required = false) String adminNote) {
         postReportService.updateStatus(reportId, status, adminNote);
     }
+
+    // ✅ 상태 변경 (PUT/PATCH 둘 다 허용)
+    @RequestMapping(value="/{reportId}/status",
+            method = { RequestMethod.PUT, RequestMethod.PATCH })
+    public ResponseEntity<?> updateStatus(
+            @PathVariable("reportId") Integer reportId,
+            @RequestBody UpdateStatusReq req
+    ) {
+        postReportService.updateStatus(reportId, req.status(), req.adminNote());
+        return ResponseEntity.ok(Map.of("ok", true));
+    }
+
+    public static record UpdateStatusReq(ReportStatus status, String adminNote) {}
 }
+
 

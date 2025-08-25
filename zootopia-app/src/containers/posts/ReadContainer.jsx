@@ -1,9 +1,10 @@
+// src/pages/posts/ReadContainer.jsx
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Read from '../../components/posts/Read';
 import { toastSuccess, toastError } from '../../apis/posts/alert';
 import { read as readPost, remove as removePost } from '../../apis/posts/posts';
-import { LoginContext } from '../../context/LoginContextProvider'; // ✅ 컨텍스트 사용
+import { LoginContext } from '../../context/LoginContextProvider';
 
 const ReadContainer = () => {
   const { postId } = useParams();
@@ -14,12 +15,10 @@ const ReadContainer = () => {
   const [isOwner, setIsOwner] = useState(false);
   const [editId, setEditId] = useState(null);
 
-  // ✅ 로그인 유저 정보
   const { userInfo } = useContext(LoginContext);
   const loginNickname = userInfo?.nickname ?? null;
   const loginProfileImg = userInfo?.profileImg ?? null;
 
-  // ✅ 다시 읽기 (댓글 변경 후 재조회 포함)
   const refetchPost = useCallback(async () => {
     try {
       const { data } = await readPost(postId);
@@ -52,13 +51,11 @@ const ReadContainer = () => {
       post={post}
       isOwner={isOwner}
       loginUserId={loginUserId}
-      // ✅ 댓글에서 사용할 로그인 닉네임/프로필 전달
       loginNickname={loginNickname}
       loginProfileImg={loginProfileImg}
       editId={editId}
       setEditId={setEditId}
       onDelete={handleDelete}
-      // ✅ 댓글 변경 시 재조회
       onCommentsChange={refetchPost}
     />
   );

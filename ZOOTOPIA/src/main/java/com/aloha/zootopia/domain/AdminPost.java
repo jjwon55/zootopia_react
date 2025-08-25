@@ -27,4 +27,6 @@ public class AdminPost {
 
     private String thumbnailUrl;
     private Boolean hidden;        // posts.hidden
+
+    private Integer reportCount;   // ✅ 신고 건수 추가
 }
