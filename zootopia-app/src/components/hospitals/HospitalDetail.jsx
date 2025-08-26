@@ -222,27 +222,27 @@ const HospitalDetail = ({
               <tbody>
                 <tr>
                   <td className="info-label tw:bg-[#f8f9fa] tw:font-semibold tw:p-2 tw:w-[150px]">병원 이름</td>
-                  <td className="info-value tw:p-2">{hospital.name}</td>
+                  <td className="info-value tw:p-2 tw:bg-[#ff99992f]">{hospital.name}</td>
                 </tr>
                 <tr>
                   <td className="info-label tw:bg-[#f8f9fa] tw:font-semibold tw:p-2">진료 과목</td>
-                  <td className="info-value tw:p-2">
+                  <td className="info-value tw:p-2 tw:bg-[#f8f9fad5]">
                     {hospital.specialties?.map((s) => s.category).join(", ") || "-"}
                   </td>
                 </tr>
                 <tr>
                   <td className="info-label tw:bg-[#f8f9fa] tw:font-semibold tw:p-2">진료 가능 동물</td>
-                  <td className="info-value tw:p-2">
+                  <td className="info-value tw:p-2 tw:bg-[#ff99992f]">
                     {hospital.animals?.map((a) => a.species).join(", ") || "-"}
                   </td>
                 </tr>
                 <tr>
                   <td className="info-label tw:bg-[#f8f9fa] tw:font-semibold tw:p-2">병원 주소</td>
-                  <td className="info-value tw:p-2 tw:cursor-pointer tw:no-underline tw:flex tw:gap-2" onClick={() => navigate(`/map?address=${encodeURIComponent(hospital.address)}`)}>{hospital.address || "-"}<MousePointerClick className="tw:text-[#ff6b6b]" /></td>
+                  <td className="info-value tw:p-2 tw:cursor-pointer tw:no-underline tw:flex tw:gap-2 tw:bg-[#f8f9fad5]" onClick={() => navigate(`/map?address=${encodeURIComponent(hospital.address)}`)}>{hospital.address || "-"}<MousePointerClick className="tw:text-[#ff6b6b]" /></td>
                 </tr>
                 <tr>
                   <td className="info-label tw:bg-[#f8f9fa] tw:font-semibold tw:p-2">홈페이지</td>
-                  <td className="info-value tw:p-2">
+                  <td className="info-value tw:p-2 tw:bg-[#ff99992f]">
                     {hospital.homepage ? (
                       <a href={hospital.homepage} target="_blank" rel="noopener noreferrer" className="tw:no-underline tw:flex tw:gap-2">
                         {hospital.homepage}<MousePointerClick className="tw:text-[#ff6b6b]" />
@@ -252,15 +252,15 @@ const HospitalDetail = ({
                 </tr>
                 <tr>
                   <td className="info-label tw:bg-[#f8f9fa] tw:font-semibold tw:p-2">대표번호</td>
-                  <td className="info-value tw:p-2">{hospital.phone || "-"}</td>
+                  <td className="info-value tw:p-2 tw:bg-[#f8f9fad5]">{hospital.phone || "-"}</td>
                 </tr>
                 <tr>
                   <td className="info-label tw:bg-[#f8f9fa] tw:font-semibold tw:p-2">이메일</td>
-                  <td className="info-value tw:p-2">{hospital.email || "-"}</td>
+                  <td className="info-value tw:p-2 tw:bg-[#ff99992f]">{hospital.email || "-"}</td>
                 </tr>
                 <tr>
                   <td className="info-label tw:bg-[#f8f9fa] tw:font-semibold tw:p-2">병원 소개</td>
-                  <td className="info-value tw:p-2">{hospital.hospIntroduce || "-"}</td>
+                  <td className="info-value tw:p-2 tw:bg-[#f8f9fad5]">{hospital.hospIntroduce || "-"}</td>
                 </tr>
               </tbody>
             </table>
@@ -282,16 +282,20 @@ const HospitalDetail = ({
 
       {/* 리뷰 섹션 */}
       <div className="review-section tw:mt-10">
-        <div className="review-header tw:flex tw:items-center tw:gap-3">
+        <div className="review-header tw:flex tw:flex-col tw:items-center tw:justify-center tw:gap-3 tw:bg-[#86d8af96] tw:p-3 tw:rounded-xl">
           <h3 className="tw:text-lg tw:font-semibold">이 병원 어때요?</h3>
-          <span className="tw:text-sm tw:flex tw:text-gray-500"><UserPen className="tw:text-[#ff6b6b]" />&nbsp; ({reviews.length}개의 리뷰가 있습니다.)</span>
-          <span className="tw:text-sm tw:flex tw:text-gray-500"><Star className="tw:text-[rgb(236,221,0)]" />&nbsp; ({reviewAvg} / 5)</span>
+          <div className="tw:flex tw:justify-center tw:items-center tw:gap-6">
+            <span className="tw:text-sm tw:flex tw:text-gray-500"><UserPen className="tw:text-[#ff6b6b]" />&nbsp; ({reviews.length}개의 리뷰가 있습니다.)</span>
+            <span className="tw:text-sm tw:flex tw:text-gray-500"><Star className="tw:text-[rgb(255,251,6)]" />&nbsp; ({reviewAvg} / 5)</span>
+          </div>
         </div>
 
         {/* 리뷰 목록 */}
         <div className="review-list tw:mt-4 tw:space-y-3">
-          {reviews.map((rev) => (
-            <div key={rev.reviewId} className="review-item tw:bg-white tw:shadow tw:rounded tw:p-3">
+          {reviews.map((rev, idx) => (
+            <div key={rev.reviewId} className={`review-item tw:shadow-md tw:rounded-xl tw:p-3 ${
+                                                  idx % 2 === 0 ? "tw:bg-[#fcf2f1dc]" : "tw:bg-[#f0f0f0a4]"
+                                                }`}>
               <div className="tw:flex tw:justify-between tw:items-center">
                 <div>
                   <strong>{rev.userNickname}</strong>
@@ -326,7 +330,7 @@ const HospitalDetail = ({
 
         {/* 리뷰 작성 폼 */}
         {isAuthenticated && (
-          <div id="review-form-container" className="tw:mt-6">
+          <div id="review-form-container" className="tw:mt-6 tw:bg-[#f9f8ffe3] tw:p-4 tw:rounded-xl tw:shadow-md">
             <h4 className="tw:mb-2 tw:font-semibold">리뷰 작성</h4>
             <form id="review-form" className="review-form tw:space-y-3" onSubmit={handleSubmit}>
               <div className="rating tw:flex tw:space-x-1 tw:text-2xl">
@@ -334,7 +338,7 @@ const HospitalDetail = ({
                   <span
                     key={v}
                     onClick={() => setRating(v)}
-                    className={`star tw:cursor-pointer ${v <= rating ? "tw:text-yellow-400" : "tw:text-gray-300"}`}
+                    className={`star tw:cursor-pointer ${v <= rating ? "tw:text-yellow-400" : "tw:text-[#dfdfdfc0]"}`}
                   >
                     ★
                   </span>
@@ -346,7 +350,7 @@ const HospitalDetail = ({
                 onChange={(e) => setContent(e.target.value)}
                 rows="3"
                 placeholder="리뷰를 작성해주세요."
-                className="review-input tw:w-full tw:border tw:rounded tw:p-2"
+                className="review-input tw:w-full tw:border-2 tw:border-[#d6d6d698] tw:focus:outline-none tw:focus:border-[#ff6b6b] tw:rounded tw:p-2"
               />
               <button
                 type="submit"

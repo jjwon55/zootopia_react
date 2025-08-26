@@ -10,7 +10,7 @@ const style = {
   transform: 'translate(-50%, -50%)',
   width: 600, // 모달의 너비를 조절할 수 있습니다.
   bgcolor: 'background.paper',
-  border: '2px solid #000',
+  border: '2px solid rgba(255, 147, 147, 1)',
   boxShadow: 24,
   p: 4,
   borderRadius: 2,

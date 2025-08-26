@@ -62,28 +62,64 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional
     public void deleteMessage(long messageNo, Long userId) throws AccessDeniedException {
-        // DB에서 쪽지 정보를 직접 조회하여 sender와 receiver ID를 가져옵니다.
-        // 이를 위해 Mapper에 새로운 조회 메소드가 필요합니다.
         MessageDTO message = messageMapper.findMessageForAuth(messageNo);
-        log.info("findMessageForAuth 결과: " + message);
-        System.out.println("findMessageForAuth 결과: " + message);
         if (message == null) {
-            // 쪽지가 존재하지 않는 경우
             throw new IllegalArgumentException("존재하지 않는 쪽지입니다.");
         }
-        // --------------------- 여기부터 상대방 쪽지함 안건드리는 삭제
-          // 보낸 사람이 삭제를 요청한 경우
-        if (message.getSenderId() == userId) {
+
+        boolean isSender = message.getSenderId() == userId;
+        boolean isReceiver = message.getReceiverId() == userId;
+
+        // 자기 자신에게 보낸 쪽지를 삭제하는 경우
+        if (isSender && isReceiver) {
             messageMapper.updateDeleteStatusBySender(messageNo);
-            return; // 작업 종료
-        }
-        // 받는 사람이 삭제를 요청한 경우
-        if (message.getReceiverId() == userId) {
             messageMapper.updateDeleteStatusByReceiver(messageNo);
-            return; // 작업 종료
+            return;
         }
+
+        // 보낸 사람이 삭제를 요청한 경우
+        if (isSender) {
+            messageMapper.updateDeleteStatusBySender(messageNo);
+            return;
+        }
+
+        // 받는 사람이 삭제를 요청한 경우
+        if (isReceiver) {
+            messageMapper.updateDeleteStatusByReceiver(messageNo);
+            return;
+        }
+
         // 권한이 없는 경우
         throw new AccessDeniedException("쪽지를 삭제할 권한이 없습니다.");
+    }
+
+
+
+    // @Override
+    // @Transactional
+    // public void deleteMessage(long messageNo, Long userId) throws AccessDeniedException {
+    //     // DB에서 쪽지 정보를 직접 조회하여 sender와 receiver ID를 가져옵니다.
+    //     // 이를 위해 Mapper에 새로운 조회 메소드가 필요합니다.
+    //     MessageDTO message = messageMapper.findMessageForAuth(messageNo);
+    //     log.info("findMessageForAuth 결과: " + message);
+    //     System.out.println("findMessageForAuth 결과: " + message);
+    //     if (message == null) {
+    //         // 쪽지가 존재하지 않는 경우
+    //         throw new IllegalArgumentException("존재하지 않는 쪽지입니다.");
+    //     }
+    //     // --------------------- 여기부터 상대방 쪽지함 안건드리는 삭제
+    //       // 보낸 사람이 삭제를 요청한 경우
+    //     if (message.getSenderId() == userId) {
+    //         messageMapper.updateDeleteStatusBySender(messageNo);
+    //         return; // 작업 종료
+    //     }
+    //     // 받는 사람이 삭제를 요청한 경우
+    //     if (message.getReceiverId() == userId) {
+    //         messageMapper.updateDeleteStatusByReceiver(messageNo);
+    //         return; // 작업 종료
+    //     }
+    //     // 권한이 없는 경우
+    //     throw new AccessDeniedException("쪽지를 삭제할 권한이 없습니다.");
         
 
 
@@ -99,7 +135,8 @@ public class MessageServiceImpl implements MessageService {
         // System.out.println("삭제 실행: messageMapper.deleteMessage 호출");
         // messageMapper.deleteMessage(messageNo);
         // System.out.println("--- MessageService: deleteMessage 정상 종료 ---");
-    }
+    // }
+
 
 
     @Override
