@@ -239,6 +239,32 @@ export default function Checkout() {
         if (!clientKey) {
           throw new Error('VITE_TOSS_CLIENT_KEY is not set. Please add a test_gck_... key in .env');
         }
+        // 미리 주문 요약 저장(성공 페이지에서 마이페이지로 연결 시 사용)
+        try {
+          const summary = {
+            orderCode: newOrderId,
+            userId,
+            items: orderItems.map(it => ({
+              id: it.id,
+              name: it.name,
+              price: it.price,
+              quantity: it.quantity,
+              imageUrl: it.imageUrl || it.image || null
+            })),
+            shipping: {
+              name: shippingInfo.name,
+              phone: shippingInfo.phone,
+              zipcode: shippingInfo.zipcode,
+              address: shippingInfo.address,
+              detailAddress: shippingInfo.detailAddress,
+              message: shippingInfo.message
+            },
+            amount: getTotalPrice(),
+            createdAt: Date.now(),
+            source: 'checkout-toss'
+          };
+          localStorage.setItem('zootopia:lastOrder', JSON.stringify(summary));
+        } catch {}
         const isMock = !tossInstanceRef.current || tossInstanceRef.current.__mock === true;
         if (isMock) {
           const widget = await createPaymentWidget(clientKey, undefined, { force: true });
@@ -283,6 +309,33 @@ export default function Checkout() {
       } catch (err) {
         console.warn('주문 생성 실패(일반 결제):', err);
       }
+      // 주문 요약(주문 상세 내역 표기를 위한 로컬 저장)
+      try {
+        const summary = {
+          orderCode: orderId,
+          userId,
+          items: orderItems.map(it => ({
+            id: it.id,
+            name: it.name,
+            price: it.price,
+            quantity: it.quantity,
+            imageUrl: it.imageUrl || it.image || null
+          })),
+          shipping: {
+            name: shippingInfo.name,
+            phone: shippingInfo.phone,
+            zipcode: shippingInfo.zipcode,
+            address: shippingInfo.address,
+            detailAddress: shippingInfo.detailAddress,
+            message: shippingInfo.message
+          },
+          amount: getTotalPrice(),
+          createdAt: Date.now(),
+          source: 'checkout'
+        };
+        localStorage.setItem('zootopia:lastOrder', JSON.stringify(summary));
+      } catch {}
+
       // 장바구니 정리
       try { await clearLocalOrApiCart(userId); } catch {}
       try { localStorage.removeItem(`cart:user:${userId}`); } catch {}
@@ -299,7 +352,7 @@ export default function Checkout() {
         open={orderModal.open}
         orderCode={orderModal.code}
         onClose={() => setOrderModal({ open: false, code: '' })}
-        goDetailUrl={`/orders/${orderModal.code}`}
+        goDetailUrl={`/mypage?order=${orderModal.code}`}
       />
       <KakaoLoginModal
         open={kakaoLogin.modal}

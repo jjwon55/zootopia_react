@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import defaultProfile from '../../assets/img/default-profile.png';
 
@@ -200,7 +200,94 @@ export default function MyPage({
             </div>
           )}
         </section>
+
+        {/* 주문 상세 내역 */}
+        <OrderSummarySection />
       </div>
+    </div>
+  );
+}
+
+// 주문 상세 내역 표시 섹션
+function OrderSummarySection() {
+  const [order, setOrder] = useState(null);
+
+  useEffect(() => {
+    try {
+      const qp = new URLSearchParams(window.location.search);
+      const orderCodeFromQuery = qp.get('order');
+      const raw = localStorage.getItem('zootopia:lastOrder');
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (orderCodeFromQuery && parsed?.orderCode !== orderCodeFromQuery) {
+        // 다른 주문 코드가 넘어온 경우에도 최신 한 건만 표시 (데모 목적)
+        parsed.orderCode = orderCodeFromQuery;
+      }
+      setOrder(parsed);
+    } catch {
+      setOrder(null);
+    }
+  }, []);
+
+  if (!order) return null;
+
+  const fullAddr = [order?.shipping?.address, order?.shipping?.detailAddress]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <section className="tw:mt-5 tw:mb-10 tw:p-5 tw:rounded-xl tw:bg-[#efefef]">
+      <h2 className="tw:text-[20px] tw:font-bold tw:mb-4">🧾 주문 상세 내역</h2>
+
+      {/* 상품 목록 */}
+      <div className="tw:bg-white tw:rounded-xl tw:p-4 tw:shadow-sm tw:border tw:border-zinc-200 tw:mb-4">
+        <h3 className="tw:font-semibold tw:mb-3">구매 상품</h3>
+        <ul className="tw:space-y-3">
+          {(order.items || []).map((it) => (
+            <li key={it.id} className="tw:flex tw:items-center tw:gap-3">
+              <img
+                src={it.imageUrl || '/vite.svg'}
+                alt={it.name}
+                className="tw:w-14 tw:h-14 tw:object-cover tw:rounded-md tw:border"
+              />
+              <div className="tw:flex-1">
+                <div className="tw:font-medium">{it.name}</div>
+                <div className="tw:text-sm tw:text-zinc-600">수량 {it.quantity}개</div>
+              </div>
+              <div className="tw:font-semibold">{(it.price * it.quantity).toLocaleString()}원</div>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* 배송 정보 */}
+      <div className="tw:bg-white tw:rounded-xl tw:p-4 tw:shadow-sm tw:border tw:border-zinc-200 tw:mb-4">
+        <h3 className="tw:font-semibold tw:mb-3">배송 정보</h3>
+        <div className="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-y-2">
+          <FieldRow label="받는분 이름" value={order?.shipping?.name} />
+          <FieldRow label="연락처" value={order?.shipping?.phone} />
+          <FieldRow label="우편번호" value={order?.shipping?.zipcode} />
+          <FieldRow label="주소" value={fullAddr} className="md:tw:col-span-2" />
+          <FieldRow label="배송메모" value={order?.shipping?.message || '-'} className="md:tw:col-span-2" />
+        </div>
+      </div>
+
+      {/* 결제 금액 */}
+      <div className="tw:bg-white tw:rounded-xl tw:p-4 tw:shadow-sm tw:border tw:border-zinc-200">
+        <div className="tw:flex tw:justify-between tw:text-lg">
+          <span className="tw:text-zinc-600">결제 금액</span>
+          <span className="tw:font-bold tw:text-pink-600">{(order?.amount || 0).toLocaleString()}원</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FieldRow({ label, value, className = '' }) {
+  return (
+    <div className={`tw:flex tw:items-center tw:gap-3 ${className}`}>
+      <div className="tw:w-28 tw:text-sm tw:text-zinc-500">{label}</div>
+      <div className="tw:flex-1 tw:font-medium">{value ?? '-'}</div>
     </div>
   );
 }
