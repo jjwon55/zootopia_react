@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import ScrollToTopButton from '../funeral/ScrollToTopButton';
 
 export default function Map({
   // 지도
@@ -133,6 +134,7 @@ export default function Map({
             );
           })}
         </div>
+        <ScrollToTopButton />
       </aside>
 
       {/* 지도 (왼쪽 패널 제외 전체) */}

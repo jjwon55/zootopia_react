@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import styles from './css/CostComponent.module.css';
 import funeralBackground from '../../assets/img/background/funeral_background1.jpg';
+import ScrollToTopButton from './ScrollToTopButton';
 
 const CostComponent = () => {
 
@@ -145,6 +146,7 @@ const CostComponent = () => {
         </div>
       </div>
     </div>
+    <ScrollToTopButton />
   </>
   );
 };

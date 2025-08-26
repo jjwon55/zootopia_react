@@ -51,7 +51,15 @@ const Header = () => {
 
   const Menus = [
   { to: '/', label: '홈' },
-  { to: '/products/listp', label: '스토어' },
+  { to: '/products/listp', label: '스토어',
+    submenu: [
+      { to: '/products/listp', label: '전체보기' },
+      { to: '/products?category=사료', label: '사료' },
+      { to: '/products/category/2', label: '용품' },
+      { to: '/products/category/3', label: '장난감' },
+      { to: '/products/category/4', label: '산책' },
+    ]
+  },
   { to: '/map', label: '내 주변 찾기' },
   // 서브메뉴 추가 예시
   {
