@@ -21,7 +21,7 @@
     <result property="hidden"       column="hidden"/>
     <result property="userEmail"    column="user_email"/>
     <result property="userNickname" column="user_nickname"/>
-    <result property="reportCount"  column="report_count"/> <!-- ✅ 추가 -->
+    <result property="reportCount"  column="report_count"/>
   </resultMap>
 
   <!-- 정렬 분기 -->
@@ -40,50 +40,66 @@
       <when test="dir == 'asc'">ASC</when>
       <otherwise>DESC</otherwise>
     </choose>
+    , p.post_id DESC
   </sql>
 
   <!-- 조건 공통 -->
-  <sql id="whereClause">
-    <where>
-      <if test="category != null and category != ''">
-        AND p.category = #{category}
-      </if>
-      <if test="hidden != null and hidden != ''">
-        <choose>
-          <when test="hidden == true or hidden == 'true'">
-            AND p.hidden = 1
-          </when>
-          <when test="hidden == false or hidden == 'false'">
-            AND p.hidden = 0
-          </when>
-        </choose>
-      </if>
-      <if test="q != null and q != ''">
-        AND (
-          p.title   LIKE CONCAT('%', #{q}, '%')
-          OR p.content LIKE CONCAT('%', #{q}, '%')
-          OR u.email LIKE CONCAT('%', #{q}, '%')
-          OR u.nickname LIKE CONCAT('%', #{q}, '%')
-        )
-      </if>
-    </where>
-  </sql>
+<sql id="whereClause">
+  <where>
+    <if test="category != null and category != ''">
+      AND p.category = #{category}
+    </if>
 
-  <!-- 개수 -->
+    <!-- ✅ Boolean만 사용: 문자열 'true'/'false' 비교 제거 -->
+    <if test="hidden != null">
+      <choose>
+        <when test="hidden">
+          AND p.hidden = 1
+        </when>
+        <otherwise>
+          AND p.hidden = 0
+        </otherwise>
+      </choose>
+    </if>
+
+    <if test="q != null and q != ''">
+      AND (
+        p.title      LIKE CONCAT('%', #{q}, '%')
+        OR p.content LIKE CONCAT('%', #{q}, '%')
+        OR u.email   LIKE CONCAT('%', #{q}, '%')
+        OR u.nickname LIKE CONCAT('%', #{q}, '%')
+      )
+    </if>
+  </where>
+</sql>
+
+  <!-- 총 개수: 동일 조건 + 신고 전용 반영 + 중복 제거 보장 -->
   <select id="countByFilter" resultType="int">
     SELECT COUNT(1)
-    FROM posts p
-    LEFT JOIN users u ON u.user_id = p.user_id
-    <include refid="whereClause"/>
+    FROM (
+      SELECT p.post_id
+      FROM posts p
+      LEFT JOIN users u ON u.user_id = p.user_id
+      LEFT JOIN (
+        SELECT post_id, COUNT(*) AS report_count
+        FROM post_report
+        GROUP BY post_id
+      ) r ON r.post_id = p.post_id
+      <include refid="whereClause"/>
+        <if test="reportedOnly != null and reportedOnly">
+          AND COALESCE(r.report_count, 0) > 0
+        </if>
+      GROUP BY p.post_id
+    ) t
   </select>
 
-  <!-- 목록 -->
+  <!-- 목록: 동일 조건 + 신고 전용 반영 + 안정 정렬 -->
   <select id="findByFilter" resultMap="AdminPostMap">
     SELECT
       p.*,
       u.email    AS user_email,
       u.nickname AS user_nickname,
-      COALESCE(r.report_count, 0) AS report_count   <!-- ✅ 추가 -->
+      COALESCE(r.report_count, 0) AS report_count
     FROM posts p
     LEFT JOIN users u ON u.user_id = p.user_id
     LEFT JOIN (
@@ -92,6 +108,10 @@
       GROUP BY post_id
     ) r ON r.post_id = p.post_id
     <include refid="whereClause"/>
+    <if test="reportedOnly != null and reportedOnly">
+      AND COALESCE(r.report_count, 0) > 0
+    </if>
+
     <include refid="orderBy"/>
     LIMIT #{offset}, #{size}
   </select>
@@ -102,7 +122,7 @@
       p.*,
       u.email    AS user_email,
       u.nickname AS user_nickname,
-      COALESCE(r.report_count, 0) AS report_count   <!-- ✅ 추가 -->
+      COALESCE(r.report_count, 0) AS report_count
     FROM posts p
     LEFT JOIN users u ON u.user_id = p.user_id
     LEFT JOIN (
