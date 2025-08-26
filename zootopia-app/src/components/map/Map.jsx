@@ -40,7 +40,7 @@ export default function Map({
             <input
               type="text"
               value={keyword ?? ''}
-              placeholder={address ? `예: ${address}` : '장소, 검색'}
+              placeholder={address ? `예: ${address}` : '장소, 주소, 좌표 검색'}
               onChange={(e) => onChangeKeyword(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') onSearchClick(); }}
               className="tw:flex-1 tw:outline-none tw:border tw:border-zinc-300 tw:rounded-md tw:px-3 tw:py-2"
@@ -75,9 +75,9 @@ export default function Map({
                 >
                   <button
                     type="button"
-                    onClick={() => onChangeKeyword(kw)}
+                    onClick={() => { onChangeKeyword(kw); onSearchClick(); }}
                     className="tw:text-xs tw:leading-none"
-                    title={`'${kw}'로 검색어 채우기`}
+                    title={`'${kw}'로 검색`}
                   >
                     {kw}
                   </button>
@@ -103,7 +103,7 @@ export default function Map({
           </div>
 
           {places.length > 0 && places.map((p) => {
-            const fav = favorites.includes(p.id);
+            const fav = favorites.includes?.(p.id);
             return (
               <div
                 key={p.id}
