@@ -19,9 +19,9 @@
     <result property="userId"       column="user_id"/>
     <result property="thumbnailUrl" column="thumbnail_url"/>
     <result property="hidden"       column="hidden"/>
-
     <result property="userEmail"    column="user_email"/>
     <result property="userNickname" column="user_nickname"/>
+    <result property="reportCount"  column="report_count"/> <!-- ✅ 추가 -->
   </resultMap>
 
   <!-- 정렬 분기 -->
@@ -82,9 +82,15 @@
     SELECT
       p.*,
       u.email    AS user_email,
-      u.nickname AS user_nickname
+      u.nickname AS user_nickname,
+      COALESCE(r.report_count, 0) AS report_count   <!-- ✅ 추가 -->
     FROM posts p
     LEFT JOIN users u ON u.user_id = p.user_id
+    LEFT JOIN (
+      SELECT post_id, COUNT(*) AS report_count
+      FROM post_report
+      GROUP BY post_id
+    ) r ON r.post_id = p.post_id
     <include refid="whereClause"/>
     <include refid="orderBy"/>
     LIMIT #{offset}, #{size}
@@ -95,9 +101,15 @@
     SELECT
       p.*,
       u.email    AS user_email,
-      u.nickname AS user_nickname
+      u.nickname AS user_nickname,
+      COALESCE(r.report_count, 0) AS report_count   <!-- ✅ 추가 -->
     FROM posts p
     LEFT JOIN users u ON u.user_id = p.user_id
+    LEFT JOIN (
+      SELECT post_id, COUNT(*) AS report_count
+      FROM post_report
+      GROUP BY post_id
+    ) r ON r.post_id = p.post_id
     WHERE p.post_id = #{postId}
   </select>
 

@@ -1,3 +1,4 @@
+import { CheckLine } from 'lucide-react';
 import React from 'react';
 
 function MessageCard({ message }) {
@@ -11,9 +12,9 @@ function MessageCard({ message }) {
       <p><strong>시간:</strong> {new Date(message.sendTime).toLocaleString()}</p>
       {/* isRead는 받은 편지함에만 의미가 있으므로, 존재할 때만 표시 */}
       {message.isRead !== undefined && (
-        <p style={{ fontWeight: message.isRead ? 'normal' : 'bold' }}>
-          {message.isRead ? '읽음' : '안 읽음'}
-        </p>
+        <div style={{ fontWeight: message.isRead ? 'normal' : 'bold' }}>
+          {message.isRead ? <CheckLine className='tw:text-[#00db49]' /> : <div className='tw:text-[#ff3333] tw:italic tw:font-bold tw:text-[13px]'>안 읽은 메시지</div>}
+        </div>
       )}
     </div>
   );

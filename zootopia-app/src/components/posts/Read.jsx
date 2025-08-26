@@ -1,3 +1,4 @@
+// src/components/posts/Read.jsx
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { formatDate } from '../../utils/format';
@@ -7,6 +8,7 @@ import Share from '../../assets/img/share.png';
 import CommentSection from './CommentSection';
 import { toastSuccess, toastInfo, toastError } from '../../apis/posts/alert';
 import { toggleLike } from '../../apis/posts/posts';
+import { createPostReport } from '../../apis/posts/PostReport';
 
 // --- 태그 정규화: string / string[] / [{name}] 모두 지원
 const normalizeTags = (post) => {
@@ -43,13 +45,13 @@ const Read = ({
   post,
   isOwner: isOwnerFromApi,
   loginUserId,
-  // ✅ 추가: 로그인 사용자 표시용
+  // 로그인 사용자 표시용
   loginNickname,
   loginProfileImg,
   editId,
   setEditId,
   onDelete,
-  // ✅ 추가: 댓글 변경 시 상위에서 재조회
+  // 댓글 변경 시 상위에서 재조회
   onCommentsChange,
 }) => {
 
@@ -112,12 +114,76 @@ const Read = ({
     }
   };
 
+  // ===== 신고 모달 상태 =====
+  const [reportOpen, setReportOpen] = React.useState(false);
+  const [reportReason, setReportReason] = React.useState('스팸/광고'); // 표시용 라벨
+  const [reportDetails, setReportDetails] = React.useState('');
+  const [reporting, setReporting] = React.useState(false);
+
+  // 라벨 → 코드 매핑 (백엔드 DB reason_code)
+  const mapReasonToCode = (label) => {
+    switch (label) {
+      case '스팸/광고': return 'SPAM';
+      case '욕설/혐오표현': return 'ABUSE';
+      case '개인정보 노출': return 'PRIVACY';
+      case '사기/거짓 정보': return 'FRAUD';
+      case '기타': return 'OTHER';
+      default: return 'OTHER';
+    }
+  };
+
+  const openReport = () => {
+    if (!loginUserId) {
+      navigate('/login', { state: { from: location }, replace: true });
+      return;
+    }
+    setReportOpen(true);
+  };
+
+  const closeReport = () => {
+    if (reporting) return;
+    setReportOpen(false);
+    setReportReason('스팸/광고');
+    setReportDetails('');
+  };
+
+  const submitReport = async (e) => {
+    e?.preventDefault?.();
+    if (!reportReason) { toastError('신고 사유를 선택해주세요.'); return; }
+    // ✅ 상세 사유는 선택 입력(옵션) — 길이 검사 제거
+
+    setReporting(true);
+    try {
+      await createPostReport({
+        postId: post.postId,
+        reasonCode: mapReasonToCode(reportReason),
+        reasonText: reportDetails.trim() || null, // ✅ 비어있으면 null로 보냄
+      });
+      toastSuccess('신고가 접수되었습니다. 감사합니다 🙏');
+      closeReport();
+    } catch (err) {
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.message || err?.message || '';
+      if (status === 401) {
+        toastError('로그인이 필요합니다.');
+        navigate('/login', { state: { from: location }, replace: true });
+      } else if (status === 409 || /이미 신고|duplicate|exists/i.test(msg)) {
+        toastInfo('이미 신고 접수된 게시글입니다.');
+        closeReport();
+      } else {
+        toastError('신고 처리 중 오류가 발생했어요.');
+      }
+    } finally {
+      setReporting(false);
+    }
+  };
+
   const processedContent = normalizeContentImgSrc(post.content);
   const tags = React.useMemo(() => normalizeTags(post), [post]);
 
   return (
     <div className="tw:max-w-[720px] tw:mx-auto tw:my-7 tw:bg-white tw:border-2 tw:border-[#ccc] tw:rounded-xl tw:p-6">
-      {/* 상단: 목록/수정/삭제 */}
+      {/* 상단: 목록/수정/삭제 or 신고 */}
       <div className="tw:flex tw:items-center tw:justify-between">
         <Link
           to="/posts"
@@ -127,7 +193,7 @@ const Read = ({
           <img src={pinkArrow} alt="back" className="tw:w-[15px] tw:h-[15px] tw:ml-1" />
         </Link>
 
-        {isOwner && (
+        {isOwner ? (
           <div className="tw:flex tw:items-center tw:gap-2 tw:pb-2">
             <Link
               to={`/posts/edit/${post.postId}`}
@@ -157,15 +223,24 @@ const Read = ({
               삭제
             </button>
           </div>
+        ) : (
+          <div className="tw:flex tw:items-center tw:gap-2 tw:pb-2">
+            <button
+              onClick={openReport}
+              className="tw:flex tw:items-center tw:gap-1 tw:px-3 tw:py-1.5 tw:text-sm
+              tw:bg-red-50 tw:text-red-600 tw:rounded-lg
+              tw:border tw:border-red-200 hover:tw:bg-red-100
+              tw:shadow-sm hover:tw:shadow transition tw:cursor-pointer"
+            >
+              <i className="bi bi-flag-fill" />
+              신고하기
+            </button>
+          </div>
         )}
       </div>
 
-      {/* 제목 */}
       <h1 className="tw:text-[22px] tw:font-bold tw:mt-2">{post.title}</h1>
-
-      {/* 메타 */}
       <div className="tw:flex tw:items-start tw:justify-between tw:text-[12px] tw:text-[#777] tw:mt-2 tw:mb-4">
-        {/* 작성자 */}
         <div className="tw:flex tw:items-center">
           <Link to={`/mypage/${post.user?.userId || ''}`} className="tw:no-underline">
             <img
@@ -204,11 +279,11 @@ const Read = ({
       {/* 본문 */}
       <div
         className="toastui-editor-contents tw:text-[16px] tw:leading-[1.6] tw:mb-4 tw:min-h-[220px]"
-        dangerouslySetInnerHTML={{ __html: processedContent }}
+        dangerouslySetInnerHTML={{ __html: normalizeContentImgSrc(post.content) }}
       />
 
       {/* ✅ 본문 하단 태그 (작게) */}
-      {tags.length > 0 && (
+      {Array.isArray(tags) && tags.length > 0 && (
         <div className="tw:flex tw:flex-wrap tw:gap-1 tw:mb-6 tw:text-xs">
           {tags.map((tag) => (
             <Link
@@ -260,15 +335,84 @@ const Read = ({
           postId={post.postId}
           comments={post.comments || []}
           loginUserId={loginUserId}
-          // ✅ 전달: 첫 작성부터 실제 닉/프로필 사용
+          // 첫 작성부터 실제 닉/프로필 사용
           loginNickname={loginNickname}
           loginProfileImg={loginProfileImg}
-          // ✅ 댓글 생성/수정/삭제 후 상위에서 재조회
+          // 댓글 생성/수정/삭제 후 상위에서 재조회
           onChange={() => onCommentsChange?.()}
           editId={editId}
           setEditId={setEditId}
         />
       </div>
+
+      {/* ===== 신고 모달 ===== */}
+      {reportOpen && (
+        <div
+          className="tw:fixed tw:inset-0 tw:z-50 tw:flex tw:items-center tw:justify-center"
+          role="dialog" aria-modal="true"
+          onKeyDown={(e) => e.key === 'Escape' && closeReport()}
+        >
+          <div className="tw:absolute tw:inset-0 tw:bg-black/40" onClick={closeReport} />
+          <div className="tw:relative tw:bg-white tw:rounded-2xl tw:shadow-2xl tw:w-full tw:max-w-md tw:p-5">
+            <div className="tw:flex tw:items-center tw:justify-between tw:mb-3">
+              <h2 className="tw:text-lg tw:font-bold">게시글 신고</h2>
+              <button onClick={closeReport} className="tw:text-gray-500 hover:tw:text-black">
+                <i className="bi bi-x-lg" />
+              </button>
+            </div>
+
+            <form onSubmit={submitReport} className="tw:space-y-3">
+              {/* 사유 선택 (필수) */}
+              <label className="tw:block">
+                <span className="tw:block tw:text-sm tw:text-gray-700 tw:mb-1">신고 사유</span>
+                <select
+                  className="tw:w-full tw:border tw:rounded tw:px-3 tw:py-2"
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  required
+                >
+                  <option>스팸/광고</option>
+                  <option>욕설/혐오표현</option>
+                  <option>개인정보 노출</option>
+                  <option>사기/거짓 정보</option>
+                  <option>기타</option>
+                </select>
+              </label>
+
+              {/* 상세 내용 (선택) */}
+              <label className="tw:block">
+                <span className="tw:block tw:text-sm tw:text-gray-700 tw:mb-1">
+                  상세 사유 <span className="tw:text-gray-400">(선택)</span>
+                </span>
+                <textarea
+                  className="tw:w-full tw:min-h-[96px] tw:border tw:rounded tw:px-3 tw:py-2"
+                  placeholder="추가로 설명이 필요하면 적어주세요. (선택)"
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                />
+              </label>
+
+              <div className="tw:flex tw:justify-end tw:gap-2 tw:pt-1">
+                <button
+                  type="button"
+                  onClick={closeReport}
+                  className="tw:px-4 tw:py-2 tw:border tw:rounded"
+                  disabled={reporting}
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  disabled={reporting}
+                  className={`tw:px-4 tw:py-2 tw:rounded tw:text-white ${reporting ? 'tw:bg-red-300' : 'tw:bg-red-500 hover:tw:bg-red-600'}`}
+                >
+                  {reporting ? '접수 중…' : '신고 접수'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,6 +1,5 @@
-// src/pages/admin/AdminPostsPage.jsx
 import { useEffect, useMemo, useState } from "react";
-import { deletePost, getPost, hidePost, listPosts, } from "../../../apis/posts/PostReport";
+import { deletePost, getPost, hidePost, listPosts } from "../../../apis/posts/PostReport";
 import { confirm, toastError, toastSuccess } from "../../../apis/posts/alert";
 import PostReportsModal from "../../../components/admin/post/PostReportsModal";
 import { Link } from "react-router-dom";
@@ -27,7 +26,7 @@ export default function AdminPostsPage() {
   const [page, setPage] = useState(0);
 
   // 상세/신고 모달
-  const [selected, setSelected] = useState(null);         // 상세 보기용 post
+  const [selected, setSelected] = useState(null);
   const [reportsPost, setReportsPost] = useState(null);   // { postId, title, reportCount }
 
   // 액션 진행 표시
@@ -227,22 +226,7 @@ export default function AdminPostsPage() {
               <th className="tw:text-left tw:p-3 tw:px-5">상태</th>
               <th className="tw:text-left tw:p-3 tw:px-5">작성일</th>
               <th className="tw:text-left tw:p-3 tw:px-5">액션</th>
-              <th className="tw:text-left tw:p-3 tw:px-5">
-                <label className="tw:inline-flex tw:items-center tw:gap-2 tw:text-sm">
-                  <input
-                    type="checkbox"
-                    className="tw:checkbox tw:checkbox-sm"
-                    checked={reportedOnly}
-                    onChange={(e) => {
-                      setReportedOnly(e.target.checked);
-                      setPage(0);
-                    }}
-                    aria-label="신고된 게시글만 보기"
-                    title="신고된 게시글만 보기"
-                  />
-                  신고
-                </label>
-              </th>
+              <th className="tw:text-left tw:p-3 tw:px-5">신고</th>
             </tr>
           </thead>
 
@@ -257,7 +241,7 @@ export default function AdminPostsPage() {
                       <Link
                         to={`/posts/read/${p.postId}`}
                         className="tw:text-blue-600 hover:tw:underline"
-                        target="_blank"   // 새 창에서 열고 싶으면 추가
+                        target="_blank"
                         rel="noopener noreferrer"
                       >
                         {p.title}
@@ -266,17 +250,28 @@ export default function AdminPostsPage() {
                     <td className="tw:p-3 tw:px-5">{p.category}</td>
                     <td className="tw:p-3 tw:px-5">{p.userEmail || "-"}</td>
                     <td className="tw:p-3 tw:px-5">
-                      <span className={`tw:badge tw:badge-sm ${p.hidden ? "tw:badge-warning" : "tw:badge-success"}`}>
+                      <span
+                        className={`tw:badge tw:badge-sm ${p.hidden ? "tw:badge-warning" : "tw:badge-success"
+                          }`}
+                      >
                         {p.hidden ? "숨김" : "표시"}
                       </span>
                     </td>
-                    <td className="tw:p-3 tw:px-5">{p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "-"}</td>
+                    <td className="tw:p-3 tw:px-5">
+                      {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "-"}
+                    </td>
                     <td className="tw:p-3 tw:px-5 tw:flex tw:justify-start tw:gap-2">
-                      <button className="tw:text-sm tw:bg-blue-500 hover:tw:bg-blue-700 tw:text-white tw:py-1 tw:px-2 tw:rounded" onClick={() => openDetail(p.postId)}>
+                      <button
+                        className="tw:text-sm tw:bg-blue-500 hover:tw:bg-blue-700 tw:text-white tw:py-1 tw:px-2 tw:rounded"
+                        onClick={() => openDetail(p.postId)}
+                      >
                         상세
                       </button>
                       <button
-                        className={`tw:text-sm ${p.hidden ? "tw:bg-green-500 hover:tw:bg-green-700" : "tw:bg-yellow-500 hover:tw:bg-yellow-700"} tw:text-white tw:py-1 tw:px-2 tw:rounded`}
+                        className={`tw:text-sm ${p.hidden
+                          ? "tw:bg-green-500 hover:tw:bg-green-700"
+                          : "tw:bg-yellow-500 hover:tw:bg-yellow-700"
+                          } tw:text-white tw:py-1 tw:px-2 tw:rounded`}
                         onClick={() => askToggleHide(p)}
                         disabled={actingId === p.postId || loading}
                       >
@@ -294,7 +289,13 @@ export default function AdminPostsPage() {
                       {(p.reportCount || 0) > 0 ? (
                         <button
                           className="tw:text-sm tw:bg-red-500 hover:tw:bg-red-700 tw:text-white tw:py-1 tw:px-2 tw:rounded"
-                          onClick={() => setReportsPost({ postId: p.postId, title: p.title, reportCount: p.reportCount })}
+                          onClick={() =>
+                            setReportsPost({
+                              postId: p.postId,
+                              title: p.title,
+                              reportCount: p.reportCount,
+                            })
+                          }
                         >
                           {p.reportCount}건
                         </button>
@@ -302,6 +303,7 @@ export default function AdminPostsPage() {
                         <span className="tw:text-gray-400">-</span>
                       )}
                     </td>
+
                   </tr>
                 ))}
           </tbody>
@@ -331,7 +333,7 @@ export default function AdminPostsPage() {
 
       {reportsPost && (
         <PostReportsModal
-          post={reportsPost}    // { postId, title, reportCount }
+          post={reportsPost}
           onClose={() => setReportsPost(null)}
         />
       )}
@@ -342,14 +344,26 @@ export default function AdminPostsPage() {
 /** 간단 상세 모달 */
 function PostDetailModal({ post, onClose, onToggleHide, onDelete }) {
   if (!post) return null;
-  const { postId, title, category, userEmail, hidden, createdAt } = post;
+  const { postId, title, category, userEmail, hidden, createdAt, reportCount } = post;
+
   return (
-    <div className="fixed inset-0 tw:bg-black/40 tw:flex tw:items-center tw:justify-center tw:z-50">
-      <div className="tw:bg-white tw:rounded-2xl tw:p-6 tw:w-full tw:max-w-2xl tw:space-y-4">
+    <div className="tw:fixed tw:inset-0 tw:z-50 tw:flex tw:items-center tw:justify-center">
+      {/* 배경 (딤 처리) */}
+      <div
+        className="tw:absolute tw:inset-0 tw:bg-black/40"
+        onClick={onClose}
+      />
+
+      {/* 모달 박스 */}
+      <div className="tw:relative tw:bg-white tw:rounded-2xl tw:shadow-2xl 
+                      tw:p-6 tw:w-full tw:max-w-2xl tw:space-y-4">
         <div className="tw:flex tw:items-center tw:justify-between">
           <h3 className="tw:text-lg tw:font-semibold">게시글 상세</h3>
-          <button className="tw:btn tw:btn-sm" onClick={onClose}>닫기</button>
+          <button className="tw:btn tw:btn-sm" onClick={onClose}>
+            닫기
+          </button>
         </div>
+
         <div className="tw:space-y-1">
           <div><b>ID:</b> {postId}</div>
           <div><b>제목:</b> {title}</div>
@@ -357,7 +371,9 @@ function PostDetailModal({ post, onClose, onToggleHide, onDelete }) {
           <div><b>작성자:</b> {userEmail || "-"}</div>
           <div><b>상태:</b> {hidden ? "숨김" : "표시"}</div>
           <div><b>작성일:</b> {createdAt ? new Date(createdAt).toLocaleString() : "-"}</div>
+          <div><b>신고 건수:</b> {reportCount || 0}건</div>
         </div>
+
         <div className="tw:flex tw:gap-2 tw:justify-end">
           <button
             className={`tw:btn tw:btn-sm ${hidden ? "tw:btn-success" : "tw:btn-warning"}`}
@@ -365,7 +381,10 @@ function PostDetailModal({ post, onClose, onToggleHide, onDelete }) {
           >
             {hidden ? "표시" : "숨김"}
           </button>
-          <button className="tw:btn tw:btn-sm tw:btn-error" onClick={() => onDelete(postId)}>
+          <button
+            className="tw:btn tw:btn-sm tw:btn-error"
+            onClick={() => onDelete(postId)}
+          >
             삭제
           </button>
         </div>

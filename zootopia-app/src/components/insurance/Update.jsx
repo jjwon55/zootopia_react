@@ -317,46 +317,6 @@ export default function Update({
               />
             </Field>
 
-            <Field label="파트너 코드 (partnerCode)">
-              <input
-                name="partnerCode"
-                value={form.partnerCode || ''}
-                onChange={change('partnerCode')}
-                placeholder="예) ZOOTOPIA123"
-                className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
-              />
-            </Field>
-
-            <div className="tw:grid tw:grid-cols-3 tw:gap-4">
-              <Field label="utm_source">
-                <input
-                  name="utmSource"
-                  value={form.utmSource || ''}
-                  onChange={change('utmSource')}
-                  placeholder="zootopia"
-                  className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
-                />
-              </Field>
-              <Field label="utm_medium">
-                <input
-                  name="utmMedium"
-                  value={form.utmMedium || ''}
-                  onChange={change('utmMedium')}
-                  placeholder="referral"
-                  className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
-                />
-              </Field>
-              <Field label="utm_campaign">
-                <input
-                  name="utmCampaign"
-                  value={form.utmCampaign || ''}
-                  onChange={change('utmCampaign')}
-                  placeholder="pet_insurance"
-                  className="tw:w-full tw:rounded-lg tw:border tw:bg-white tw:px-3 tw:py-2 tw:text-sm tw:outline-none focus:tw:border-rose-300 focus:tw:ring-2 focus:tw:ring-rose-200"
-                />
-              </Field>
-            </div>
-
             <Field label="광고/제휴 표기">
               <label className="tw:inline-flex tw:items-center tw:gap-2 tw:text-sm">
                 <input type="checkbox" checked={!!form.sponsored} onChange={toggleSponsored} />
@@ -378,7 +338,6 @@ export default function Update({
 
           <p className="tw:mt-2 tw:text-xs tw:text-gray-500">
             * applyUrl이 있으면 applyUrl을, 없으면 homepageUrl을 사용해 최종 이동 링크(outboundApplyUrl)를 자동 생성합니다.
-            파라미터는 ref/utm_*가 자동으로 붙습니다.
           </p>
         </div>
 

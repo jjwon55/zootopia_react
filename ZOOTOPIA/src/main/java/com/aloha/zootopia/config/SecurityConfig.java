@@ -96,7 +96,8 @@ public class SecurityConfig {
                 .requestMatchers("/posts/create", "/showoff/create", "/lost/create").authenticated()
 
                 // 로그인/회원가입/인증 관련 공개
-                .requestMatchers("/login", "/api/login", "/join", "/users", "/auth/**").permitAll()
+                .requestMatchers("/login", "/api/login", "/join", "/users", "/users/check", "/auth/**").permitAll()
+
 
                 // 정적 리소스
                 .requestMatchers("/images/**", "/upload/**", "/css/**", "/js/**", "/img/**").permitAll()

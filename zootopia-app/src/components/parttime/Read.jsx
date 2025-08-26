@@ -48,7 +48,7 @@ const Read = ({
   }
 
   // ── ZOOTOPIA THEME ───────────────────────────────────────────────
-  const ZOO_BG = 'tw:bg-gradient-to-b tw:from-[#FFF0F0] tw:to-white'
+  const ZOO_BG = 'tw:bg-transparent'
   const ZOO_BORDER = 'tw:border tw:border-rose-100'
   const ZOO_CARD = `tw:bg-white ${ZOO_BORDER} tw:rounded-3xl tw:shadow-sm`
 
@@ -65,7 +65,7 @@ const Read = ({
   const CHIP = 'tw:inline-flex tw:items-center tw:gap-1 tw:px-3 tw:py-1 tw:text-xs tw:rounded-full tw:bg-rose-50 tw:text-rose-600 tw:border tw:border-rose-100'
 
   return (
-    <div className={`tw:min-h-screen ${ZOO_BG}`}>
+    <div className={`tw:min-h-screen ${ZOO_BG}`}>  {/* 투명 배경 */}
       {/* 헤더 */}
       <div className="tw:max-w-5xl tw:mx-auto tw:px-4 tw:pt-10">
         <div className={`${ZOO_CARD} tw:p-6 tw:flex tw:flex-col md:tw:flex-row md:tw:items-center md:tw:justify-between tw:gap-4`}>

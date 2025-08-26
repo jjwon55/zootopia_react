@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import defaultBanner from '../../assets/img/insurancelogo2.png'
+import newBanner from '../../assets/img/zootopialogo.png' 
 
 const items = [
   { q: '펫보험이란 무엇인가요?', a: '반려동물의 치료비를 보장해 주는 보험입니다.' },
@@ -10,7 +10,7 @@ const items = [
 
 export default function FaqSection({ bannerSrc }) {
   const [open, setOpen] = useState(null)
-  const src = bannerSrc || defaultBanner
+  const src = bannerSrc || newBanner
 
   // 공통 사이즈/여백
   const SIZE = 'tw:w-full tw:px-5 tw:py-4 tw:text-base tw:min-h-[56px] tw:border tw:transition-colors'
@@ -71,7 +71,7 @@ export default function FaqSection({ bannerSrc }) {
         <img
           src={src}
           alt="펫보험 배너"
-          className="tw:w-[260px] sm:tw:w-[320px] md:tw:w-[380px] tw:rounded-lg tw:shadow"
+          className="tw:w-[260px] sm:tw:w-[320px] md:tw:w-[300px] tw:rounded-lg"
         />
       </div>
     </div>

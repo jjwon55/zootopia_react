@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import com.aloha.zootopia.domain.InsuranceProduct;
 import com.aloha.zootopia.mapper.InsuranceProductMapper;
@@ -84,19 +83,11 @@ public class InsuranceProductServiceImpl implements InsuranceProductService {
     // 내부 헬퍼들
     // ──────────────────────────
     private void injectOutboundUrl(InsuranceProduct p) {
-        if (p == null) return;
-        p.setOutboundApplyUrl(buildApplyUrl(p)); // ← DB 컬럼 아님(응답용)
-    }
-
-    private String buildApplyUrl(InsuranceProduct p) {
+        if (p == null) {
+            return;
+        }
+        // applyUrl이 있으면 그것을, 없으면 homepageUrl을 최종 이동 링크로 사용합니다.
         String base = StringUtils.hasText(p.getApplyUrl()) ? p.getApplyUrl() : p.getHomepageUrl();
-        if (!StringUtils.hasText(base)) return null;
-
-        UriComponentsBuilder b = UriComponentsBuilder.fromUriString(base);
-        if (StringUtils.hasText(p.getPartnerCode())) b.queryParam("ref", p.getPartnerCode());
-        if (StringUtils.hasText(p.getUtmSource()))  b.queryParam("utm_source", p.getUtmSource());
-        if (StringUtils.hasText(p.getUtmMedium()))  b.queryParam("utm_medium", p.getUtmMedium());
-        if (StringUtils.hasText(p.getUtmCampaign()))b.queryParam("utm_campaign", p.getUtmCampaign());
-        return b.build(true).toUriString();
+        p.setOutboundApplyUrl(base);
     }
 }

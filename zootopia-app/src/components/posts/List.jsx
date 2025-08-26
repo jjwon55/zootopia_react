@@ -93,7 +93,8 @@ function AuthorMenu({ user, profileSrc, onMessage }) {
           {/* 프로필 보기 → 마이페이지로 이동 */}
           <Link
             to={`/mypage/${user.userId}`}
-            className="tw:block tw:w-full tw:text-left tw:px-3 tw:py-2 hover:tw:bg-gray-50 tw:no-underline"
+            className="tw:block tw:w-full tw:text-left tw:px-3 tw:py-2 hover:tw:bg-gray-50 tw:no-underline 
+                      tw:hover:bg-[#ff9191] tw:hover:text-[#ffffff] tw:rounded-[10px] tw:hover:transition-all tw:duration-200"
             role="menuitem"
             onClick={() => setOpen(false)}
           >
@@ -107,7 +108,8 @@ function AuthorMenu({ user, profileSrc, onMessage }) {
               setOpen(false);
               onMessage?.(user);
             }}
-            className="tw:w-full tw:text-left tw:px-3 tw:py-2 hover:tw:bg-gray-50"
+            className="tw:w-full tw:text-left tw:px-3 tw:py-2 hover:tw:bg-gray-50 tw:cursor-pointer 
+                    tw:hover:bg-[#ff9191] tw:hover:text-[#ffffff] tw:rounded-[10px] tw:hover:transition-all tw:duration-200"
             role="menuitem"
           >
             쪽지 보내기
@@ -120,7 +122,8 @@ function AuthorMenu({ user, profileSrc, onMessage }) {
               setOpen(false);
               setReportOpen(true);
             }}
-            className="tw:w-full tw:text-left tw:px-3 tw:py-2 hover:tw:bg-gray-50 tw:text-red-500"
+            className="tw:w-full tw:text-left tw:px-3 tw:py-2 hover:tw:bg-gray-50 tw:text-red-500 tw:cursor-pointer 
+                      tw:hover:bg-[#ff4949] tw:hover:text-[#ffffff] tw:rounded-[10px] tw:hover:transition-all tw:duration-200"
             role="menuitem"
           >
             신고하기

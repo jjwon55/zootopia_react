@@ -13,6 +13,13 @@ const REASON_LABEL = {
   ILLEGAL: "불법",
   OTHER: "기타",
 };
+const STATUS_LABEL = {
+  PENDING: "대기",
+  REVIEWED: "검토됨",
+  REJECTED: "기각",
+  ACTION_TAKEN: "조치 완료",
+};
+
 
 export default function PostReportsModal({ post, onClose }) {
   // post: { postId, title, reportCount }
@@ -61,8 +68,13 @@ export default function PostReportsModal({ post, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 tw:bg-black/40 tw:flex tw:items-center tw:justify-center tw:z-50">
-      <div className="tw:bg-white tw:rounded-2xl tw:p-5 tw:w-full tw:max-w-4xl tw:max-h-[80vh] tw:overflow-auto">
+    <div className="tw:fixed tw:inset-0 tw:z-50 tw:flex tw:items-center tw:justify-center">
+      {/* 배경 딤 처리 */}
+      <div className="tw:absolute tw:inset-0 tw:bg-black/40" onClick={onClose} />
+
+      {/* 모달 컨텐츠 */}
+      <div className="tw:relative tw:bg-white tw:rounded-2xl tw:shadow-2xl 
+                    tw:w-full tw:max-w-4xl tw:max-h-[80vh] tw:overflow-auto tw:p-5">
         <div className="tw:flex tw:items-center tw:justify-between tw:mb-4">
           <h3 className="tw:text-lg tw:font-semibold">
             게시글 신고 ({post?.postId}) — {post?.title}
@@ -102,7 +114,9 @@ export default function PostReportsModal({ post, onClose }) {
                 <td className="tw:p-2">{r.reasonText || "-"}</td>
                 <td className="tw:p-2">{r.reporterEmail || "-"}</td>
                 <td className="tw:p-2">
-                  <span className="tw:badge tw:badge-outline">{r.status}</span>
+                  <span className="tw:badge tw:badge-outline">
+                    {STATUS_LABEL[r.status] || r.status}
+                  </span>
                 </td>
                 <td className="tw:p-2">
                   <input
@@ -111,7 +125,9 @@ export default function PostReportsModal({ post, onClose }) {
                     onChange={(e) => {
                       const v = e.target.value;
                       setRows((prev) =>
-                        prev.map((x) => (x.reportId === r.reportId ? { ...x, adminNote: v } : x))
+                        prev.map((x) =>
+                          x.reportId === r.reportId ? { ...x, adminNote: v } : x
+                        )
                       );
                     }}
                     placeholder="관리자 메모"
@@ -124,16 +140,21 @@ export default function PostReportsModal({ post, onClose }) {
                   <select
                     className="tw:select tw:select-bordered tw:select-sm"
                     defaultValue=""
-                    onChange={(e) => e.target.value && onChangeStatus(r, e.target.value)}
+                    onChange={(e) =>
+                      e.target.value && onChangeStatus(r, e.target.value)
+                    }
                     disabled={saving === r.reportId}
                   >
                     <option value="" disabled>상태 변경…</option>
                     {STATUS_OPTS.map((s) => (
-                      <option key={s} value={s}>{s}</option>
+                      <option key={s} value={s}>
+                        {STATUS_LABEL[s] || s} {/* 드롭다운에서도 한글 표시 */}
+                      </option>
                     ))}
                   </select>
                 </td>
               </tr>
+
             ))}
           </tbody>
         </table>

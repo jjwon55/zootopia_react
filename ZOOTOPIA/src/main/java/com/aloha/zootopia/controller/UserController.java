@@ -1,5 +1,7 @@
 package com.aloha.zootopia.controller;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.aloha.zootopia.domain.CustomUser;
@@ -56,6 +59,29 @@ public class UserController {
       return new ResponseEntity<>("UNAUTHORIZED", HttpStatus.UNAUTHORIZED);
   }
 
+
+    @GetMapping("/check")
+    public ResponseEntity<?> check(
+            @RequestParam(name = "email", required = false) String email,
+            @RequestParam(name = "nickname", required = false) String nickname) {
+
+        if (email != null && !email.isBlank()) {
+            boolean exists = userService.existsByEmail(email);
+            return ResponseEntity.ok(Map.of("available", !exists));
+        }
+
+        if (nickname != null && !nickname.isBlank()) {
+            boolean exists = userService.existsByNickname(nickname);
+            boolean available = !exists;
+            log.info("nickname '{}' exists={}, available={}", nickname, exists, available);
+            return ResponseEntity.ok(Map.of("available", available));
+        }
+
+        return ResponseEntity
+                .badRequest()
+                .body(Map.of("error", "Email or nickname is required"));
+    }
+    
   /**
    * 회원 가입
    * @param user
