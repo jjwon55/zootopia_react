@@ -23,6 +23,13 @@ export default function MyPageEdit({
   infoMsg,
   infoErr,
 
+  // 닉네임 중복검사
+  onCheckNickname,          // () => void
+  checkingNickname,         // boolean
+  nicknameAvailable,        // null | boolean
+  nicknameMsg,              // string
+  submitDisabled,           // boolean (저장 버튼 비활성화 조건 전달)
+
   // 반려동물
   pet,
   onChangePetField,
@@ -120,14 +127,37 @@ export default function MyPageEdit({
         <form onSubmit={onSubmitProfileInfo} className="tw:space-y-3">
           <div>
             <label className="tw:block tw:text-sm tw:mb-1">닉네임</label>
-            <input
-              type="text"
-              value={nickname}
-              onChange={(e) => onChangeNickname(e.target.value)}
-              className="tw:w-full tw:border tw:border-zinc-300 tw:rounded-md tw:px-3 tw:py-2"
-              required
-            />
+            <div className="tw:flex tw:gap-2">
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => onChangeNickname(e.target.value)}
+                className="tw:flex-1 tw:border tw:border-zinc-300 tw:rounded-md tw:px-3 tw:py-2"
+                required
+              />
+              <button
+                type="button"
+                onClick={onCheckNickname}
+                className="tw:px-3 tw:py-2 tw:rounded-md tw:bg-zinc-500 tw:text-white hover:tw:bg-zinc-600 disabled:tw:opacity-50"
+                disabled={checkingNickname}
+                aria-busy={checkingNickname ? 'true' : 'false'}
+              >
+                {checkingNickname ? '확인 중…' : '중복확인'}
+              </button>
+            </div>
+
+            {/* 중복검사 결과 메시지 */}
+            {nicknameMsg && (
+              <p
+                className={`tw:text-sm tw:mt-1 ${
+                  nicknameAvailable ? 'tw:text-green-600' : 'tw:text-red-600'
+                }`}
+              >
+                {nicknameMsg}
+              </p>
+            )}
           </div>
+
           <div>
             <label className="tw:block tw:text-sm tw:mb-1">소개글</label>
             <textarea
@@ -137,10 +167,13 @@ export default function MyPageEdit({
               className="tw:w-full tw:border tw:border-zinc-300 tw:rounded-md tw:px-3 tw:py-2"
             />
           </div>
+
           <div className="tw:text-right">
             <button
               type="submit"
-              className="tw:inline-flex tw:px-4 tw:py-2 tw:rounded-md tw:bg-blue-600 tw:text-white hover:tw:bg-blue-700"
+              className="tw:inline-flex tw:px-4 tw:py-2 tw:rounded-md tw:bg-blue-600 tw:text-white hover:tw:bg-blue-700 disabled:tw:opacity-50"
+              disabled={submitDisabled}
+              title={submitDisabled ? '닉네임 중복을 먼저 확인하세요.' : undefined}
             >
               정보 저장
             </button>
