@@ -41,7 +41,7 @@ export default function TossSuccess() {
         </div>
       )}
       <div style={{marginTop:24}}>
-        <a href={`/orders/${detail?.orderId || ''}`}>주문 상세 보기</a> | <a href="/products/listp">계속 쇼핑</a>
+        <a href={`/mypage?order=${detail?.orderId || ''}`}>주문 상세 보기</a> | <a href="/products/listp">계속 쇼핑</a>
       </div>
     </div>
   );
