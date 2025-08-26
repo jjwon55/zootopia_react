@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export default function Map({
   // 지도
@@ -18,11 +18,20 @@ export default function Map({
   // 액션
   onMyLocation,
 
-  // placeholder
+  // placeholder ( /map?address=... 로 진입 시 자동 검색 트리거 )
   address,
 }) {
   const headerH = '64px';
   const sidebarW = 360; // 왼쪽 패널 너비(px)
+
+  // ✅ 주소로 진입하면 1회 자동 입력 + 검색
+  const didAutoSearchRef = useRef(false);
+  useEffect(() => {
+    if (!address || didAutoSearchRef.current) return;
+    onChangeKeyword?.(address);
+    setTimeout(() => onSearchClick?.(), 0); // state 반영 이후 트리거
+    didAutoSearchRef.current = true;
+  }, [address, onChangeKeyword, onSearchClick]);
 
   return (
     <div
