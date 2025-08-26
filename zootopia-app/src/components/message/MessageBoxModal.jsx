@@ -5,6 +5,7 @@ import ReceivedMessagesListContainer from '../../containers/message/ReceivedMess
 import MessageDetailContainer from '../../containers/message/MessageDetailContainer';
 
 import SentMessagesListContainer from '../../containers/message/SentMessagesListContainer';
+import { MailOpen, MessageSquareText } from 'lucide-react';
 
 // TabPanel 컴포넌트 (MUI 문서에서 가져온 기본 구조)
 function TabPanel(props) {
@@ -69,7 +70,7 @@ const MessageBoxModal = ({ open, onClose, onReply }) => {
   };
 
   // 모달 제목 동적 변경
-  const modalTitle = view === 'list' ? '내 쪽지함' : '쪽지 상세 보기';
+  const modalTitle = view === 'list' ? <MailOpen className='tw:text-[#ffd0d0]' /> : <MessageSquareText className='tw:text-[#ffd0d0]'/>;
 
   return (
     <MessageBaseModal open={open} onClose={handleClose} title={modalTitle}>

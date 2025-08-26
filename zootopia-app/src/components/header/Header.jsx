@@ -8,6 +8,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { MessageContext } from '../../context/MessageContextProvider';
 import MessageBoxModal from '../message/MessageBoxModal';
 import SendMessageModal from '../message/SendMessageModal';
+import { Mail } from 'lucide-react';
 
 const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -191,10 +192,10 @@ const Header = () => {
               </div>
             ) : (
               <div className="tw:flex tw:items-center tw:gap-2">
-                <button onClick={handleOpenMessageBox} className="tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-0 tw:text-gray-700 hover:tw:text-[#ff6b6b] tw:font-sans tw:text-base">
-                  쪽지함
+                <button onClick={handleOpenMessageBox} className="tw:relative tw:pr-2 tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-0 tw:text-gray-700 hover:tw:text-[#ff6b6b] tw:font-sans tw:text-base">
+                  <Mail className='tw:absolute tw:top-[-13px] tw:left-[-40px] tw:size-8 tw:text-[#ff6464] tw:hover:text-[#ff3434]' />
                   {/* unreadCount가 0보다 클 때만 뱃지를 표시 (추가) */}
-                  {unreadCount > 0 && <span style={badgeStyle}>{unreadCount}</span>}
+                  {unreadCount > 0 && <span className='tw:absolute tw:top-[-20px] tw:left-[-25px]' style={badgeStyle}>{unreadCount}</span>}
                 </button>
                 {/* 유저 드롭다운 */}
                 <div className="tw:relative">

@@ -2,13 +2,21 @@ import React from 'react';
 import MessageSendForm from '../../components/message/MessageSendForm'; // 경로 확인
 import { sendMessage } from '../../apis/message/messageApi'; // 경로 확인
 import { toast } from 'react-toastify';
+import Swal from 'sweetalert2';
 
 function SendMessageFormContainer({ initialRecipient, onSuccess }) {
   const handleSubmit = async (messageData) => {
     try {
       // messageData는 { receiverId, content } 형태입니다.
       const response = await sendMessage(messageData);
-      toast.success('쪽지 전송 성공: ' + response); // 백엔드에서 보낸 메시지
+      Swal.fire({
+        position: "middle",
+        icon: "success",
+        title: response,
+        showConfirmButton: false,
+        timer: 1500
+      });
+      // toast.success(response); // 백엔드에서 보낸 메시지
       
       // 성공 시 부모 컴포넌트에서 전달받은 콜백 함수 실행
       if (onSuccess) {
@@ -21,7 +29,6 @@ function SendMessageFormContainer({ initialRecipient, onSuccess }) {
 
   return (
     <div>
-      <h2>새 쪽지 보내기</h2>
       <MessageSendForm
         onSubmit={handleSubmit}
         initialRecipientId={initialRecipient?.recipientId}

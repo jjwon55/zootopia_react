@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import defaultProfile from '../../assets/img/default-profile.png';
 import ReportModal from '../../components/admin/users/ReportsUserModal'; 
+import { Mail } from 'lucide-react';
+import SendMessageModal from '../message/SendMessageModal';
 
 
 /** 서버 경로를 안전한 이미지 URL로 변환 */
@@ -17,6 +19,15 @@ export default function UserInfo({ user, pets = [], myPosts = [] }) {
   if (!user) return null;
 
   const [reportOpen, setReportOpen] = useState(false); // ✅ 추가
+  // 쪽지 보내기 모달 상태 관리
+  const [messageModalOpen, setMessageModalOpen] = useState(false);
+  const [messageRecipient, setMessageRecipient] = useState(null);
+
+  // 라우팅 핸들러 -> 모달 핸들러로 변경
+  const handleSendMessage = (user) => {
+    setMessageRecipient(user);
+    setMessageModalOpen(true);
+  };
 
   const profileSrc = resolveImg(user.profileImg) || defaultProfile;
 
@@ -32,7 +43,7 @@ export default function UserInfo({ user, pets = [], myPosts = [] }) {
     <div className="tw:py-6">
       <div className="tw:max-w-[880px] tw:mx-auto tw:px-4">
         {/* 👤 사용자 프로필 */}
-        <section className="tw:mt-5 tw:p-5 tw:rounded-xl tw:bg-[#efefef]">
+        <section className="tw:relative tw:mt-5 tw:p-5 tw:rounded-xl tw:bg-[#efefef]">
           <h2 className="tw:text-[20px] tw:font-bold tw:mb-4">
             {user.nickname}님의 프로필
           </h2>
@@ -47,9 +58,22 @@ export default function UserInfo({ user, pets = [], myPosts = [] }) {
               {user.intro && <div className="tw:mt-1">{user.intro}</div>}
             </div>
 
+
+            {/* 쪽지 보내기 */}
+          <button
+            type="button"
+            onClick={handleSendMessage.bind(null, user)}
+            className="tw:absolute tw:top-[8px] tw:right-[140px] tw:w-[125px] tw:flex tw:gap-[5px] tw:text-center tw:px-1 tw:py-1 hover:tw:bg-gray-50 tw:cursor-pointer 
+                    tw:hover:bg-[#ff9191] tw:hover:text-[#ffffff] tw:rounded-[10px] tw:hover:transition-all tw:duration-200 tw:group "
+            role="menuitem"
+          >
+            <Mail className='tw:text-[#ff9191] tw:group-hover:text-[#ff3535]'/>쪽지 보내기
+          </button>
+
             <button
                 type="button"
-                className="tw:btn tw:btn-error tw:btn-sm"
+                className="tw:absolute tw:top-[8px] tw:right-[15px] tw:text-center tw:px-1 tw:py-1 tw:w-[110px]
+                          tw:hover:bg-[#ff1313] tw:hover:text-[#ffffff] tw:rounded-[10px] tw:hover:transition-all tw:duration-200"
                 onClick={() => setReportOpen(true)}
                 title="이 유저 신고하기"
               >
@@ -129,6 +153,11 @@ export default function UserInfo({ user, pets = [], myPosts = [] }) {
           // context={{ postId, commentId, lostPostId, lostCommentId }}
         />
       )}
+      {/* 쪽지 보내기 모달 */}
+      <SendMessageModal
+        open={messageModalOpen}
+        onClose={() => setMessageModalOpen(false)}
+        recipient={messageRecipient}/>
     </div>
   );
 }
