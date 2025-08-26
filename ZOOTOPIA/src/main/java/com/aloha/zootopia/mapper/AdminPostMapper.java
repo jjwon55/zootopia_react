@@ -13,13 +13,15 @@ public interface AdminPostMapper {
     int countByFilter(
         @Param("q") String q,
         @Param("category") String category,
-        @Param("hidden") Boolean hidden
+        @Param("hidden") Boolean hidden,
+        @Param("reportedOnly") Boolean reportedOnly
     );
 
     List<AdminPost> findByFilter(
         @Param("q") String q,
         @Param("category") String category,
         @Param("hidden") Boolean hidden,
+        @Param("reportedOnly") Boolean reportedOnly,
         @Param("offset") int offset,
         @Param("size") int size,
         @Param("sort") String sort,

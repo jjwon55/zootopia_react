@@ -5,7 +5,8 @@ import Cookies from 'js-cookie';
 // ✅ axios 인스턴스
 const api = axios.create({
   baseURL: '/api',
-  withCredentials: true, // 쿠키 인증 시 필수
+  withCredentials: true,
+  timeout: 10000, // (선택) 기본 타임아웃
 });
 
 // ✅ 요청마다 JWT 토큰 자동 첨부
@@ -19,13 +20,18 @@ api.interceptors.request.use((config) => {
 
 const base = '/mypage';
 
+// ✅ 닉네임 중복 확인 (true=사용가능 / false=중복)
+export const checkNickname = (nickname) =>
+  api.get(`${base}/check-nickname`, { params: { nickname } });
+
 // ✅ 내 마이페이지 정보 조회
 export const getMyPage = () => api.get(base);
 
 // ✅ 프로필 이미지 변경 (FormData)
-export const updateProfileImage = (formData) =>
+export const updateProfileImage = (formData, onUploadProgress) =>
   api.post(`${base}/edit/profile-image`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress, // (선택) 업로드 진행률 콜백
   });
 
 // ✅ 닉네임 및 소개 변경
