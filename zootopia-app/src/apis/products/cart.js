@@ -23,6 +23,22 @@ const writeLocalCart = (userId, items) => {
     localStorage.setItem(cartKey(userId), JSON.stringify(items));
   } catch {}
 };
+// 신규 등록 제품(오버레이) 조회
+const readOverlay = () => {
+  try { return JSON.parse(localStorage.getItem('customProductsOverlay') || '[]'); } catch { return []; }
+};
+const findProductById = (id) => {
+  const mock = mockProductsDatabase.find(p => String(p.no) === String(id));
+  if (mock) return mock;
+  const overlay = readOverlay();
+  return overlay.find(p => String(p.no) === String(id));
+};
+const sanitizeImage = (url) => {
+  if (!url) return url;
+  // base64 데이터는 로컬스토리지 용량 초과를 유발할 수 있으므로 생략
+  if (String(url).startsWith('data:')) return '';
+  return url;
+};
 const calcTotals = (items) => ({
   totalAmount: items.reduce((s, it) => s + (it.price || 0) * (it.quantity || 0), 0),
   totalItems: items.reduce((s, it) => s + (it.quantity || 0), 0)
@@ -84,7 +100,7 @@ export async function addToCart(userId = 1, productId, quantity = 1) {
   try {
     // 개발 모드: 로컬 스토리지만 갱신
     if (isDev()) {
-      const product = mockProductsDatabase.find(p => String(p.no) === String(productId));
+      const product = findProductById(productId);
       const prev = readLocalCart(userId);
       const idx = prev.findIndex(it => String(it.productId) === String(productId));
       if (idx >= 0) {
@@ -96,7 +112,7 @@ export async function addToCart(userId = 1, productId, quantity = 1) {
           productName: product.name,
           price: product.price,
           quantity,
-          imageUrl: product.imageUrl,
+        imageUrl: sanitizeImage(product.imageUrl),
           category: product.category
         });
       }
@@ -117,19 +133,19 @@ export async function addToCart(userId = 1, productId, quantity = 1) {
   } catch (error) {
     console.error('Failed to add item to cart:', error);
     // 로컬 스토리지 폴백: 제품 정보를 DB에서 찾아 장바구니 갱신
-    const product = mockProductsDatabase.find(p => String(p.no) === String(productId));
+  const product = findProductById(productId);
     const prev = readLocalCart(userId);
     const idx = prev.findIndex(it => String(it.productId) === String(productId));
     if (idx >= 0) {
       prev[idx] = { ...prev[idx], quantity: (prev[idx].quantity || 0) + quantity };
-    } else if (product) {
+  } else if (product) {
       prev.push({
         id: product.no, // 폴백에선 cartItemId = productId로 사용
         productId: product.no,
         productName: product.name,
         price: product.price,
         quantity,
-        imageUrl: product.imageUrl,
+    imageUrl: sanitizeImage(product.imageUrl),
         category: product.category
       });
     }

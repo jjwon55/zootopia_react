@@ -14,6 +14,7 @@ import com.aloha.zootopia.security.provider.JwtProvider;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -43,18 +44,31 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 1) Authorization 헤더에서 JWT 추출
+        // 1) Authorization 헤더에서 JWT 추출 (없으면 쿠키 'jwt'에서 보조 추출)
         String authorization = request.getHeader(SecurityConstants.TOKEN_HEADER); // "Authorization"
-        log.info("authorization : {}", authorization);
+        log.info("authorization header : {}", authorization);
 
-        if (authorization == null || authorization.isEmpty()
-                || !authorization.startsWith(SecurityConstants.TOKEN_PREFIX)) {
-            filterChain.doFilter(request, response);
-            return;
+        String jwt = null;
+        if (authorization != null && authorization.startsWith(SecurityConstants.TOKEN_PREFIX)) {
+            // "Bearer " 제거
+            jwt = authorization.replace(SecurityConstants.TOKEN_PREFIX, "");
+        } else {
+            // 헤더가 없으면 쿠키에서 jwt 조회 (SPA가 document.cookie에 저장한 토큰)
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie c : cookies) {
+                    if ("jwt".equals(c.getName())) {
+                        jwt = c.getValue();
+                        break;
+                    }
+                }
+            }
+            if (jwt == null || jwt.isEmpty()) {
+                // 토큰이 전혀 없으면 패스
+                filterChain.doFilter(request, response);
+                return;
+            }
         }
-
-        // "Bearer " 제거
-        String jwt = authorization.replace(SecurityConstants.TOKEN_PREFIX, "");
 
         // 2) 토큰으로 Authentication 생성 (내부에서 DB 조회해 CustomUser 채워둠)
         Authentication authentication = jwtProvider.getAuthenticationToken(jwt);
@@ -70,7 +84,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         // 3) JWT 서명/만료 검증
-        boolean valid = jwtProvider.validateToken(jwt);
+    boolean valid = jwtProvider.validateToken(jwt);
         if (valid && authentication != null && authentication.isAuthenticated()) {
             log.info("유효한 JWT 토큰 입니다.");
             SecurityContextHolder.getContext().setAuthentication(authentication);
