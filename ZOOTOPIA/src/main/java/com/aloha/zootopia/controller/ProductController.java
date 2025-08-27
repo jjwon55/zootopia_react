@@ -31,6 +31,22 @@ public class ProductController {
 
     @org.springframework.beans.factory.annotation.Autowired
     private com.aloha.zootopia.service.FileUploadService fileUploadService;
+
+    // 관리자용 게시판 스타일 목록
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin")
+    public String adminList(@RequestParam(value = "page", defaultValue = "1") int page,
+                            @RequestParam(value = "size", defaultValue = "20") int size,
+                            Model model) {
+        try {
+            List<Product> products = productService.listByPage(page, size);
+            model.addAttribute("products", products);
+            return "products/admin_list";
+        } catch (Exception e) {
+            model.addAttribute("error", "상품 목록을 불러오는 중 오류가 발생했습니다.");
+            return "products/admin_list";
+        }
+    }
     
     // React API 엔드포인트 - 상품 목록 조회
     @GetMapping("/api/list")
@@ -358,7 +374,7 @@ public class ProductController {
             
             if (result > 0) {
                 redirectAttributes.addFlashAttribute("success", "상품이 성공적으로 등록되었습니다.");
-                return "redirect:/products/listp";
+                return "redirect:/products/admin";
             } else {
                 redirectAttributes.addFlashAttribute("error", "상품 등록에 실패했습니다.");
                 return "redirect:/products/create";
@@ -368,6 +384,64 @@ public class ProductController {
             redirectAttributes.addFlashAttribute("error", "오류가 발생했습니다: " + e.getMessage());
             return "redirect:/products/create";
         }
+    }
+
+    // 수정 폼
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/edit/{no}")
+    public String editForm(@PathVariable("no") int no, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Product p = productService.getByNo(no);
+            if (p == null) {
+                redirectAttributes.addFlashAttribute("error", "존재하지 않는 상품입니다.");
+                return "redirect:/products/admin";
+            }
+            model.addAttribute("product", p);
+            return "products/edit";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "오류가 발생했습니다: " + e.getMessage());
+            return "redirect:/products/admin";
+        }
+    }
+
+    // 수정 처리
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/edit")
+    public String edit(Product product,
+                       @RequestParam(required = false) MultipartFile imageFile,
+                       RedirectAttributes redirectAttributes) {
+        try {
+            if (imageFile != null && !imageFile.isEmpty()) {
+                String imageUrl = fileUploadService.uploadFile(imageFile);
+                product.setImageUrl(imageUrl);
+            }
+            int result = productService.update(product);
+            if (result > 0) {
+                redirectAttributes.addFlashAttribute("success", "수정되었습니다.");
+            } else {
+                redirectAttributes.addFlashAttribute("error", "수정에 실패했습니다.");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "오류: " + e.getMessage());
+        }
+        return "redirect:/products/admin";
+    }
+
+    // 삭제 처리
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/delete/{no}")
+    public String delete(@PathVariable("no") int no, RedirectAttributes redirectAttributes) {
+        try {
+            int result = productService.delete(no);
+            if (result > 0) {
+                redirectAttributes.addFlashAttribute("success", "삭제되었습니다.");
+            } else {
+                redirectAttributes.addFlashAttribute("error", "삭제 실패");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "오류: " + e.getMessage());
+        }
+        return "redirect:/products/admin";
     }
     
 //     // 장바구니 추가 기능

@@ -12,6 +12,7 @@ import TossSuccess from '../pages/payments/TossSuccess.jsx';
 import TossFail from '../pages/payments/TossFail.jsx';
 import BrandpayCheckout from '../pages/payments/BrandpayCheckout.jsx';
 import BrandpaySuccess from '../pages/payments/BrandpaySuccess.jsx';
+import ProductCreate from '../pages/products/create.jsx';
 
 export default function HsmRoutes() {
   return (
@@ -22,6 +23,9 @@ export default function HsmRoutes() {
 
       {/* 상세 (ProductList에서 /products/detail/${productId} 로 이동하므로 파라미터명을 productId로) */}
       <Route path="/products/detail/:productId" element={<ProductDetail />} />
+
+  {/* 상품 등록/관리 (SPA) */}
+  <Route path="/products/create" element={<ProductCreate />} />
 
       {/* 장바구니 */}
       <Route path="/cart" element={<Cart />} />

@@ -12,6 +12,16 @@ import api from '../../apis/api';
 import { clearCart as clearLocalOrApiCart } from '../../apis/products/cart';
 import { useLoginContext } from '../../context/LoginContextProvider';
 import fallbackImg from '../../assets/react.svg';
+
+// 오버레이에서 이미지 보정
+const readOverlay = () => {
+  try { return JSON.parse(localStorage.getItem('customProductsOverlay') || '[]'); } catch { return []; }
+};
+const getOverlayImage = (id) => {
+  const overlay = readOverlay();
+  const found = overlay.find(p => String(p.no) === String(id));
+  return found?.imageUrl || '';
+};
 import OrderCompleteModal from '../../components/common/OrderCompleteModal';
 import KakaoLoginModal from '../../components/common/KakaoLoginModal';
 
@@ -441,28 +451,30 @@ export default function Checkout() {
                   <span>👜</span> 주문 상품 확인
                 </h2>
                 <div className="tw:space-y-4">
-                  {orderItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="tw:flex tw:items-center tw:gap-4 tw:pb-4 tw:border-b tw:border-gray-200 tw:last:border-b-0 tw:last:pb-0"
-                    >
-                      <img
-                        src={item.imageUrl || item.image || fallbackImg}
-                        alt={item.name}
-                        className="tw:w-16 tw:h-16 tw:object-cover tw:rounded tw:border"
-                        onError={(e) => {
-                          e.currentTarget.src = fallbackImg;
-                        }}
-                      />
-                      <div className="tw:flex-1">
-                        <h3 className="tw:font-medium">{item.name}</h3>
-                        <p className="tw:text-gray-600 tw:text-sm">수량: {item.quantity}개</p>
+
+                  {orderItems.map(item => {
+                    const imgSrc = item.imageUrl || item.image || getOverlayImage(item.productId || item.id) || fallbackImg;
+                    return (
+                      <div key={item.id} className="tw:flex tw:items-center tw:gap-4 tw:pb-4 tw:border-b tw:border-gray-200 tw:last:border-b-0 tw:last:pb-0">
+                        <img
+                          src={imgSrc}
+                          alt={item.name}
+                          className="tw:w-16 tw:h-16 tw:object-cover tw:rounded tw:border"
+                          onError={(e) => { e.currentTarget.src = fallbackImg; }}
+                        />
+                        <div className="tw:flex-1">
+                          <h3 className="tw:font-medium">{item.name}</h3>
+                          <p className="tw:text-gray-600 tw:text-sm">수량: {item.quantity}개</p>
+                        </div>
+                        <div className="tw:text-right">
+                          <p className="tw:font-bold tw:text-pink-500">
+                            {(item.price * item.quantity).toLocaleString()}원
+                          </p>
+                        </div>
+
                       </div>
-                      <div className="tw:text-right">
-                        <p className="tw:font-bold tw:text-pink-500">{(item.price * item.quantity).toLocaleString()}원</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
