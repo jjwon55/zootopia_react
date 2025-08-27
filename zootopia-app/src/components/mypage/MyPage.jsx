@@ -239,6 +239,16 @@ function OrderSummarySection() {
     <section className="tw:mt-5 tw:mb-10 tw:p-5 tw:rounded-xl tw:bg-[#efefef]">
       <h2 className="tw:text-[20px] tw:font-bold tw:mb-4">🧾 주문 상세 내역</h2>
 
+      {/* 주문번호 */}
+      <div className="tw:bg-white tw:rounded-xl tw:p-4 tw:shadow-sm tw:border tw:border-zinc-200 tw:mb-4">
+        <div className="tw:flex tw:items-center tw:gap-3">
+          <span className="tw:w-24 tw:text-sm tw:text-zinc-600">주문번호</span>
+          <code className="tw:bg-white tw:px-2 tw:py-1 tw:rounded tw:border tw:border-zinc-200 tw:text-pink-600 tw:text-xs">
+            {order?.orderCode || '-'}
+          </code>
+        </div>
+      </div>
+
       {/* 상품 목록 */}
       <div className="tw:bg-white tw:rounded-xl tw:p-4 tw:shadow-sm tw:border tw:border-zinc-200 tw:mb-4">
         <h3 className="tw:font-semibold tw:mb-3">구매 상품</h3>
