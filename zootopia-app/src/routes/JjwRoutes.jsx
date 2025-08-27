@@ -22,6 +22,7 @@ import AdminPostContainer from '../containers/admin/AdminPostContainer'; // ✅ 
 
 import RequireAdmin from '../pages/Required/RequiredAdmin';
 import RequireAuth from '../pages/Required/RequiredAuth';
+import LostUpdate from '../pages/lost/LostUpdate';
 
 const JjwRoutes = () => {
   return (
@@ -57,9 +58,15 @@ const JjwRoutes = () => {
           }
         />
         <Route
-          path="/showoff/edit/:postId"
+          path="/lost/edit/:postId"
           element={
-            <RequireAuth><ShowoffUpdate /></RequireAuth>
+            <RequireAuth><LostUpdate /></RequireAuth>
+          }
+        />
+        <Route
+          path="/lost/edit/:postId"
+          element={
+            <RequireAuth><Update /></RequireAuth>
           }
         />
 
