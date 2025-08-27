@@ -5,18 +5,18 @@ const CommentList = ({
   user,
   commentPage,
   totalCommentPages,
-  currentPage,
   onPageChange,
   onDelete,
 }) => {
   const handleCommentPageChange = (page) => {
-    onPageChange(currentPage, page)
+    if (page < 1 || page > totalCommentPages) return
+    onPageChange(page)
   }
 
   return (
     <div>
-      {/* 💬 댓글 목록 */}
-      {Array.isArray(comments) && comments.length > 0 ? (
+      {/* 댓글 목록 */}
+      {comments.length > 0 ? (
         comments.map((comment) => (
           <div
             key={comment.commentId}
@@ -35,7 +35,7 @@ const CommentList = ({
                   <div className="tw:text-right tw:mt-2">
                     <button
                       type="button"
-                      onClick={() => onDelete?.(comment.commentId)}
+                      onClick={() => onDelete(comment.commentId)}
                       className="
                         tw:border tw:border-[#F27A7A] tw:text-[#F27A7A]
                         tw:rounded-xl tw:px-3 tw:py-1 tw:text-xs
@@ -57,7 +57,7 @@ const CommentList = ({
         <p className="tw:text-gray-400 tw:text-xs">등록된 댓글이 없습니다.</p>
       )}
 
-      {/* 📄 댓글 페이지네이션 */}
+      {/* 댓글 페이지네이션 */}
       {totalCommentPages > 1 && (
         <nav className="tw:flex tw:justify-center tw:mt-4">
           <ul className="tw:flex tw:gap-1">
@@ -69,9 +69,7 @@ const CommentList = ({
                   tw:px-3 tw:py-1 tw:rounded-xl tw:border tw:border-[#F27A7A]
                   tw:text-[#F27A7A] tw:text-xs
                   focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#F27A7A]/40
-                  ${commentPage === 1
-                    ? 'tw:opacity-50 tw:cursor-not-allowed'
-                    : 'hover:tw:bg-rose-50 tw:transition'}
+                  ${commentPage === 1 ? 'tw:opacity-50 tw:cursor-not-allowed' : 'hover:tw:bg-rose-50 tw:transition'}
                 `}
               >
                 이전
@@ -85,9 +83,7 @@ const CommentList = ({
                   className={`
                     tw:px-3 tw:py-1 tw:rounded-xl tw:border tw:border-[#F27A7A] tw:text-xs
                     focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#F27A7A]/40
-                    ${num === commentPage
-                      ? 'tw:bg-[#F27A7A] tw:text-white tw:font-bold'
-                      : 'tw:text-[#F27A7A] hover:tw:bg-rose-50 tw:transition'}
+                    ${num === commentPage ? 'tw:bg-[#F27A7A] tw:text-white tw:font-bold' : 'tw:text-[#F27A7A] hover:tw:bg-rose-50 tw:transition'}
                   `}
                 >
                   {num}
@@ -103,9 +99,7 @@ const CommentList = ({
                   tw:px-3 tw:py-1 tw:rounded-xl tw:border tw:border-[#F27A7A]
                   tw:text-[#F27A7A] tw:text-xs
                   focus:tw:outline-none focus:tw:ring-2 focus:tw:ring-[#F27A7A]/40
-                  ${commentPage === totalCommentPages
-                    ? 'tw:opacity-50 tw:cursor-not-allowed'
-                    : 'hover:tw:bg-rose-50 tw:transition'}
+                  ${commentPage === totalCommentPages ? 'tw:opacity-50 tw:cursor-not-allowed' : 'hover:tw:bg-rose-50 tw:transition'}
                 `}
               >
                 다음

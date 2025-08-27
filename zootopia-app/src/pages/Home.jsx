@@ -5,7 +5,7 @@ import logo from '../assets/img/homelogo.png'
 const Home = () => {
   return (
     <>
-      <section className="tw:bg-[#FFEFEF] tw:min-h-screen tw:flex tw:items-center">
+      <section className="tw:min-h-screen tw:flex tw:items-center">
         <div className="tw:w-full tw:max-w-7xl tw:mx-auto tw:px-6">
           <div className="tw:flex tw:flex-col tw:md:flex-row tw:items-center tw:justify-center tw:gap-10">
             {/* 로고 */}

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.aloha.zootopia.mapper.PetProfileMapper">
+
+    <!-- 펫 등록 -->
+    <insert id="insertPet" parameterType="com.aloha.zootopia.domain.PetProfile" useGeneratedKeys="true" keyProperty="petId">
+        INSERT INTO pet_profile (user_id, name, species, breed, age, gender, description, photo_url)
+        VALUES (#{userId}, #{name}, #{species}, #{breed}, #{age}, #{gender}, #{description}, #{photoUrl})
+    </insert>
+
+    <!-- 단일 펫 조회 -->
+    <select id="selectPetById" resultType="com.aloha.zootopia.domain.PetProfile">
+        SELECT * FROM pet_profile WHERE pet_id = #{petId}
+    </select>
+
+    <!-- 유저의 펫 리스트 조회 -->
+    <select id="selectPetsByUserId" resultType="com.aloha.zootopia.domain.PetProfile">
+        SELECT * FROM pet_profile WHERE user_id = #{userId}
+    </select>
+
+    <!-- 공고에 매핑된 펫 리스트 조회 -->
+    <select id="selectPetsByJobId" resultType="com.aloha.zootopia.domain.PetProfile">
+        SELECT p.* 
+        FROM pet_profile p
+        INNER JOIN job_pet jp ON p.pet_id = jp.pet_id
+        WHERE jp.job_id = #{jobId}
+    </select>
+
+    <!-- 공고-펫 매핑 추가 -->
+    <insert id="insertJobPetMapping">
+        INSERT INTO job_pet (job_id, pet_id) VALUES (#{jobId}, #{petId})
+    </insert>
+
+    <!-- 공고-펫 매핑 삭제 -->
+    <delete id="deleteJobPetMapping">
+        DELETE FROM job_pet WHERE job_id = #{jobId} AND pet_id = #{petId}
+    </delete>
+
+    <!-- 펫 삭제 -->
+    <delete id="deletePet">
+        DELETE FROM pet_profile WHERE pet_id = #{petId}
+    </delete>
+
+</mapper>

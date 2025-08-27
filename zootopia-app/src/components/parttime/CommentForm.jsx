@@ -1,15 +1,17 @@
 import React, { useState } from 'react'
 
-const CommentForm = ({ user, onSubmit }) => {
+const CommentForm = ({ user, jobId, onSubmit }) => {
   const [content, setContent] = useState('')
   const isEmpty = content.trim().length === 0
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!content.trim()) return
+
     onSubmit({
       writer: user?.nickname ?? '익명',
       content: content.trim(),
+      jobId, // 현재 연관된 jobId 전달
     })
     setContent('')
   }
@@ -43,9 +45,7 @@ const CommentForm = ({ user, onSubmit }) => {
         />
 
         <div className="tw:flex tw:items-center tw:justify-between tw:mt-3">
-          <span className="tw:text-xs tw:text-gray-400">
-            {content.trim().length}자
-          </span>
+          <span className="tw:text-xs tw:text-gray-400">{content.trim().length}자</span>
           <button
             type="submit"
             disabled={isEmpty}
