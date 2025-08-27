@@ -118,7 +118,7 @@ const HospitalList = ({
               {/* 이미지 */}
               <div className="tw:w-full tw:h-[200px] tw:overflow-hidden">
                 <img
-                  src={`${hospital.thumbnailImageUrl ? `http://localhost:8080${hospital.thumbnailImageUrl}` : defaultHospitalImg}`}
+                  src={`${hospital.thumbnailImageUrl ? `/api${hospital.thumbnailImageUrl}` : defaultHospitalImg}`}
                   alt={hospital.name}
                   className="tw:w-full tw:h-full tw:object-cover tw:transition-transform hover:tw:scale-105"
                 />

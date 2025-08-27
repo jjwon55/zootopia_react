@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 
 // ✅ 공통 axios 인스턴스
 const api = axios.create({
-  baseURL: '/api', // vite proxy에서 /api → http://localhost:8080 로 매핑
+  baseURL: '/api', 
   withCredentials: true, // 세션/쿠키 인증 시 필수
 });
 

@@ -44,7 +44,7 @@ const LostList = ({ posts, pagination, keyword, type }) => {
           >
             <div className="tw:w-[80px] tw:h-[80px]">
               <img
-                src={post.thumbnailUrl ? `http://localhost:8080${post.thumbnailUrl}` : defaultThumbnail}
+                src={post.thumbnailUrl ? `/api${post.thumbnailUrl}` : defaultThumbnail}
                 alt="썸네일"
                 className="tw:w-full tw:h-full tw:rounded-[10px] tw:object-cover"
                 onError={(e) => {
@@ -77,7 +77,7 @@ const LostList = ({ posts, pagination, keyword, type }) => {
               <div className="tw:flex tw:justify-between tw:items-center tw:gap-[6px] tw:text-[14px] tw:text-[#666] tw:mt-1">
                 <span className="tw:flex tw:items-center tw:gap-[6px]">
                   <img
-                    src={post.user?.profileImg ? `http://localhost:8080${post.user.profileImg}` : defaultProfile}
+                    src={post.user?.profileImg ? `/api${post.user.profileImg}` : defaultProfile}
                     alt="작성자 프로필"
                     className="tw:w-[24px] tw:h-[24px] tw:rounded-full tw:object-cover"
                   />

@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 
 // 1. 프로젝트의 유일한 API 인스턴스를 여기서 생성하고 설정합니다.
 const api = axios.create({
-  baseURL: 'http://localhost:8080', // 서버 주소를 명확히 적어주는 것이 좋습니다.
+  baseURL: '/api', // 서버 주소를 명확히 적어주는 것이 좋습니다.
   withCredentials: true,
 });
 
