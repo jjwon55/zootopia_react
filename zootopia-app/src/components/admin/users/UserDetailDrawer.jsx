@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 // ✅ SweetAlert helpers
 import { toastSuccess, toastError } from "../../../apis/posts/alert";
+import { Mail } from "lucide-react";
+import SendMessageModal from "../../message/SendMessageModal";
 
 // ✅ 허용 역할(프론트도 백엔드와 맞춰 2개만)
 const ROLE_OPTIONS = ["ROLE_USER", "ROLE_ADMIN"];
@@ -18,6 +20,16 @@ export default function UserDetailDrawer({ user, onClose, onSaveBasic, onSaveRol
   // 로딩/중복 클릭 방지
   const [savingBasic, setSavingBasic] = useState(false);
   const [savingRoles, setSavingRoles] = useState(false);
+
+  // 쪽지 보내기 모달 상태 관리
+  const [messageModalOpen, setMessageModalOpen] = useState(false);
+  const [messageRecipient, setMessageRecipient] = useState(null);
+
+  // 라우팅 핸들러 -> 모달 핸들러로 변경
+  const handleSendMessage = (user) => {
+    setMessageRecipient(user);
+    setMessageModalOpen(true);
+  };
 
   // 🔁 외부 user 변경 시 폼 초기화
   useEffect(() => {
@@ -173,7 +185,6 @@ export default function UserDetailDrawer({ user, onClose, onSaveBasic, onSaveRol
           <div>
             <div className="tw:flex tw:items-center tw:justify-between">
               <h3 className="tw:text-sm tw:font-semibold tw:text-gray-700">역할</h3>
-              <div className="tw:text-xs tw:text-gray-400">백엔드와 동기화됨</div>
             </div>
             <div className="tw:flex tw:flex-wrap tw:gap-2 tw:mt-2">
               {ROLE_OPTIONS.map(r => (
@@ -210,6 +221,15 @@ export default function UserDetailDrawer({ user, onClose, onSaveBasic, onSaveRol
           >
             {savingRoles ? "저장 중..." : "역할 저장"}
           </button>
+          <button
+            type="button"
+            onClick={handleSendMessage.bind(null, user)}
+            className="tw:leading-8 tw:w-[125px] tw:flex tw:gap-[5px] tw:text-center tw:px-1 tw:py-1 tw:bg-[#ffdcdc] hover:tw:bg-gray-50 tw:cursor-pointer tw:items-center
+                    tw:hover:bg-[#ff9191] tw:hover:text-[#ffffff] tw:rounded-[10px] tw:hover:transition-all tw:duration-200 tw:group "
+            role="menuitem"
+          >
+            <Mail className='tw:text-[#ff9191] tw:group-hover:text-[#ff3535]'/>쪽지 보내기
+          </button>
           <div className="tw:flex-1" />
           <button
             type="button"  // ✅ 버튼 타입 명시
@@ -220,6 +240,11 @@ export default function UserDetailDrawer({ user, onClose, onSaveBasic, onSaveRol
           </button>
         </footer>
       </aside>
+      {/* 쪽지 보내기 모달 */}
+      <SendMessageModal
+        open={messageModalOpen}
+        onClose={() => setMessageModalOpen(false)}
+        recipient={messageRecipient}/>
     </div>
   );
 }
