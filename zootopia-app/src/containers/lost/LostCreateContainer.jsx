@@ -83,7 +83,7 @@ const LostCreateContainer = () => {
 
       const result = await response.json();
       const imageUrl = result.imageUrl.startsWith('/')
-        ? `/api${result.imageUrl}`
+        ? `http://192.168.30.3:5173${result.imageUrl}`
         : result.imageUrl;
 
       callback(imageUrl, blob.name);

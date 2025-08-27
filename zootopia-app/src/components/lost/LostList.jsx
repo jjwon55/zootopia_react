@@ -20,6 +20,14 @@ const LostList = ({ posts, pagination, keyword, type }) => {
     return `/lost?${newQuery.toString()}`;
   };
 
+  const resolveImg = (src, fallback) => {
+    if (!src) return fallback;
+    if (/^https?:\/\//i.test(src)) return src;       
+    if (src.startsWith('/api/')) return src;         
+    if (src.startsWith('/')) return `/api${src}`;    
+    return `/api/${src}`;                            
+  };
+
   return (
     <section className="tw:max-w-[900px] tw:my-8 tw:mx-auto tw:bg-white tw:p-6 tw:rounded-[10px] tw:shadow-[0_2px_5px_rgba(0,0,0,0.05)]">
       {/* 상단 헤더 */}
@@ -44,13 +52,10 @@ const LostList = ({ posts, pagination, keyword, type }) => {
           >
             <div className="tw:w-[80px] tw:h-[80px]">
               <img
-                src={post.thumbnailUrl ? `/api${post.thumbnailUrl}` : defaultThumbnail}
+                src={resolveImg(post.thumbnailUrl, defaultThumbnail)}
                 alt="썸네일"
                 className="tw:w-full tw:h-full tw:rounded-[10px] tw:object-cover"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = defaultThumbnail;
-                }}
+                onError={(e) => { e.currentTarget.src = defaultThumbnail; }}
               />
             </div>
             <div className="tw:flex tw:flex-col tw:justify-between tw:flex-grow">

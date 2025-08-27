@@ -9,6 +9,7 @@ import { MessageContext } from '../../context/MessageContextProvider';
 import MessageBoxModal from '../message/MessageBoxModal';
 import SendMessageModal from '../message/SendMessageModal';
 import { Mail } from 'lucide-react';
+import defaultProfile from '../../assets/img/default-profile.png';
 
 const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -47,42 +48,52 @@ const Header = () => {
   const { unreadCount } = useContext(MessageContext);
 
   const nickname = userInfo?.nickname;
-  const profileImage = userInfo?.profileImg || '/assets/img/default-profile.png';
 
+  const resolveImg = (src) => {
+    if (!src) return null;
+    if (/^https?:\/\//i.test(src)) return src;
+    if (src.startsWith('/api/')) return src;
+    if (src.startsWith('/')) return `/api${src}`;
+    return `/api/${src}`;
+  };
+
+  const rawProfile = resolveImg(userInfo?.profileImg);
+  const profileSrc = rawProfile || defaultProfile;
   const Menus = [
-  { to: '/', label: '홈' },
-  { to: '/products/listp', label: '스토어' },
-  { to: '/map', label: '내 주변 찾기' },
-  // 서브메뉴 추가 예시
-  {
-    label: '서비스',
-    submenu: [
-      { to: '/parttime/list', label: '아르바이트' },
-      { to: '/insurance/list', label: '펫 보험' },
-      { to: '/service/hospitals/hospitallist', label: '추천 병원' },
-      { to: '/service/funeral/procedure', label: 'Cross the Rainbow Bridge' },
-    ],
-  },
-  { to: '/posts', label: '커뮤니티',
-    submenu: [
-    { to:'/posts', label: '자유게시판'},
-    { to:'/showoff', label: '자랑게시판'},
-    { to:'/lost', label: '유실동물 게시판'},
-    ]
-  },
-];
+    { to: '/', label: '홈' },
+    { to: '/products/listp', label: '스토어' },
+    { to: '/map', label: '내 주변 찾기' },
+    // 서브메뉴 추가 예시
+    {
+      label: '서비스',
+      submenu: [
+        { to: '/parttime/list', label: '아르바이트' },
+        { to: '/insurance/list', label: '펫 보험' },
+        { to: '/service/hospitals/hospitallist', label: '추천 병원' },
+        { to: '/service/funeral/procedure', label: 'Cross the Rainbow Bridge' },
+      ],
+    },
+    {
+      to: '/posts', label: '커뮤니티',
+      submenu: [
+        { to: '/posts', label: '자유게시판' },
+        { to: '/showoff', label: '자랑게시판' },
+        { to: '/lost', label: '유실동물 게시판' },
+      ]
+    },
+  ];
 
 
   // 뱃지 스타일 (추가)
-    const badgeStyle = {
-        backgroundColor: 'red',
-        color: 'white',
-        borderRadius: '50%',
-        padding: '2px 6px',
-        fontSize: '12px',
-        marginLeft: '5px',
-        verticalAlign: 'super',
-    };
+  const badgeStyle = {
+    backgroundColor: 'red',
+    color: 'white',
+    borderRadius: '50%',
+    padding: '2px 6px',
+    fontSize: '12px',
+    marginLeft: '5px',
+    verticalAlign: 'super',
+  };
 
 
   return (
@@ -175,7 +186,7 @@ const Header = () => {
           {/* 로그인/회원가입 또는 사용자 메뉴 (데스크톱) */}
           <div className="tw:hidden tw:lg:flex tw:items-center tw:gap-3 tw:relative">
             {!isLogin ? (
-            
+
               <div className="tw:flex tw:items-center tw:gap-2">
                 <Link
                   to="/login"
@@ -200,18 +211,20 @@ const Header = () => {
                 {/* 유저 드롭다운 */}
                 <div className="tw:relative">
                   <img
-                    src={profileImage}
+                    src={profileSrc}
                     alt="프로필"
                     className="tw:w-10 tw:h-10 tw:rounded-full tw:cursor-pointer"
                     onClick={() => setIsUserMenuOpen((v) => !v)}
+                    onError={(e) => { e.currentTarget.src = defaultProfile; }}
                   />
                   {isUserMenuOpen && (
                     <div className="tw:absolute tw:top-[calc(100%+10px)] tw:-left-8 tw:w-80 tw:shadow-[0_8px_16px_-4px_rgba(255,107,107,0.28)] tw:bg-[#fdfdfd] tw:rounded-md tw:p-5">
                       <div className="tw:flex tw:items-center tw:gap-4">
                         <img
-                          src={profileImage}
+                          src={profileSrc}
                           alt="프로필"
                           className="tw:w-14 tw:h-14 tw:rounded-full"
+                          onError={(e) => { e.currentTarget.src = defaultProfile; }}
                         />
                         <h5 className="tw:m-0 tw:text-[16px] tw:font-medium">{nickname}</h5>
                       </div>
@@ -222,9 +235,10 @@ const Header = () => {
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <img
-                          src={profileImage}
+                          src={profileSrc}
                           alt="프로필"
                           className="tw:w-10 tw:h-10 tw:rounded-full tw:bg-[#e5e5e5] tw:p-2"
+                          onError={(e) => { e.currentTarget.src = defaultProfile; }}
                         />
                         <p className="tw:m-0">마이 페이지</p>
                       </Link>
