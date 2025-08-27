@@ -10,7 +10,7 @@ export default function ScrollToTopButton() {
   return (
     <button
       onClick={scrollToTop}
-      className="tw:fixed tw:bottom-5 tw:right-5 tw:bg-[#ffb2b2] tw:text-[#8a8a8a] tw:px-4 tw:py-2 tw:rounded-full tw:shadow-md tw:hover:bg-[#ff6b61] tw:transition tw:z-50"
+      className="tw:fixed tw:bottom-5 tw:right-5 tw:bg-[#ff4b4b] tw:text-[#ffffff] tw:px-4 tw:py-2 tw:rounded-full tw:shadow-md tw:hover:bg-[#ff1100] tw:transition tw:z-[9999]"
     >
      <CircleChevronUp />
     </button>
