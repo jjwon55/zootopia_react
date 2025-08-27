@@ -79,7 +79,7 @@ const CreateContainer = () => {
 
       // ✅ 절대 경로 보정 (백엔드에서 /upload/filename 처럼 줄 경우)
       const imageUrl = result.imageUrl.startsWith('/')
-        ? `http://192.168.30.3:5173${result.imageUrl}`
+        ? `http://192.168.30.51:5173${result.imageUrl}`
         : result.imageUrl;
       callback(imageUrl, blob.name); // ⬅️ 꼭 file name도 함께 전달!
     } catch (err) {

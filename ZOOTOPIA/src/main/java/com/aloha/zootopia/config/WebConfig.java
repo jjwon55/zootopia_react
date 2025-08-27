@@ -59,7 +59,7 @@ public void addCorsMappings(CorsRegistry registry) {
   registry.addMapping("/**")
       .allowedOrigins(
           "http://localhost:5173",
-          "http://192.168.30.3:5173"   // 👈 내부 IP도 추가
+          "http://192.168.30.51:5173"   // 👈 내부 IP도 추가
       )
       .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
       .allowedHeaders("*")

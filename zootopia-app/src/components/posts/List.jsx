@@ -1,13 +1,38 @@
+// src/components/posts/List.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+
 import defaultThumbnail from '../../assets/img/default-thumbnail.png';
 import defaultProfile from '../../assets/img/default-profile.png';
 import chatIcon from '../../assets/img/chat.png';
 import writeIcon from '../../assets/img/write.png';
 import catPpl from '../../assets/img/catppl.jpg';
 import Ppl from '../../assets/img/ppl2.jpg';
+
 import ReportModal from '../../components/admin/users/ReportsUserModal';
 import SendMessageModal from '../message/SendMessageModal';
+
+/* =========================
+   이미지 경로 보정 유틸
+   ========================= */
+const resolveProfile = (src) => {
+  // 값이 없거나 DB가 기본이미지 파일명을 준 경우 → 프론트의 import 기본이미지 사용
+  if (!src || /default-profile\.(png|jpg|jpeg|webp|gif)$/i.test(src)) return defaultProfile;
+
+  // 절대 URL은 그대로
+  if (/^https?:\/\//i.test(src)) return src;
+
+  // 백엔드 상대경로는 /api 프록시로
+  return `/api${src.startsWith('/') ? src : `/${src}`}`;
+};
+
+const resolveThumb = (src) => {
+  if (!src) return defaultThumbnail;
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith('/api/')) return src;
+  if (src.startsWith('/')) return `/api${src}`;
+  return `/api/${src}`;
+};
 
 /* =========================
    태그 정규화 유틸
@@ -23,7 +48,7 @@ const normalizeTags = (post) => {
   }
   if (typeof raw === 'string') {
     return raw
-      .split(/[,#\s]+/) // 쉼표/공백/# 구분
+      .split(/[,#\s]+/)
       .map((s) => s.trim())
       .filter(Boolean);
   }
@@ -59,7 +84,7 @@ function AuthorMenu({ user, profileSrc, onMessage }) {
     return (
       <span className="tw:flex tw:items-center tw:gap-[6px] tw:text-[#999]">
         <img
-          src={profileSrc || defaultProfile}
+          src={defaultProfile}
           alt=""
           className="tw:w-[24px] tw:h-[24px] tw:rounded-full tw:object-cover"
         />
@@ -81,6 +106,10 @@ function AuthorMenu({ user, profileSrc, onMessage }) {
           src={profileSrc || defaultProfile}
           alt="작성자 프로필"
           className="tw:w-[24px] tw:h-[24px] tw:rounded-full tw:object-cover"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = defaultProfile;
+          }}
         />
         {user.nickname || '알 수 없음'}
       </button>
@@ -159,13 +188,12 @@ const List = ({ posts, topList, pagination, keyword }) => {
     return `/posts?${newQuery.toString()}`;
   };
 
-  // 라우팅 핸들러 -> 모달 핸들러로 변경
   const handleSendMessage = (user) => {
     setMessageRecipient(user);
     setMessageModalOpen(true);
   };
 
-  // ✅ 화면 렌더링 시 숨김 게시글 제거
+  // 렌더링 시 숨김 게시글 제거
   const visibleTopList = Array.isArray(topList) ? topList.filter((p) => !p?.hidden) : [];
   const visiblePosts = Array.isArray(posts) ? posts.filter((p) => !p?.hidden) : [];
 
@@ -241,7 +269,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
             >
               <div className="tw:w-[80px] tw:h-[80px]">
                 <img
-                  src={post.thumbnailUrl ? `/api${post.thumbnailUrl}` : defaultThumbnail}
+                  src={resolveThumb(post.thumbnailUrl)}
                   alt="썸네일"
                   className="tw:w-full tw:h-full tw:rounded-[10px] tw:object-cover"
                   onError={(e) => {
@@ -265,7 +293,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
                     {post.category || '기타'}
                   </span>
 
-                  {/* ✅ 태그 칩 */}
+                  {/* 태그 칩 */}
                   {(() => {
                     const tags = normalizeTags(post);
                     if (!tags.length) return null;
@@ -292,9 +320,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
                   {/* 작성자 클릭 시 메뉴 */}
                   <AuthorMenu
                     user={post.user}
-                    profileSrc={
-                      post.user?.profileImg ? `http://192.168.30.3:5173${post.user.profileImg}` : defaultProfile
-                    }
+                    profileSrc={resolveProfile(post.user?.profileImg)}
                     onMessage={handleSendMessage}
                   />
 
@@ -325,7 +351,6 @@ const List = ({ posts, topList, pagination, keyword }) => {
             }}
             className="tw:flex tw:gap-2 tw:mt-6"
           >
-
             <select name="type" className="tw:border tw:border-[#dee2e6] tw:rounded tw:px-2 tw:py-1 tw:w-[140px]">
               <option value="title">제목</option>
               <option value="titleContent">제목+내용</option>
@@ -345,7 +370,6 @@ const List = ({ posts, topList, pagination, keyword }) => {
               검색
             </button>
           </form>
-
 
           {/* 광고 */}
           <div className="tw:my-6">
@@ -370,8 +394,9 @@ const List = ({ posts, topList, pagination, keyword }) => {
                   (pageNum) => (
                     <li key={pageNum}>
                       <Link
-                        className={`tw:px-[13px] tw:py-[6px] tw:border tw:rounded-[6px] tw:text-[14px] tw:text-inherit tw:no-underline ${pagination.page === pageNum ? 'tw:bg-[#5b99f5] tw:text-white tw:border-[#5b99f5]' : ''
-                          }`}
+                        className={`tw:px-[13px] tw:py-[6px] tw:border tw:rounded-[6px] tw:text-[14px] tw:text-inherit tw:no-underline ${
+                          pagination.page === pageNum ? 'tw:bg-[#5b99f5] tw:text-white tw:border-[#5b99f5]' : ''
+                        }`}
                         to={buildQuery({ page: pageNum })}
                       >
                         {pageNum}
