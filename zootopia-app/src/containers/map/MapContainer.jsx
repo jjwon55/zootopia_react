@@ -102,6 +102,10 @@ export default function MapContainer() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const address = params.get('address') || '';
+  const qParam = params.get('q') || '';
+
+
+
 
   const compositeKeyword = useMemo(() => keyword, [keyword]);
 
@@ -109,9 +113,9 @@ export default function MapContainer() {
   const moveMapTo = useCallback((latlng, level = 3) => {
     const map = mapObjRef.current;
     if (!map || !latlng) return;
-    try { map.setLevel(level); } catch {}
-    try { map.setCenter(latlng); } catch {}
-    try { map.panTo(latlng); } catch {}
+    try { map.setLevel(level); } catch { }
+    try { map.setCenter(latlng); } catch { }
+    try { map.panTo(latlng); } catch { }
   }, []);
 
   const clearMarkers = useCallback(() => {
@@ -440,7 +444,7 @@ export default function MapContainer() {
     setRecent(prev => {
       const exists = prev.filter(v => v !== kw);
       const next = [kw, ...exists].slice(0, 8);
-      try { localStorage.setItem('recentKeywords', JSON.stringify(next)); } catch {}
+      try { localStorage.setItem('recentKeywords', JSON.stringify(next)); } catch { }
       return next;
     });
   }, []);
@@ -448,20 +452,20 @@ export default function MapContainer() {
   const removeRecent = useCallback((kw) => {
     setRecent(prev => {
       const next = prev.filter(v => v !== kw);
-      try { localStorage.setItem('recentKeywords', JSON.stringify(next)); } catch {}
+      try { localStorage.setItem('recentKeywords', JSON.stringify(next)); } catch { }
       return next;
     });
   }, []);
 
   const clearRecent = useCallback(() => {
-    try { localStorage.removeItem('recentKeywords'); } catch {}
+    try { localStorage.removeItem('recentKeywords'); } catch { }
     setRecent([]);
   }, []);
 
   // 입력 디바운스 프리뷰(가벼운 2km) — 결과 미리보기
   const onChangeKeywordDebounced = useCallback((v) => {
     setKeyword(v);
-    try { localStorage.setItem('map.keyword', v); } catch {}
+    try { localStorage.setItem('map.keyword', v); } catch { }
     if (!placesSvcRef.current) return;
 
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -489,7 +493,7 @@ export default function MapContainer() {
     if (debounceTimer.current) clearTimeout(debounceTimer.current); // 프리뷰 취소
 
     const kw = normalizeQuery(compositeKeyword ?? '');
-    try { localStorage.setItem('map.keyword', kw || ''); } catch {}
+    try { localStorage.setItem('map.keyword', kw || ''); } catch { }
     pushRecent(kw);
 
     if (isCoordString(kw) || isProbablyAddress(kw)) {
@@ -530,6 +534,32 @@ export default function MapContainer() {
       () => doSearch(),
     );
   }, [doSearch, moveMapTo]);
+
+
+    useEffect(() => {
+    if (!qParam) return;
+    // 지도/서비스 준비 여부 체크
+    if (mapObjRef.current && placesSvcRef.current) {
+      setKeyword(qParam);
+      try { localStorage.setItem('map.keyword', qParam); } catch {}
+      doSearch(); // 🔎 바로 검색
+    }
+  }, [qParam, doSearch]);
+
+  const runInitial = async () => {
+    if (address) {
+      const ok = await (isCoordString(address) || isProbablyAddress(address)
+        ? goToQuery(address)
+        : Promise.resolve(false));
+      console.log('[init] address param 이동 결과:', ok);
+
+      if (qParam) {
+        doSearch();   // 🔹 주소 이동 후 qParam(동물병원)으로 검색 실행
+      }
+      return;
+    }
+    // 기존 현재위치 로직 그대로
+  };
 
   return (
     <Map
