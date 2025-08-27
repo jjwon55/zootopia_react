@@ -1,5 +1,4 @@
-import React, { useEffect, useRef } from 'react';
-import ScrollToTopButton from '../funeral/ScrollToTopButton';
+import React from 'react';
 
 export default function Map({
   // 지도
@@ -19,20 +18,11 @@ export default function Map({
   // 액션
   onMyLocation,
 
-  // placeholder ( /map?address=... 로 진입 시 자동 검색 트리거 )
+  // placeholder (주소 파라미터는 컨테이너에서 처리)
   address,
 }) {
   const headerH = '64px';
   const sidebarW = 360; // 왼쪽 패널 너비(px)
-
-  // ✅ 주소로 진입하면 1회 자동 입력 + 검색
-  const didAutoSearchRef = useRef(false);
-  useEffect(() => {
-    if (!address || didAutoSearchRef.current) return;
-    onChangeKeyword?.(address);
-    setTimeout(() => onSearchClick?.(), 0); // state 반영 이후 트리거
-    didAutoSearchRef.current = true;
-  }, [address, onChangeKeyword, onSearchClick]);
 
   return (
     <div

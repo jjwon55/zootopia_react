@@ -7,6 +7,7 @@ import {
   updatePet,
   updatePassword,
   deleteAccount,
+  checkNickname, // ✅ 닉네임 중복확인 API (필수)
 } from '../../apis/posts/mypage';
 
 // 날짜를 yyyy-MM-dd 로 변환
@@ -23,6 +24,7 @@ export default function MyPageEditContainer() {
 
   // 사용자/펫 기본 데이터
   const [user, setUser] = useState(null);
+  const [initialNickname, setInitialNickname] = useState(''); // ✅ 최초 닉네임 보관
   const [pet, setPet] = useState({ name: '', species: '', breed: '', birthDate: '' });
 
   // 프로필 이미지 업로드
@@ -35,6 +37,11 @@ export default function MyPageEditContainer() {
   const [intro, setIntro] = useState('');
   const [infoMsg, setInfoMsg] = useState('');
   const [infoErr, setInfoErr] = useState('');
+
+  // 닉네임 중복검사 상태
+  const [checkingNickname, setCheckingNickname] = useState(false);
+  const [nicknameAvailable, setNicknameAvailable] = useState(null); // null | true | false
+  const [nicknameMsg, setNicknameMsg] = useState('');
 
   // 비밀번호
   const [passwords, setPasswords] = useState({
@@ -68,7 +75,9 @@ export default function MyPageEditContainer() {
         setUser(data.user || null);
 
         // 닉/소개 채우기
-        setNickname(data.user?.nickname || '');
+        const nick = data.user?.nickname || '';
+        setNickname(nick);
+        setInitialNickname(nick); // ✅ 최초 닉네임 저장
         setIntro(data.user?.intro || '');
 
         // 펫(단일 사용 가정: 첫 번째만 바인딩)
@@ -79,6 +88,10 @@ export default function MyPageEditContainer() {
           breed: p.breed || '',
           birthDate: toDateInputValue(p.birthDate) || '',
         });
+
+        // 중복검사 초기화
+        setNicknameAvailable(null);
+        setNicknameMsg('');
       } catch (err) {
         console.error(err);
         setLoadErr(
@@ -91,6 +104,22 @@ export default function MyPageEditContainer() {
       }
     })();
   }, []);
+
+  // 닉네임 입력 변경 시 검사 상태 초기화 (단, 원래 닉네임으로 되돌리면 사용 가능 처리)
+  useEffect(() => {
+    if (!nickname) {
+      setNicknameAvailable(null);
+      setNicknameMsg('');
+      return;
+    }
+    if (nickname === initialNickname) {
+      setNicknameAvailable(true);
+      setNicknameMsg('현재 사용 중인 닉네임입니다.');
+    } else {
+      setNicknameAvailable(null);
+      setNicknameMsg('');
+    }
+  }, [nickname, initialNickname]);
 
   // Handlers
   const onChangeProfileFile = (e) => {
@@ -127,15 +156,61 @@ export default function MyPageEditContainer() {
     }
   };
 
+  // ✅ 닉네임 중복확인 버튼 핸들러
+  const handleCheckNickname = async () => {
+    if (!nickname?.trim()) {
+      setNicknameAvailable(false);
+      setNicknameMsg('닉네임을 입력하세요.');
+      return;
+    }
+    // 본인 기존 닉네임이면 항상 가능
+    if (nickname === initialNickname) {
+      setNicknameAvailable(true);
+      setNicknameMsg('현재 사용 중인 닉네임입니다.');
+      return;
+    }
+    try {
+      setCheckingNickname(true);
+      setNicknameMsg('');
+      const res = await checkNickname(nickname.trim());
+      // 공통 ApiResponse 포맷: { success, message, data }
+      const ok = !!res?.data?.data; // true=사용 가능, false=중복
+      setNicknameAvailable(ok);
+      setNicknameMsg(ok ? '사용 가능한 닉네임입니다 ✅' : '이미 사용 중인 닉네임입니다 ❌');
+    } catch (err) {
+      console.error(err);
+      setNicknameAvailable(false);
+      setNicknameMsg(
+        err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          '닉네임 확인 중 오류가 발생했습니다.'
+      );
+    } finally {
+      setCheckingNickname(false);
+    }
+  };
+
   const onSubmitProfileInfo = async (e) => {
     e.preventDefault();
     setInfoErr('');
     setInfoMsg('');
+
+    // 저장 시 자동검사: 닉네임이 변경되었고, 아직 사용가능 판정이 아니면 먼저 체크
+    if (nickname !== initialNickname && nicknameAvailable !== true) {
+      await handleCheckNickname();
+      // 검사 후 상태 재확인
+      if (nicknameAvailable !== true) {
+        setInfoErr('닉네임 중복을 먼저 확인해 주세요.');
+        return;
+      }
+    }
+
     try {
       const res = await updateProfileInfo(nickname, intro);
       setInfoMsg(res.data?.message || '닉네임 및 소개글이 수정되었습니다.');
       // 반영
       setUser((prev) => ({ ...(prev || {}), nickname, intro }));
+      setInitialNickname(nickname); // ✅ 저장 후 기준값 갱신
     } catch (err) {
       console.error(err);
       setInfoErr(
@@ -205,12 +280,10 @@ export default function MyPageEditContainer() {
   };
 
   const onDeleteAccount = async () => {
-    // confirm
     if (!window.confirm('정말 탈퇴하시겠습니까? 탈퇴 후 복구할 수 없습니다.')) return;
     try {
       await deleteAccount();
       alert('회원 탈퇴가 완료되었습니다.');
-      // 로그아웃/메인 이동 등 후처리
       window.location.href = '/';
     } catch (err) {
       console.error(err);
@@ -241,6 +314,13 @@ export default function MyPageEditContainer() {
     );
   }
 
+  // 저장 버튼 비활성화 조건:
+  // - 닉네임이 변경되었고
+  // - 아직 사용가능(true)이 확정되지 않았으며
+  // - 중복확인도 안 한 상태(null) 또는 사용불가(false)일 때
+  const submitDisabled =
+    nickname !== initialNickname && nicknameAvailable !== true;
+
   return (
     <MyPageEdit
       // 프로필 이미지
@@ -258,6 +338,13 @@ export default function MyPageEditContainer() {
       onSubmitProfileInfo={onSubmitProfileInfo}
       infoMsg={infoMsg}
       infoErr={infoErr}
+
+      // 닉네임 중복검사
+      onCheckNickname={handleCheckNickname}
+      checkingNickname={checkingNickname}
+      nicknameAvailable={nicknameAvailable}
+      nicknameMsg={nicknameMsg}
+      submitDisabled={submitDisabled}
 
       // 펫
       pet={pet}

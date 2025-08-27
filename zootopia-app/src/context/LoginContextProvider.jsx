@@ -1,86 +1,111 @@
-import React from 'react';
-import { createContext, useEffect, useState, useContext } from 'react';
+import React, { createContext, useEffect, useState, useContext } from 'react';
 import api from '../apis/api';
 import * as auth from '../apis/auth';
 import * as Swal from '../apis/posts/alert';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 
-// 📦 컨텍스트 생성
+// ... import 동일
 export const LoginContext = createContext();
 export const useLoginContext = () => useContext(LoginContext);
 
 const LoginContextProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [isLogin, setIsLogin] = useState(() => localStorage.getItem('isLogin') === 'true');
-  const [userInfo, setUserInfo] = useState(() => JSON.parse(localStorage.getItem('userInfo') || 'null'));
-  const [roles, setRoles] = useState(() =>
-    JSON.parse(localStorage.getItem('roles') || '{"isUser": false, "isAdmin": false}')
-  );
-
+  const [isLogin, setIsLogin] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
+  const [roles, setRoles] = useState({ isUser: false, isAdmin: false });
   const navigate = useNavigate();
 
-  // 🔐 로그인 함수 (에러 덮어쓰기/알림/내부 네비게이션 제거, 원본 에러 그대로 throw)
-  const login = async (email, password) => {
-    const response = await auth.login(email, password); // 실패 시 Axios 에러가 그대로 throw
+  const applyUser = (data) => {
+    setIsLogin(true);
+    setUserInfo(data);
+    const r = { isUser: false, isAdmin: false };
+    if (Array.isArray(data.authList)) {
+      for (const obj of data.authList) {
+        if (obj.auth === 'ROLE_USER') r.isUser = true;
+        if (obj.auth === 'ROLE_ADMIN') r.isAdmin = true;
+      }
+    }
+    setRoles(r);
+  };
+
+  const clearUser = () => {
+    setIsLogin(false);
+    setUserInfo(null);
+    setRoles({ isUser: false, isAdmin: false });
+    delete api.defaults.headers.common.Authorization;
+    localStorage.removeItem('isLogin');
+    localStorage.removeItem('userInfo');
+    localStorage.removeItem('roles');
+  };
+
+  // ⬇️ 로그인 함수: rememberMe 옵션 지원
+  const login = async (email, password, { rememberMe = false } = {}) => {
+    const response = await auth.login(email, password);
     const jwt = response?.data?.token;
     if (!jwt) throw new Error('JWT 없음');
 
-    Cookies.set('jwt', jwt);
-    await loginSetting(`Bearer ${jwt}`);
-    // 성공 알림/라우팅은 호출하는 컴포넌트에서 처리 (관심사 분리)
+    await loginSetting(`Bearer ${jwt}`, { rememberMe });
     return response;
   };
 
-  // JWT로 사용자 정보 조회 후 로그인 세팅
-  const loginSetting = async (authorization) => {
+  // ⬇️ 토큰 세팅 + 유저조회. rememberMe에 따라 쿠키 보존 기간 결정
+  const loginSetting = async (authorization, { rememberMe = false } = {}) => {
     try {
       const jwt = authorization.replace('Bearer ', '');
-      Cookies.set('jwt', jwt);
-      // ✅ API 헤더에도 설정(로그아웃 시 제거와 대칭)
       api.defaults.headers.common.Authorization = `Bearer ${jwt}`;
 
-      const response = await auth.info();
-      const data = response.data;
-
-      setIsLogin(true);
-      setUserInfo(data);
-      localStorage.setItem('isLogin', 'true');
-      localStorage.setItem('userInfo', JSON.stringify(data));
-
-      // 권한 설정
-      const updateRoles = { isUser: false, isAdmin: false };
-      if (Array.isArray(data.authList)) {
-        data.authList.forEach((obj) => {
-          if (obj.auth === 'ROLE_USER') updateRoles.isUser = true;
-          if (obj.auth === 'ROLE_ADMIN') updateRoles.isAdmin = true;
-        });
+      // rememberMe=true → 영속(예: 14일), false → 세션 쿠키
+      const cookieOpts = { path: '/', sameSite: 'lax' };
+      if (rememberMe) {
+        // 프로덕션(https)에서는 secure: true 권장
+        Cookies.set('jwt', jwt, { ...cookieOpts, expires: 14 /* days */ });
+      } else {
+        Cookies.set('jwt', jwt, cookieOpts); // 세션 쿠키
       }
-      setRoles(updateRoles);
-      localStorage.setItem('roles', JSON.stringify(updateRoles));
+
+      const { data } = await auth.info();
+      applyUser(data);
+
+      // (선택) rememberMe일 때만 로컬 저장
+      if (rememberMe) {
+        localStorage.setItem('isLogin', 'true');
+        localStorage.setItem('userInfo', JSON.stringify(data));
+        localStorage.setItem('roles', JSON.stringify(roles));
+      } else {
+        localStorage.removeItem('isLogin');
+        localStorage.removeItem('userInfo');
+        localStorage.removeItem('roles');
+      }
     } catch (err) {
       console.error('자동 로그인 실패 또는 JWT 인증 실패:', err);
-      logout(true); // 강제 로그아웃
+      logout(true);
     }
   };
 
-  // 🍪 JWT 쿠키 기반 자동 로그인
   const autoLogin = async () => {
     const jwt = Cookies.get('jwt');
-    if (!jwt) return;
-
-    const authorization = `Bearer ${jwt}`;
-    await loginSetting(authorization);
+    if (!jwt) { clearUser(); return; }
+    try {
+      api.defaults.headers.common.Authorization = `Bearer ${jwt}`;
+      const { data } = await auth.info();
+      applyUser(data);
+    } catch {
+      await logout(true);
+    }
   };
 
-  // 로그아웃
+  const logoutSetting = () => {
+    clearUser();
+    Cookies.remove('jwt', { path: '/' }); // set 시 사용한 path와 동일해야 확실히 삭제
+  };
+
   const logout = (force = false) => {
     if (force) {
       logoutSetting();
       navigate('/');
       return;
     }
-
     Swal.confirm('로그아웃 하시겠습니까?', '로그아웃을 진행합니다.', 'warning', (result) => {
       if (result.isConfirmed) {
         Swal.alert('로그아웃 완료', '정상적으로 로그아웃 되었습니다.', 'success');
@@ -90,28 +115,18 @@ const LoginContextProvider = ({ children }) => {
     });
   };
 
-  const logoutSetting = () => {
-    delete api.defaults.headers.common.Authorization;
-    setIsLogin(false);
-    setUserInfo(null);
-    setRoles({ isUser: false, isAdmin: false });
-    localStorage.removeItem('isLogin');
-    localStorage.removeItem('userInfo');
-    localStorage.removeItem('roles');
-    Cookies.remove('jwt');
-  };
-
   useEffect(() => {
-    if (!localStorage.getItem('isLogin')) {
-      autoLogin();
-    }
-    setIsLoading(false);
+    (async () => {
+      try {
+        await autoLogin(); // 쿠키 있으면 자동로그인
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   }, []);
 
   return (
-    <LoginContext.Provider
-      value={{ isLogin, login, userInfo, roles, isLoading, logout, loginSetting }}
-    >
+    <LoginContext.Provider value={{ isLogin, login, userInfo, roles, isLoading, logout, loginSetting }}>
       {children}
     </LoginContext.Provider>
   );

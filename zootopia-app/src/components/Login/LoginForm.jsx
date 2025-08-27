@@ -10,7 +10,8 @@ const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberId, setRememberId] = useState(false);
-  const [loading, setLoading] = useState(false); // ✅ 로딩 상태
+  const [rememberMe, setRememberMe] = useState(false);   // ⬅️ 추가
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const savedEmail = localStorage.getItem('savedEmail');
@@ -28,15 +29,13 @@ const LoginForm = () => {
 
     try {
       setLoading(true);
-      await login(email, password);
+      await login(email, password, { rememberMe }); // ⬅️ 옵션 전달
 
-      // ✅ SweetAlert로 성공 알림 후 이동
       Swal.alert('로그인 성공', '메인 화면으로 이동합니다.', 'success', () => navigate('/'));
     } catch (err) {
       const status = err?.response?.status;
       const serverMsg = err?.response?.data?.error;
 
-      // ✅ SweetAlert로 실패 알림
       if (status === 403) {
         Swal.alert('로그인 실패', serverMsg || '정지된 계정입니다.', 'error');
       } else if (status === 401) {
@@ -65,7 +64,7 @@ const LoginForm = () => {
               <input
                 type="text"
                 id="email"
-                className="tw:w-full tw:rounded-lg tw:bg-zinc-100 tw:p-[14px] tw:text-[0.95rem] tw:transition-colors tw:outline-none tw:ring-0 focus:tw:bg-zinc-200"
+                className="tw:w-full tw:rounded-lg tw:bg-zinc-100 tw:p-[14px] tw:text-[0.95rem] focus:tw:bg-zinc-200 tw:outline-none"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoFocus
@@ -79,7 +78,7 @@ const LoginForm = () => {
               <input
                 type="password"
                 id="password"
-                className="tw:w-full tw:rounded-lg tw:bg-zinc-100 tw:p-[14px] tw:text-[0.95rem] tw:transition-colors tw:outline-none tw:ring-0 focus:tw:bg-zinc-200"
+                className="tw:w-full tw:rounded-lg tw:bg-zinc-100 tw:p-[14px] tw:text-[0.95rem] focus:tw:bg-zinc-200 tw:outline-none"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
@@ -106,7 +105,9 @@ const LoginForm = () => {
                   name="auto-login"
                   id="remember-me-check"
                   className="tw:w-4 tw:h-4"
-                  disabled
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}  // ⬅️ 활성화
+                  disabled={loading}
                 />
                 자동 로그인
               </label>

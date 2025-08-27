@@ -18,7 +18,7 @@ import UserInfo from '../pages/mypage/UserInfo';
 import Map from '../pages/map/Map';
 import UsersPage from '../pages/admin/users/UsersPage';
 import Join from '../components/join/Join';
-import AdminPostsPage from '../pages/admin/post/AdminPostsPage'; // ✅ 누락 보완
+import AdminPostContainer from '../containers/admin/AdminPostContainer'; // ✅ 누락 보완
 
 import RequireAdmin from '../pages/Required/RequiredAdmin';
 import RequireAuth from '../pages/Required/RequiredAuth';
@@ -102,7 +102,7 @@ const JjwRoutes = () => {
         <Route
           path="/admin/post"
           element={
-            <RequireAdmin><AdminPostsPage /></RequireAdmin>
+            <RequireAdmin><AdminPostContainer /></RequireAdmin>
           }
         />
 

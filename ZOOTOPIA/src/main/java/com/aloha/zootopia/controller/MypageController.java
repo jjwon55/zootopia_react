@@ -210,4 +210,26 @@ public class MypageController {
                     .body(ApiResponse.error("탈퇴 중 오류가 발생했습니다."));
         }
     }
+
+    @GetMapping("/check-nickname")
+    public ResponseEntity<?> checkNickname(@RequestParam String nickname,
+                                        @AuthenticationPrincipal CustomUser loginUser) throws Exception {
+        if (loginUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("로그인이 필요합니다."));
+        }
+        String trimmed = nickname == null ? "" : nickname.trim();
+        if (trimmed.isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("닉네임을 입력하세요."));
+        }
+
+        // 본인 닉네임은 항상 사용 가능 처리
+        Users me = userService.findUserById(loginUser.getUserId());
+        if (me != null && trimmed.equals(me.getNickname())) {
+            return ResponseEntity.ok(ApiResponse.ok(true));
+        }
+
+        boolean exists = userService.existsByNickname(trimmed);
+        return ResponseEntity.ok(ApiResponse.ok(!exists)); // true=사용가능, false=중복
+    }
 }
