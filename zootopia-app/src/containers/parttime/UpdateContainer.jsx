@@ -22,66 +22,68 @@ const UpdateContainer = () => {
     startDate: '',
     endDate: '',
     petInfo: '',
-    memo: ''
+    memo: '',
+    petIds: [],
   })
+  const [petsList, setPetsList] = useState([])
 
-  // 📌 데이터 불러오기
   useEffect(() => {
     (async () => {
       try {
-        // getJobDetail이 data만 반환한다면: const data = await parttimeApi.getJobDetail(jobId)
-        // getJobById가 axios 응답이라면: const { data } = await parttimeApi.getJobById(jobId)
-        let data
-        if (parttimeApi.getJobDetail) {
-          data = await parttimeApi.getJobDetail(jobId) // .then(r => r.data)로 벗겨진 형태
-        } else {
-          const res = await parttimeApi.getJobById(jobId) // axios 응답
-          data = res.data
-        }
-        const j = data?.job ?? data
+        const data = await parttimeApi.getJobDetail(jobId)
+        const job = data?.job ?? data
 
-        setForm({
-          jobId: j.jobId ?? j.id ?? j.job_id ?? jobId,
-          title: j.title || '',
-          location: j.location || '',
-          pay: j.pay ?? '',
-          startDate: toDateInput(j.startDate ?? j.start_date),
-          endDate: toDateInput(j.endDate ?? j.end_date),
-          petInfo: j.petInfo ?? j.pet_info ?? '',
-          memo: j.memo ?? ''
-        })
+        setForm(prev => ({
+          ...prev,
+          jobId: job.jobId ?? job.id ?? job.job_id ?? jobId,
+          title: job.title || '',
+          location: job.location || '',
+          pay: job.pay ?? '',
+          startDate: toDateInput(job.startDate ?? job.start_date),
+          endDate: toDateInput(job.endDate ?? job.end_date),
+          petInfo: job.petInfo ?? job.pet_info ?? '',
+          memo: job.memo ?? '',
+          petIds: job.petIds?.map(p => p.petId) ?? [],
+        }))
+
+        // 기존 등록된 펫 리스트
+        const pets = job.pets ?? []
+        setPetsList(pets)
       } catch (err) {
         console.error('수정할 데이터 조회 실패', err)
       }
     })()
   }, [jobId])
 
-  // 📌 입력 변경 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target
     setForm(prev => ({ ...prev, [name]: value }))
   }
 
-  // 📌 수정 요청
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const handleSubmit = async (submitForm) => {
     try {
       const body = {
-        title: form.title,
-        location: form.location,
-        pay: Number(form.pay || 0),
-        startDate: form.startDate,
-        endDate: form.endDate,
-        petInfo: form.petInfo,
-        memo: form.memo
+        title: submitForm.title,
+        location: submitForm.location,
+        pay: Number(submitForm.pay || 0),
+        startDate: submitForm.startDate,
+        endDate: submitForm.endDate,
+        petInfo: submitForm.petInfo,
+        memo: submitForm.memo,
+        petIds: submitForm.petIds ?? [],
       }
-      // ✅ 실제 시그니처에 맞게
-      const res = await parttimeApi.updateJob(form.jobId ?? jobId, body)
-      if (!res || res.status === 200 || res.status === 204) {
-        navigate(`/parttime/read/${form.jobId ?? jobId}`)
+
+      const res = await parttimeApi.updateJob(submitForm.jobId ?? jobId, body)
+
+      if (res?.data?.ok || res?.status === 200 || res?.status === 204) {
+        navigate(`/parttime/read/${submitForm.jobId ?? jobId}`)
+      } else {
+        alert('수정 실패: 서버 응답을 확인하세요.')
       }
     } catch (err) {
       console.error('수정 실패', err)
+      const msg = err?.response?.data?.message ?? err?.message ?? '알 수 없는 오류'
+      alert('수정 실패: ' + msg)
     }
   }
 
@@ -91,6 +93,8 @@ const UpdateContainer = () => {
       onChange={handleChange}
       onSubmit={handleSubmit}
       onCancel={() => navigate(`/parttime/read/${form.jobId ?? jobId}`)}
+      petsList={petsList}       // 🔹 기존 펫 리스트 전달
+      setPetsList={setPetsList} // 🔹 선택/삭제 처리
     />
   )
 }

@@ -1,13 +1,13 @@
-// src/containers/parttime/InsertContainer.jsx
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Insert from '../../components/parttime/Insert.jsx'
 import * as parttimeApi from '../../apis/parttime/parttime.js'
 import { useLoginContext } from '../../context/LoginContextProvider.jsx'
+import api from '../../apis/parttime/parttime.js' // Axios 인스턴스 사용
 
 const InsertContainer = () => {
   const navigate = useNavigate()
-  const { userInfo } = useLoginContext() // 로그인 사용자 정보 가져오기 (Context 기반)
+  const { userInfo } = useLoginContext()
 
   const [form, setForm] = useState({
     title: '',
@@ -19,20 +19,29 @@ const InsertContainer = () => {
     memo: ''
   })
 
+  const [petsList, setPetsList] = useState([])
+
+  // 로그인한 사용자의 기존 펫 리스트 불러오기
+  useEffect(() => {
+    async function fetchPets() {
+      try {
+        const res = await api.get('/pets')
+        if (res.data.pets) setPetsList(res.data.pets)
+      } catch (err) {
+        console.error('펫 리스트 조회 실패', err)
+      }
+    }
+    fetchPets()
+  }, [])
+
   const onChange = (e) => {
     const { name, value } = e.target
     setForm(prev => ({ ...prev, [name]: value }))
   }
 
-  const onSubmit = async (e) => {
-    e.preventDefault()
-
+  const onSubmit = async (submitData) => {
     try {
-      const jobData = {
-        ...form,
-        userId: userInfo.userId // 백엔드에서 보안을 위해 다시 확인하지만, 명시적으로 전달 가능
-      }
-
+      const jobData = { ...submitData, userId: userInfo.userId }
       await parttimeApi.insertJob(jobData)
       navigate('/parttime/list')
     } catch (error) {
@@ -41,7 +50,15 @@ const InsertContainer = () => {
     }
   }
 
-  return <Insert form={form} onChange={onChange} onSubmit={onSubmit} />
+  return (
+    <Insert
+      form={form}
+      onChange={onChange}
+      onSubmit={onSubmit}
+      petsList={petsList}
+      setPetsList={setPetsList}
+    />
+  )
 }
 
 export default InsertContainer

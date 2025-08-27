@@ -1,15 +1,30 @@
 package com.aloha.zootopia.controller;
 
 import java.io.IOException;
-import java.nio.file.*;
-import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.aloha.zootopia.domain.InsuranceProduct;
@@ -118,12 +133,11 @@ public class InsuranceProductRestController {
 
     @PostMapping(value = "/delete/{productId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deletePost(@PathVariable int productId) {
+    public ResponseEntity<?> deletePost(@PathVariable("productId") int productId) {
         productService.deleteProduct(productId);
         return ResponseEntity.ok(Map.of("ok", true));
     }
 
-    // 이미지 업로드 (ADMIN)
     @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> uploadImage(@RequestParam(name = "imageFile") MultipartFile imageFile) {
@@ -131,15 +145,19 @@ public class InsuranceProductRestController {
             if (imageFile == null || imageFile.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "이미지 파일이 비어 있습니다."));
             }
+
             String original = imageFile.getOriginalFilename();
             String safeName = (original == null ? "img" : original).replaceAll("[^a-zA-Z0-9.]", "_");
             String fileName = java.util.UUID.randomUUID() + "_" + safeName;
 
-            Path targetPath = Paths.get(uploadDir, fileName);
-            Files.createDirectories(targetPath.getParent());
+            // ✅ insurance 폴더 경로 추가
+            Path insuranceDir = Paths.get(uploadDir, "insurance");
+            Files.createDirectories(insuranceDir); // 폴더가 없으면 생성
+
+            Path targetPath = insuranceDir.resolve(fileName);
             Files.copy(imageFile.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
-            String imagePath = "/upload/" + fileName; // 정적 매핑 필요
+            String imagePath = "/upload/insurance/" + fileName; // URL도 하위 폴더 반영
             return ResponseEntity.ok(Map.of("imagePath", imagePath));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
