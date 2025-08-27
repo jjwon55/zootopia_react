@@ -107,7 +107,7 @@ const List = ({ loading, posts = [], topList = [], pagination, keyword }) => {
               >
                 <div className="tw:h-full tw:bg-white tw:shadow-sm tw:border-0 tw:rounded-2xl tw:overflow-hidden tw:hover:shadow-md tw:transition-shadow">
                   <img
-                    src={post.thumbnailUrl ? toAbs(post.thumbnailUrl) : defaultThumbnail}
+                    src={post.thumbnailUrl ? `/api${post.thumbnailUrl}` : defaultThumbnail}
                     alt="썸네일"
                     className="tw:w-full"
                     style={{ aspectRatio: '1 / 1', objectFit: 'cover' }}

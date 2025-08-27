@@ -20,6 +20,14 @@ const LostList = ({ posts, pagination, keyword, type }) => {
     return `/lost?${newQuery.toString()}`;
   };
 
+  const resolveImg = (src, fallback) => {
+    if (!src) return fallback;
+    if (/^https?:\/\//i.test(src)) return src;       
+    if (src.startsWith('/api/')) return src;         
+    if (src.startsWith('/')) return `/api${src}`;    
+    return `/api/${src}`;                            
+  };
+
   return (
     <section className="tw:max-w-[900px] tw:my-8 tw:mx-auto tw:bg-white tw:p-6 tw:rounded-[10px] tw:shadow-[0_2px_5px_rgba(0,0,0,0.05)]">
       {/* 상단 헤더 */}
@@ -44,13 +52,10 @@ const LostList = ({ posts, pagination, keyword, type }) => {
           >
             <div className="tw:w-[80px] tw:h-[80px]">
               <img
-                src={post.thumbnailUrl ? `http://localhost:8080${post.thumbnailUrl}` : defaultThumbnail}
+                src={resolveImg(post.thumbnailUrl, defaultThumbnail)}
                 alt="썸네일"
                 className="tw:w-full tw:h-full tw:rounded-[10px] tw:object-cover"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = defaultThumbnail;
-                }}
+                onError={(e) => { e.currentTarget.src = defaultThumbnail; }}
               />
             </div>
             <div className="tw:flex tw:flex-col tw:justify-between tw:flex-grow">
@@ -77,7 +82,7 @@ const LostList = ({ posts, pagination, keyword, type }) => {
               <div className="tw:flex tw:justify-between tw:items-center tw:gap-[6px] tw:text-[14px] tw:text-[#666] tw:mt-1">
                 <span className="tw:flex tw:items-center tw:gap-[6px]">
                   <img
-                    src={post.user?.profileImg ? `http://localhost:8080${post.user.profileImg}` : defaultProfile}
+                    src={post.user?.profileImg ? `/api${post.user.profileImg}` : defaultProfile}
                     alt="작성자 프로필"
                     className="tw:w-[24px] tw:h-[24px] tw:rounded-full tw:object-cover"
                   />

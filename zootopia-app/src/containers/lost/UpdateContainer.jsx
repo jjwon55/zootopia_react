@@ -104,7 +104,7 @@ const UpdateContainer = () => {
 
       const result = await response.json();
       const imageUrl = result.imageUrl.startsWith('/')
-        ? `http://localhost:8080${result.imageUrl}`
+        ? `/api${result.imageUrl}`
         : result.imageUrl;
 
       callback(imageUrl, blob.name);

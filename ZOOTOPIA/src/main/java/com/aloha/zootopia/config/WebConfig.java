@@ -54,16 +54,18 @@ public class WebConfig implements WebMvcConfigurer {
         .addResourceLocations("file:///" + uploadPath);
   }
 
-    // ✅ CORS 허용 설정 추가
-  // @Override
-  // public void addCorsMappings(CorsRegistry registry) {
-  //   registry.addMapping("/**")
-  //       .allowedOrigins("http://localhost:5173") // React 개발 서버 주소
-  //       .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-  //       .allowedHeaders("*")
-  //       .exposedHeaders("Authorization")
-  //       .allowCredentials(true);
-  // }
+@Override
+public void addCorsMappings(CorsRegistry registry) {
+  registry.addMapping("/**")
+      .allowedOrigins(
+          "http://localhost:5173",
+          "http://192.168.30.3:5173"   // 👈 내부 IP도 추가
+      )
+      .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+      .allowedHeaders("*")
+      .exposedHeaders("Authorization", "Content-Disposition") // 필요시
+      .allowCredentials(true);
+}
 
 
 }

@@ -241,7 +241,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
             >
               <div className="tw:w-[80px] tw:h-[80px]">
                 <img
-                  src={post.thumbnailUrl ? `http://localhost:8080${post.thumbnailUrl}` : defaultThumbnail}
+                  src={post.thumbnailUrl ? `/api${post.thumbnailUrl}` : defaultThumbnail}
                   alt="썸네일"
                   className="tw:w-full tw:h-full tw:rounded-[10px] tw:object-cover"
                   onError={(e) => {
@@ -293,7 +293,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
                   <AuthorMenu
                     user={post.user}
                     profileSrc={
-                      post.user?.profileImg ? `http://localhost:8080${post.user.profileImg}` : defaultProfile
+                      post.user?.profileImg ? `http://192.168.30.3:5173${post.user.profileImg}` : defaultProfile
                     }
                     onMessage={handleSendMessage}
                   />
@@ -394,7 +394,7 @@ const List = ({ posts, topList, pagination, keyword }) => {
           )}
         </section>
       </section>
-      
+
       {/* 쪽지 보내기 모달 */}
       <SendMessageModal
         open={messageModalOpen}
