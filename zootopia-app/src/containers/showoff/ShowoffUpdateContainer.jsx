@@ -101,7 +101,7 @@ const ShowoffUpdateContainer = () => {
 
       const result = await response.json();
       const imageUrl = result.imageUrl?.startsWith('/')
-        ? `http://localhost:8080${result.imageUrl}`
+        ? `/api${result.imageUrl}`
         : result.imageUrl;
 
       if (!imageUrl) throw new Error('imageUrl 누락');

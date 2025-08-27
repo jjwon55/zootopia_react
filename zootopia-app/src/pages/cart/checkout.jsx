@@ -1,7 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 // Toss 연동: 환경변수 VITE_TOSS_CLIENT_KEY 가 설정되어 있지 않으면 테스트 키 사용
 // Toss widget helper (handles v1/v2 script loading & request)
-import { createPaymentWidget, initPaymentMethods, requestTossPayment, setAmount as tossSetAmount } from '../../apis/products/payments/toss';
+import {
+  createPaymentWidget,
+  initPaymentMethods,
+  requestTossPayment,
+  setAmount as tossSetAmount,
+} from '../../apis/products/payments/toss';
 // import { KakaoPay } from '../../apis/products/payments/kakao';
 import api from '../../apis/api';
 import { clearCart as clearLocalOrApiCart } from '../../apis/products/cart';
@@ -32,7 +37,9 @@ export default function Checkout() {
       const search = typeof window !== 'undefined' ? window.location.search : '';
       const pm = new URLSearchParams(search).get('pm');
       return pm === 'toss' ? 'toss' : 'card';
-    } catch { return 'card'; }
+    } catch {
+      return 'card';
+    }
   })();
   const [paymentMethod, setPaymentMethod] = useState(initialPM); // card | bank | phone | toss
   const tossWidgetRef = useRef(null); // (미사용 예정) 컨테이너 접근용 참조
@@ -40,6 +47,7 @@ export default function Checkout() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [tossLoading, setTossLoading] = useState(false); // Toss 위젯 로딩 상태
   const [tossError, setTossError] = useState(null); // Toss 위젯 오류 메시지
+  const [tossReady, setTossReady] = useState(false);     // ★ 위젯/약관 렌더 완료 여부
   const [orderModal, setOrderModal] = useState({ open: false, code: '' });
   const [shippingInfo, setShippingInfo] = useState({
     name: '',
@@ -47,9 +55,30 @@ export default function Checkout() {
     zipcode: '',
     address: '',
     detailAddress: '',
-    message: ''
+    message: '',
   });
   const detailAddressRef = useRef(null);
+
+  // crypto.randomUUID 폴리필
+  function generateUUID() {
+    if (window.crypto?.randomUUID) {
+      return window.crypto.randomUUID();
+    }
+    const buf = new Uint8Array(16);
+    window.crypto.getRandomValues(buf);
+    // UUID v4 포맷
+    buf[6] = (buf[6] & 0x0f) | 0x40;
+    buf[8] = (buf[8] & 0x3f) | 0x80;
+    const toHex = (n) => n.toString(16).padStart(2, '0');
+    const hex = [...buf].map(toHex).join('');
+    return [
+      hex.substring(0, 8),
+      hex.substring(8, 12),
+      hex.substring(12, 16),
+      hex.substring(16, 20),
+      hex.substring(20),
+    ].join('-');
+  }
 
   // 결제 동의 상태 (Toss는 자체 약관 위젯을 제공하므로 로컬 동의는 제외)
   const [agreements, setAgreements] = useState({
@@ -57,36 +86,47 @@ export default function Checkout() {
     terms: false,
     privacy: false,
     pg: false,
-    marketing: false
+    marketing: false,
   });
   // Toss 선택 시 로컬 동의는 요구하지 않음
-  const requiredAgreed = paymentMethod === 'toss' ? true : (agreements.terms && agreements.privacy && agreements.pg);
+  const requiredAgreed = paymentMethod === 'toss' ? true : agreements.terms && agreements.privacy && agreements.pg;
   const canPay = orderItems.length > 0 && requiredAgreed;
 
-  // Toss 위젯 자동 초기화 & 금액 갱신
+  // Toss 위젯 자동 초기화 & 금액 갱신 (★ 클릭 이전에 모두 준비)
   useEffect(() => {
     if (paymentMethod !== 'toss') return;
     if (!orderItems.length) return;
     let cancelled = false;
+
     async function init() {
       setTossError(null);
       setTossLoading(true);
+      setTossReady(false);
       try {
         const total = getTotalPrice();
         const clientKey = import.meta.env.VITE_TOSS_CLIENT_KEY;
         if (!clientKey) {
           throw new Error('VITE_TOSS_CLIENT_KEY is not set. Please add a test_gck_... key in .env');
         }
+
         const needsRecreate = !tossInstanceRef.current || tossInstanceRef.current.__mock === true;
         if (needsRecreate) {
           const widget = await createPaymentWidget(clientKey, undefined, { force: true });
           if (cancelled) return;
-            tossInstanceRef.current = widget;
+          tossInstanceRef.current = widget;
+          // 결제수단 영역 렌더
           await initPaymentMethods(widget, '#toss-payment-methods', total);
+          // 약관 영역 렌더 (토스 약관 사용)
+          try {
+            await widget.renderAgreement?.({ selector: '#toss-agreement', variantKey: 'AGREEMENT' });
+          } catch {}
         } else {
           // 금액만 업데이트
-          try { await tossSetAmount(tossInstanceRef.current, getTotalPrice()); } catch {}
+          try {
+            await tossSetAmount(tossInstanceRef.current, total);
+          } catch {}
         }
+        setTossReady(true); // 클릭 시 바로 결제 가능
       } catch (e) {
         if (!cancelled) {
           console.error('Toss 위젯 초기화 실패', e);
@@ -96,8 +136,11 @@ export default function Checkout() {
         if (!cancelled) setTossLoading(false);
       }
     }
+
     init();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentMethod, orderItems]);
 
@@ -117,7 +160,7 @@ export default function Checkout() {
             name: it.productName || it.name,
             price: it.price,
             quantity: it.quantity,
-            imageUrl: it.imageUrl || it.image
+            imageUrl: it.imageUrl || it.image,
           }));
           setOrderItems(items);
           return; // tempOrder 사용 시 장바구니 무시
@@ -125,7 +168,9 @@ export default function Checkout() {
       } catch {}
     } else {
       // cart 경로에서 온 경우 tempOrder 무시 & 제거
-      try { localStorage.removeItem('tempOrder'); } catch {}
+      try {
+        localStorage.removeItem('tempOrder');
+      } catch {}
     }
     // 2) 장바구니(localStorage)
     try {
@@ -136,7 +181,7 @@ export default function Checkout() {
         name: it.productName || it.name,
         price: it.price,
         quantity: it.quantity,
-        imageUrl: it.imageUrl || it.image
+        imageUrl: it.imageUrl || it.image,
       }));
       setOrderItems(items);
     } catch {
@@ -145,7 +190,7 @@ export default function Checkout() {
   }, [userId]);
 
   const getTotalPrice = () => {
-    return orderItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return orderItems.reduce((total, item) => total + item.price * item.quantity, 0);
   };
 
   const getTotalItems = () => {
@@ -153,7 +198,7 @@ export default function Checkout() {
   };
 
   const handleInputChange = (field, value) => {
-    setShippingInfo(prev => ({ ...prev, [field]: value }));
+    setShippingInfo((prev) => ({ ...prev, [field]: value }));
   };
 
   // 카카오(다음) 우편번호 스크립트 로더
@@ -187,15 +232,15 @@ export default function Checkout() {
       new window.daum.Postcode({
         oncomplete: (data) => {
           const addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
-          setShippingInfo(prev => ({
+          setShippingInfo((prev) => ({
             ...prev,
             zipcode: data.zonecode || '',
-            address: addr || ''
+            address: addr || '',
           }));
           setTimeout(() => {
             detailAddressRef.current?.focus();
           }, 0);
-        }
+        },
       }).open();
     } catch (e) {
       alert('주소 검색 스크립트를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
@@ -208,7 +253,7 @@ export default function Checkout() {
     setAgreements({ all: next, terms: next, privacy: next, pg: next, marketing: next });
   };
   const toggleAgreement = (key) => {
-    setAgreements(prev => {
+    setAgreements((prev) => {
       const next = { ...prev, [key]: !prev[key] };
       const allRequired = next.terms && next.privacy && next.pg;
       const allChecked = allRequired && next.marketing; // 전체는 선택 포함 전부 체크 시
@@ -227,77 +272,59 @@ export default function Checkout() {
       return;
     }
 
-    const newOrderId = 'ORD-' + crypto.randomUUID();
-
+    const newOrderId = 'ORD-' + generateUUID();
 
     // 카카오 결제 분기(로그인/모달 유지, 결제만 미사용)
     if (paymentMethod === 'kakao') {
       if (!kakaoLogin.loggedIn) {
-        setKakaoLogin(prev => ({ ...prev, modal: true }));
+        setKakaoLogin((prev) => ({ ...prev, modal: true }));
         return;
       }
       alert('카카오페이 결제는 현재 지원하지 않습니다.');
       return;
     }
 
-    // Toss 결제: 페이지 내 위젯으로 직접 결제
+    // Toss 결제: 페이지 내 위젯으로 직접 결제 (★ 클릭 제스처 보존)
     if (paymentMethod === 'toss') {
-      try {
-        setIsProcessing(true);
-        // 위젯 초기화가 아직 안 된 경우 초기화
-        const clientKey = import.meta.env.VITE_TOSS_CLIENT_KEY;
-        if (!clientKey) {
-          throw new Error('VITE_TOSS_CLIENT_KEY is not set. Please add a test_gck_... key in .env');
-        }
-        // 미리 주문 요약 저장(성공 페이지에서 마이페이지로 연결 시 사용)
-        try {
-          const summary = {
-            orderCode: newOrderId,
-            userId,
-            items: orderItems.map(it => ({
-              id: it.id,
-              name: it.name,
-              price: it.price,
-              quantity: it.quantity,
-              imageUrl: it.imageUrl || it.image || null
-            })),
-            shipping: {
-              name: shippingInfo.name,
-              phone: shippingInfo.phone,
-              zipcode: shippingInfo.zipcode,
-              address: shippingInfo.address,
-              detailAddress: shippingInfo.detailAddress,
-              message: shippingInfo.message
-            },
-            amount: getTotalPrice(),
-            createdAt: Date.now(),
-            source: 'checkout-toss'
-          };
-          localStorage.setItem('zootopia:lastOrder', JSON.stringify(summary));
-        } catch {}
-        const isMock = !tossInstanceRef.current || tossInstanceRef.current.__mock === true;
-        if (isMock) {
-          const widget = await createPaymentWidget(clientKey, undefined, { force: true });
-          tossInstanceRef.current = widget;
-          await initPaymentMethods(widget, '#toss-payment-methods', getTotalPrice());
-          try { await widget.renderAgreement?.({ selector: '#toss-agreement', variantKey: 'AGREEMENT' }); } catch {}
-        } else {
-          // 금액 갱신
-          await tossSetAmount(tossInstanceRef.current, getTotalPrice());
-        }
-        await requestTossPayment(tossInstanceRef.current, {
-          orderId: newOrderId,
-          orderName: orderItems[0]?.name || '주문상품',
-          amount: getTotalPrice(),
-          preferWidget: true
-        });
+      if (!tossInstanceRef.current || !tossReady) {
+        alert('결제 위젯을 준비 중입니다. 잠시 후 다시 시도해주세요.');
         return;
-      } catch (err) {
-        console.error('Toss 결제 오류', err);
-        alert('Toss 결제 요청 중 오류가 발생했습니다: ' + (err.message || ''));
-      } finally {
-        setIsProcessing(false);
       }
+      // (선택) 주문 요약 로컬 저장
+      try {
+        const summary = {
+          orderCode: newOrderId,
+          userId,
+          items: orderItems.map((it) => ({
+            id: it.id,
+            name: it.name,
+            price: it.price,
+            quantity: it.quantity,
+            imageUrl: it.imageUrl || it.image || null,
+          })),
+          shipping: {
+            name: shippingInfo.name,
+            phone: shippingInfo.phone,
+            zipcode: shippingInfo.zipcode,
+            address: shippingInfo.address,
+            detailAddress: shippingInfo.detailAddress,
+            message: shippingInfo.message,
+          },
+          amount: getTotalPrice(),
+          createdAt: Date.now(),
+          source: 'checkout-toss',
+        };
+        localStorage.setItem('zootopia:lastOrder', JSON.stringify(summary));
+      } catch {}
+      const origin = window.location.origin; // 예: http://192.168.30.3:5173
+      await requestTossPayment(tossInstanceRef.current, {
+        orderId: newOrderId,
+        orderName: orderItems[0]?.name || '주문상품',
+        amount: getTotalPrice(),
+        successUrl: `${origin}/pay/toss/success`,
+        failUrl: `${origin}/pay/toss/fail`,
+        preferWidget: true,
+      });
       return;
     }
 
@@ -314,7 +341,7 @@ export default function Checkout() {
           productId: orderItems[0]?.id || 0,
           productName: orderItems[0]?.name || '주문상품',
           price: getTotalPrice(),
-          status: '결제완료'
+          status: '결제완료',
         });
       } catch (err) {
         console.warn('주문 생성 실패(일반 결제):', err);
@@ -324,12 +351,12 @@ export default function Checkout() {
         const summary = {
           orderCode: orderId,
           userId,
-          items: orderItems.map(it => ({
+          items: orderItems.map((it) => ({
             id: it.id,
             name: it.name,
             price: it.price,
             quantity: it.quantity,
-            imageUrl: it.imageUrl || it.image || null
+            imageUrl: it.imageUrl || it.image || null,
           })),
           shipping: {
             name: shippingInfo.name,
@@ -337,19 +364,25 @@ export default function Checkout() {
             zipcode: shippingInfo.zipcode,
             address: shippingInfo.address,
             detailAddress: shippingInfo.detailAddress,
-            message: shippingInfo.message
+            message: shippingInfo.message,
           },
           amount: getTotalPrice(),
           createdAt: Date.now(),
-          source: 'checkout'
+          source: 'checkout',
         };
         localStorage.setItem('zootopia:lastOrder', JSON.stringify(summary));
       } catch {}
 
       // 장바구니 정리
-      try { await clearLocalOrApiCart(userId); } catch {}
-      try { localStorage.removeItem(`cart:user:${userId}`); } catch {}
-      try { localStorage.removeItem('tempOrder'); } catch {}
+      try {
+        await clearLocalOrApiCart(userId);
+      } catch {}
+      try {
+        localStorage.removeItem(`cart:user:${userId}`);
+      } catch {}
+      try {
+        localStorage.removeItem('tempOrder');
+      } catch {}
       setOrderModal({ open: true, code: orderId });
     } finally {
       setIsProcessing(false);
@@ -366,9 +399,10 @@ export default function Checkout() {
       />
       <KakaoLoginModal
         open={kakaoLogin.modal}
-        onClose={() => setKakaoLogin(prev => ({ ...prev, modal: false }))}
+        onClose={() => setKakaoLogin((prev) => ({ ...prev, modal: false }))}
         onLoggedIn={(ku) => setKakaoLogin({ loggedIn: true, user: ku, modal: false })}
       />
+
       {/* 결제 처리 로딩 오버레이 */}
       {isProcessing && (
         <div className="tw:fixed tw:inset-0 tw:z-[1200] tw:bg-black/30 tw:flex tw:items-center tw:justify-center">
@@ -378,15 +412,22 @@ export default function Checkout() {
           </div>
         </div>
       )}
+
       <div className="tw:max-w-6xl tw:mx-auto tw:px-4">
         {/* 브레드크럼 */}
         <nav className="tw:mb-8">
           <div className="tw:flex tw:items-center tw:space-x-2 tw:text-sm">
-            <a href="/" className="tw:text-[#FF9999] tw:hover:text-[#FF7A7A]">홈</a>
+            <a href="/" className="tw:text-[#FF9999] tw:hover:text-[#FF7A7A]">
+              홈
+            </a>
             <span className="tw:text-gray-400">&gt;</span>
-            <a href="/products/listp" className="tw:text-[#FF9999] tw:hover:text-[#FF7A7A]">스토어</a>
+            <a href="/products/listp" className="tw:text-[#FF9999] tw:hover:text-[#FF7A7A]">
+              스토어
+            </a>
             <span className="tw:text-gray-400">&gt;</span>
-            <a href="/cart" className="tw:text-pink-400 tw:hover:text-pink-500">장바구니</a>
+            <a href="/cart" className="tw:text-pink-400 tw:hover:text-pink-500">
+              장바구니
+            </a>
             <span className="tw:text-gray-400">&gt;</span>
             <span className="tw:text-gray-600">결제</span>
           </div>
@@ -410,6 +451,7 @@ export default function Checkout() {
                   <span>👜</span> 주문 상품 확인
                 </h2>
                 <div className="tw:space-y-4">
+
                   {orderItems.map(item => {
                     const imgSrc = item.imageUrl || item.image || getOverlayImage(item.productId || item.id) || fallbackImg;
                     return (
@@ -429,6 +471,7 @@ export default function Checkout() {
                             {(item.price * item.quantity).toLocaleString()}원
                           </p>
                         </div>
+
                       </div>
                     );
                   })}
@@ -527,19 +570,45 @@ export default function Checkout() {
                   <span>💳</span> 결제 방법
                 </h2>
                 <div className="tw:space-y-3">
-                  {[{ id: 'card', name: '신용카드/체크카드', icon: 'fas fa-credit-card' }, { id: 'bank', name: '계좌이체', icon: 'fas fa-university' }, { id: 'phone', name: '휴대폰결제', icon: 'fas fa-mobile-alt' }, { id: 'toss', name: 'Toss 결제', icon: 'fas fa-wallet' }].map(method => (
-                    <div key={method.id} onClick={() => setPaymentMethod(method.id)} className={`tw:border-2 tw:rounded-lg tw:p-4 tw:cursor-pointer tw:transition-all ${paymentMethod === method.id ? 'tw:bg-[#FFF0F0]' : 'tw:border-gray-200 tw:hover:bg-[#FFECEC]'}`} style={paymentMethod === method.id ? { borderColor: '#FF9999' } : {}}>
+                  {[
+                    { id: 'card', name: '신용카드/체크카드', icon: 'fas fa-credit-card' },
+                    { id: 'bank', name: '계좌이체', icon: 'fas fa-university' },
+                    { id: 'phone', name: '휴대폰결제', icon: 'fas fa-mobile-alt' },
+                    { id: 'toss', name: 'Toss 결제', icon: 'fas fa-wallet' },
+                  ].map((method) => (
+                    <div
+                      key={method.id}
+                      onClick={() => setPaymentMethod(method.id)}
+                      className={`tw:border-2 tw:rounded-lg tw:p-4 tw:cursor-pointer tw:transition-all ${
+                        paymentMethod === method.id ? 'tw:bg-[#FFF0F0]' : 'tw:border-gray-200 tw:hover:bg-[#FFECEC]'
+                      }`}
+                      style={paymentMethod === method.id ? { borderColor: '#FF9999' } : {}}
+                    >
                       <div className="tw:flex tw:items-center tw:gap-3">
-                        <input type="radio" name="paymentMethod" value={method.id} checked={paymentMethod === method.id} onChange={() => setPaymentMethod(method.id)} className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} />
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value={method.id}
+                          checked={paymentMethod === method.id}
+                          onChange={() => setPaymentMethod(method.id)}
+                          className="tw:focus:ring-[#FF9999]"
+                          style={{ accentColor: '#FF9999' }}
+                        />
                         <i className={`${method.icon}`} style={{ color: '#FF9999' }}></i>
                         <span className="tw:font-medium">{method.name}</span>
                       </div>
                     </div>
                   ))}
                 </div>
+
                 {paymentMethod === 'toss' && (
                   <div className="tw:mt-6 tw:space-y-4">
-                    <div id="toss-payment-methods" ref={tossWidgetRef} className="tw:border tw:rounded tw:p-4 tw:min-h-[140px] tw:relative" style={{borderColor:'#FFD1D1'}}>
+                    <div
+                      id="toss-payment-methods"
+                      ref={tossWidgetRef}
+                      className="tw:border tw:rounded tw:p-4 tw:min-h-[140px] tw:relative"
+                      style={{ borderColor: '#FFD1D1' }}
+                    >
                       {tossLoading && (
                         <div className="tw:absolute tw:inset-0 tw:bg-white/70 tw:flex tw:flex-col tw:items-center tw:justify-center tw:gap-2">
                           <div className="tw:w-8 tw:h-8 tw:border-4 tw:border-[#FF9999] tw:border-t-transparent tw:rounded-full tw:animate-spin" />
@@ -550,14 +619,21 @@ export default function Checkout() {
                         <div className="tw:text-sm tw:text-gray-500">위젯 준비 중...</div>
                       )}
                       {tossError && (
-                        <div className="tw:text-xs tw:text-red-500">Toss 위젯 오류: {tossError} (데모 키일 경우 정상입니다)</div>
+                        <div className="tw:text-xs tw:text-red-500">
+                          Toss 위젯 오류: {tossError} (데모 키일 경우 정상입니다)
+                        </div>
                       )}
                     </div>
                     {/* Toss 자체 약관 영역 (로컬 동의 UI 대신 사용) */}
                     <div id="toss-agreement" className="tw:text-xs tw:text-gray-500"></div>
                     {tossInstanceRef.current && tossInstanceRef.current.__mock && !tossLoading && (
-                      <div className="tw:text-xs tw:text-gray-600 tw:bg-[#FFF5F5] tw:border tw:rounded tw:p-3 tw:space-y-1" style={{borderColor:'#FFD1D1'}}>
-                        <div><strong className="tw:text-pink-500">모의/데모 모드</strong> - 실제 결제 위젯 대신 시뮬레이션 동작</div>
+                      <div
+                        className="tw:text-xs tw:text-gray-600 tw:bg-[#FFF5F5] tw:border tw:rounded tw:p-3 tw:space-y-1"
+                        style={{ borderColor: '#FFD1D1' }}
+                      >
+                        <div>
+                          <strong className="tw:text-pink-500">모의/데모 모드</strong> - 실제 결제 위젯 대신 시뮬레이션 동작
+                        </div>
                         {tossInstanceRef.current.__mockReason && (
                           <div className="tw:text-[10px] tw:text-gray-500">사유: {tossInstanceRef.current.__mockReason}</div>
                         )}
@@ -576,36 +652,88 @@ export default function Checkout() {
                   </h2>
                   <div className="tw:space-y-3 tw:text-sm">
                     <label className="tw:flex tw:items-center tw:gap-2">
-                      <input type="checkbox" className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} checked={agreements.all} onChange={toggleAllAgreements} />
+                      <input
+                        type="checkbox"
+                        className="tw:focus:ring-[#FF9999]"
+                        style={{ accentColor: '#FF9999' }}
+                        checked={agreements.all}
+                        onChange={toggleAllAgreements}
+                      />
                       <span className="tw:font-medium">전체 약관에 동의합니다</span>
                     </label>
                     <div className="tw:pl-6 tw:space-y-2 tw:text-gray-700">
                       <label className="tw:flex tw:items-center tw:gap-2">
-                        <input type="checkbox" className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} checked={agreements.terms} onChange={() => toggleAgreement('terms')} />
+                        <input
+                          type="checkbox"
+                          className="tw:focus:ring-[#FF9999]"
+                          style={{ accentColor: '#FF9999' }}
+                          checked={agreements.terms}
+                          onChange={() => toggleAgreement('terms')}
+                        />
                         [필수] 이용약관 동의
                       </label>
                       <label className="tw:flex tw:items-center tw:gap-2">
-                        <input type="checkbox" className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} checked={agreements.privacy} onChange={() => toggleAgreement('privacy')} />
+                        <input
+                          type="checkbox"
+                          className="tw:focus:ring-[#FF9999]"
+                          style={{ accentColor: '#FF9999' }}
+                          checked={agreements.privacy}
+                          onChange={() => toggleAgreement('privacy')}
+                        />
                         [필수] 개인정보 처리방침 동의
                       </label>
                       <label className="tw:flex tw:items-center tw:gap-2">
-                        <input type="checkbox" className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} checked={agreements.pg} onChange={() => toggleAgreement('pg')} />
+                        <input
+                          type="checkbox"
+                          className="tw:focus:ring-[#FF9999]"
+                          style={{ accentColor: '#FF9999' }}
+                          checked={agreements.pg}
+                          onChange={() => toggleAgreement('pg')}
+                        />
                         [필수] 결제대행 서비스 약관 동의
                       </label>
                       <label className="tw:flex tw:items-center tw:gap-2">
-                        <input type="checkbox" className="tw:focus:ring-[#FF9999]" style={{ accentColor: '#FF9999' }} checked={agreements.marketing} onChange={() => toggleAgreement('marketing')} />
+                        <input
+                          type="checkbox"
+                          className="tw:focus:ring-[#FF9999]"
+                          style={{ accentColor: '#FF9999' }}
+                          checked={agreements.marketing}
+                          onChange={() => toggleAgreement('marketing')}
+                        />
                         [선택] 마케팅 정보 수신 동의
                       </label>
                     </div>
                   </div>
                 </div>
               )}
+
+              {/* 주문 요약 + 결제 버튼 (submit) */}
+              <div className="lg:tw:hidden">
+                {/* 모바일일 때 오른쪽 카드가 없으므로 버튼을 아래도 노출하고 싶다면 이 블록을 활용 */}
+              </div>
+
+              <div className="tw:hidden">{/* spacer */}</div>
+
+              <button
+                type="submit"
+                disabled={!canPay}
+                className={`tw:w-full tw:font-bold tw:py-3 tw:rounded-lg tw:transition-colors tw:flex tw:items-center tw:justify-center tw:gap-2 ${
+                  canPay ? 'tw:bg-white tw:hover:bg-gray-100' : 'tw:bg-white/50 tw:text-white/80 tw:cursor-not-allowed'
+                }`}
+                style={canPay ? { color: '#B44444' } : {}}
+              >
+                <span>💳</span>
+                <span>{getTotalPrice().toLocaleString()}원 결제하기</span>
+              </button>
             </form>
           </div>
 
-          {/* 주문 요약 */}
+          {/* 주문 요약 (사이드) */}
           <div className="lg:tw:col-span-1">
-            <div className="tw:text-white tw:rounded-lg tw:p-6 tw:sticky tw:top-20 tw:bg-gradient-to-br" style={{ backgroundImage: 'linear-gradient(135deg, #FF9999, #FF8C8C)' }}>
+            <div
+              className="tw:text-white tw:rounded-lg tw:p-6 tw:sticky tw:top-20 tw:bg-gradient-to-br"
+              style={{ backgroundImage: 'linear-gradient(135deg, #FF9999, #FF8C8C)' }}
+            >
               <h2 className="tw:text-xl tw:font-bold tw:mb-6">주문 요약</h2>
 
               <div className="tw:space-y-3 tw:mb-6">
@@ -629,14 +757,14 @@ export default function Checkout() {
                 </div>
               </div>
 
+              {/* 오른쪽 카드의 버튼은 보조: 실제 제출은 폼 submit과 동일 동작을 원하면 form 외 버튼 사용은 피하는 것이 안전 */}
               <button
-                onClick={handleSubmit}
-                disabled={!canPay}
-                className={`tw:w-full tw:font-bold tw:py-3 tw:rounded-lg tw:transition-colors tw:flex tw:items-center tw:justify-center tw:gap-2 ${canPay ? 'tw:bg-white tw:hover:bg-gray-100' : 'tw:bg-white/50 tw:text-white/80 tw:cursor-not-allowed'}`}
-                style={canPay ? { color: '#B44444' } : {}}
+                type="submit"
+                form="" // 별도 폼 ID 없이 동작시키려면 onClick에서 handleSubmit 호출해야 하므로, 여기선 버튼을 제거/비활성 권장
+                disabled
+                className="tw:w-full tw:font-bold tw:py-3 tw:rounded-lg tw:opacity-60"
               >
-                <span>💳</span>
-                <span>{getTotalPrice().toLocaleString()}원 결제하기</span>
+                {getTotalPrice().toLocaleString()}원 결제하기
               </button>
 
               <button

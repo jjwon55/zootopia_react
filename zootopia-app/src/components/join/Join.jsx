@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { join as joinApi, checkEmail, checkNickname } from "../../apis/auth";
+import Swal from "sweetalert2";   // ✅ SweetAlert2 임포트
 
 export default function Join() {
   const navigate = useNavigate();
@@ -18,15 +19,14 @@ export default function Join() {
   const [serverError, setServerError] = useState("");
 
   const [checkResult, setCheckResult] = useState({
-    email: null,    // true: 사용 가능, false: 사용 불가
-    nickname: null, // true: 사용 가능, false: 사용 불가
+    email: null,
+    nickname: null,
   });
 
   const [checking, setChecking] = useState({ email: false, nickname: false });
 
   const setVal = (k, v) => {
     setForm((s) => ({ ...s, [k]: v }));
-    // 입력이 바뀌면 다시 확인해야 하므로 결과 초기화
     if (k === "email") setCheckResult((s) => ({ ...s, email: null }));
     if (k === "nickname") setCheckResult((s) => ({ ...s, nickname: null }));
   };
@@ -41,7 +41,7 @@ export default function Join() {
       const res = await checkEmail(form.email);
       setCheckResult((s) => ({ ...s, email: res.data.available }));
       if (!res.data.available) touch("email");
-    } catch (err) {
+    } catch {
       setCheckResult((s) => ({ ...s, email: false }));
     } finally {
       setChecking((s) => ({ ...s, email: false }));
@@ -56,7 +56,7 @@ export default function Join() {
       const res = await checkNickname(form.nickname);
       setCheckResult((s) => ({ ...s, nickname: res.data.available }));
       if (!res.data.available) touch("nickname");
-    } catch (err) {
+    } catch {
       setCheckResult((s) => ({ ...s, nickname: false }));
     } finally {
       setChecking((s) => ({ ...s, nickname: false }));
@@ -67,19 +67,27 @@ export default function Join() {
   const errors = useMemo(() => {
     const e = {};
     if (!form.email) e.email = "이메일을 입력하세요.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "이메일 형식이 올바르지 않습니다.";
-    else if (checkResult.email === false) e.email = "이미 사용 중인 이메일입니다.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+      e.email = "이메일 형식이 올바르지 않습니다.";
+    else if (checkResult.email === false)
+      e.email = "이미 사용 중인 이메일입니다.";
 
     if (!form.password) e.password = "비밀번호를 입력하세요.";
-    else if (form.password.length < 6) e.password = "비밀번호는 최소 6자 이상입니다.";
+    else if (form.password.length < 6)
+      e.password = "비밀번호는 최소 6자 이상입니다.";
 
     if (!form.passwordCheck) e.passwordCheck = "비밀번호를 다시 입력하세요.";
-    else if (form.password !== form.passwordCheck) e.passwordCheck = "비밀번호가 일치하지 않습니다.";
+    else if (form.password !== form.passwordCheck)
+      e.passwordCheck = "비밀번호가 일치하지 않습니다.";
 
     if (!form.nickname) e.nickname = "닉네임을 입력하세요.";
-    else if (checkResult.nickname === false) e.nickname = "이미 사용 중인 닉네임입니다.";
+    else if (checkResult.nickname === false)
+      e.nickname = "이미 사용 중인 닉네임입니다.";
 
-    if (form.phone && !/^\d{9,13}$/.test(form.phone.replace(/[^0-9]/g, ""))) {
+    if (
+      form.phone &&
+      !/^\d{9,13}$/.test(form.phone.replace(/[^0-9]/g, ""))
+    ) {
       e.phone = "숫자만 9~13자리로 입력하세요.";
     }
     return e;
@@ -90,7 +98,13 @@ export default function Join() {
   const onSubmit = async (e) => {
     e.preventDefault();
     setServerError("");
-    setTouched({ email: true, password: true, passwordCheck: true, nickname: true, phone: true });
+    setTouched({
+      email: true,
+      password: true,
+      passwordCheck: true,
+      nickname: true,
+      phone: true,
+    });
 
     if (!isValid || loading) return;
 
@@ -106,16 +120,34 @@ export default function Join() {
       const ok =
         res?.status >= 200 &&
         res?.status < 300 &&
-        (typeof res?.data !== "string" || res.data?.toUpperCase?.() !== "FAIL");
+        (typeof res?.data !== "string" ||
+          res.data?.toUpperCase?.() !== "FAIL");
 
-      if (ok) navigate("/login", { replace: true });
-      else setServerError(typeof res?.data === "string" ? res.data : "회원가입에 실패했습니다.");
+      if (ok) {
+        // ✅ 회원가입 성공 시 SweetAlert2 팝업
+        Swal.fire({
+          title: "회원가입 완료",
+          text: "회원가입이 성공적으로 완료되었습니다!",
+          icon: "success",
+          confirmButtonText: "확인",
+        }).then(() => {
+          navigate("/login", { replace: true });
+        });
+      } else {
+        setServerError(
+          typeof res?.data === "string"
+            ? res.data
+            : "회원가입에 실패했습니다."
+        );
+      }
     } catch (err) {
       const msg =
         err?.response?.data?.message ||
         err?.response?.data ||
         "회원가입에 실패했습니다. 입력값을 확인해 주세요.";
-      setServerError(typeof msg === "string" ? msg : "회원가입에 실패했습니다.");
+      setServerError(
+        typeof msg === "string" ? msg : "회원가입에 실패했습니다."
+      );
     } finally {
       setLoading(false);
     }
@@ -153,7 +185,6 @@ export default function Join() {
             </div>
             <div className="tw-flex tw-items-center tw-gap-2">
               {checkResult.email === true && <span className="tw-text-green-500 tw-text-[0.7rem]">사용 가능</span>}
-              {/* {checkResult.email === false && <span className="tw-text-red-500 tw-text-[0.7rem]">사용 불가</span>} */}
               {touched.email && errors.email && (
                 <span className="tw-text-[0.7rem] tw-text-gray-500">{errors.email}</span>
               )}
@@ -216,11 +247,10 @@ export default function Join() {
                 {checking.nickname ? "확인 중..." : "중복확인"}
               </button>
             </div>
-            <div className="tw-flex tw-items-center tw-gap-2">
+            <div className="tw:flex tw-items-center tw-gap-2">
               {checkResult.nickname === true && <span className="tw-text-green-500 tw-text-[0.7rem]">사용 가능</span>}
-              {/* {checkResult.nickname === false && <span className="tw-text-red-500 tw-text-[0.7rem]">사용 불가</span>} */}
               {touched.nickname && errors.nickname && (
-                <span className="tw-text-[0.7rem] tw:text-gray-500">{errors.nickname}</span>
+                <span className="tw-text-[0.7rem] tw-text-gray-500">{errors.nickname}</span>
               )}
             </div>
 
@@ -249,16 +279,12 @@ export default function Join() {
             <button
               type="submit"
               disabled={
-                !isValid ||
-                loading ||
-                checkResult.email !== true ||
-                checkResult.nickname !== true
+                !isValid || loading || checkResult.email !== true || checkResult.nickname !== true
               }
               className={`tw:w-full tw:h-12 tw:rounded-lg tw:text-white tw:font-semibold tw:transition
-                ${
-                  !isValid || loading || checkResult.email !== true || checkResult.nickname !== true
-                    ? "tw:bg-rose-300 tw:cursor-not-allowed"
-                    : "tw:bg-rose-400 hover:tw:bg-rose-500"
+                ${!isValid || loading || checkResult.email !== true || checkResult.nickname !== true
+                  ? "tw:bg-rose-300 tw:cursor-not-allowed"
+                  : "tw:bg-rose-400 hover:tw:bg-rose-500"
                 }`}
             >
               {loading ? "가입 중..." : "회원 가입"}

@@ -18,10 +18,11 @@ import UserInfo from '../pages/mypage/UserInfo';
 import Map from '../pages/map/Map';
 import UsersPage from '../pages/admin/users/UsersPage';
 import Join from '../components/join/Join';
-import AdminPostsPage from '../pages/admin/post/AdminPostsPage'; // ✅ 누락 보완
+import AdminPostContainer from '../containers/admin/AdminPostContainer'; // ✅ 누락 보완
 
 import RequireAdmin from '../pages/Required/RequiredAdmin';
 import RequireAuth from '../pages/Required/RequiredAuth';
+import LostUpdate from '../pages/lost/LostUpdate';
 
 const JjwRoutes = () => {
   return (
@@ -57,9 +58,15 @@ const JjwRoutes = () => {
           }
         />
         <Route
-          path="/showoff/edit/:postId"
+          path="/lost/edit/:postId"
           element={
-            <RequireAuth><ShowoffUpdate /></RequireAuth>
+            <RequireAuth><LostUpdate /></RequireAuth>
+          }
+        />
+        <Route
+          path="/lost/edit/:postId"
+          element={
+            <RequireAuth><Update /></RequireAuth>
           }
         />
 
@@ -102,7 +109,7 @@ const JjwRoutes = () => {
         <Route
           path="/admin/post"
           element={
-            <RequireAdmin><AdminPostsPage /></RequireAdmin>
+            <RequireAdmin><AdminPostContainer /></RequireAdmin>
           }
         />
 

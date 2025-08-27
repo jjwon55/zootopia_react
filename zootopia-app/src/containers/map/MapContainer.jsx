@@ -42,6 +42,29 @@ function useKakaoLoader(appKey) {
 ========================= */
 const normalizeQuery = (s) => String(s ?? '').replace(/\s+/g, ' ').trim();
 
+const isCoordString = (s) =>
+  /^\(?\s*([+-]?\d+(?:\.\d+)?)\s*[, ]\s*([+-]?\d+(?:\.\d+)?)\s*\)?$/.test(s);
+
+// 주소일 가능성 판정
+const isProbablyAddress = (raw) => {
+  const s = normalizeQuery(raw);
+  if (/(도|시|군|구|읍|면|동|리|로|길|대로|번길)(?:\s|$)/.test(s)) return true;
+  if (/\d/.test(s) && /(로|길|번길|동|리)/.test(s)) return true;
+  return false;
+};
+
+// "제주특별자치도 서귀포시 일주동로 56" → { region: "제주특별자치도 서귀포시", rest: "일주동로 56" }
+const splitRegionAndRest = (s) => {
+  const m = s.match(/^(.*?(?:도|시|군|구))\s+(.*)$/);
+  return m ? { region: m[1], rest: m[2] } : { region: '', rest: s };
+};
+
+// "일주동로 56" / "일주동로6307번길 56-1" → "일주동로" 또는 "일주동로6307번길"
+const extractRoad = (s) => {
+  const m = s.match(/(.+?(?:로|길|번길))/);
+  return m ? m[1] : '';
+};
+
 /* =========================
    컴포넌트
 ========================= */
@@ -73,11 +96,16 @@ export default function MapContainer() {
   const idleTimerRef = useRef(null);
   const searchSeqRef = useRef(0);
   const searchingRef = useRef(false);
+  const debounceTimer = useRef(null);
 
   // URL ?address=
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const address = params.get('address') || '';
+  const qParam = params.get('q') || '';
+
+
+
 
   const compositeKeyword = useMemo(() => keyword, [keyword]);
 
@@ -85,10 +113,9 @@ export default function MapContainer() {
   const moveMapTo = useCallback((latlng, level = 3) => {
     const map = mapObjRef.current;
     if (!map || !latlng) return;
-    try { map.setLevel(level); } catch {}
-    try { map.setCenter(latlng); } catch {}
-    // 같은 좌표여도 panTo 한번 더: 애니메이션 + 일부 브라우저에서 이동 보장
-    try { map.panTo(latlng); } catch {}
+    try { map.setLevel(level); } catch { }
+    try { map.setCenter(latlng); } catch { }
+    try { map.panTo(latlng); } catch { }
   }, []);
 
   const clearMarkers = useCallback(() => {
@@ -103,7 +130,8 @@ export default function MapContainer() {
     overlayRef.current = null;
   }, []);
 
-  const showOverlay = useCallback((place) => {
+  // ✅ 오버레이가 선택 마커의 실제 좌표(posLatLng)에 뜰 수 있게 수정
+  const showOverlay = useCallback((place, posLatLng) => {
     const { kakao } = window;
     closeOverlay();
 
@@ -128,7 +156,7 @@ export default function MapContainer() {
     content.querySelector('[data-close="1"]').onclick = () => closeOverlay();
 
     const ov = new kakao.maps.CustomOverlay({
-      position: new kakao.maps.LatLng(parseFloat(place.y), parseFloat(place.x)),
+      position: posLatLng || new kakao.maps.LatLng(parseFloat(place.y), parseFloat(place.x)),
       content,
       xAnchor: 0.5,
       yAnchor: 1.1,
@@ -139,20 +167,61 @@ export default function MapContainer() {
     selectedIdRef.current = place.id;
   }, [closeOverlay]);
 
-  // 기본 마커 적용
+  // ✅ 겹치는 좌표 원형 분산(스파이더링) 적용
   const applyMarkers = useCallback((data) => {
     const { kakao } = window;
     const map = mapObjRef.current;
     clearMarkers();
 
-    const markers = data.map((place) => {
-      const coords = new kakao.maps.LatLng(parseFloat(place.y), parseFloat(place.x));
-      const marker = new kakao.maps.Marker({ position: coords });
-      kakao.maps.event.addListener(marker, 'click', () => showOverlay(place));
-      marker.__pid = place.id;
-      marker.__place = place;
-      return marker;
+    // ① 같은 좌표로 그룹화
+    const groups = data.reduce((acc, p) => {
+      const key = `${p.x},${p.y}`; // 경도,위도 문자열
+      (acc[key] ||= []).push(p);
+      return acc;
+    }, {});
+
+    const markers = [];
+    const proj = map.getProjection();
+
+    // ② 그룹별 분산 마커 생성
+    Object.values(groups).forEach((group) => {
+      const n = group.length;
+      const base = group[0];
+      const baseLatLng = new kakao.maps.LatLng(parseFloat(base.y), parseFloat(base.x));
+      const centerPt = proj.containerPointFromCoords
+        ? proj.containerPointFromCoords(baseLatLng)
+        : proj.pointFromCoords(baseLatLng); // 환경에 따라 대응
+
+      if (n === 1) {
+        const p = group[0];
+        const latlng = baseLatLng;
+        const marker = new kakao.maps.Marker({ position: latlng });
+        kakao.maps.event.addListener(marker, 'click', () => showOverlay(p, marker.getPosition()));
+        marker.__pid = p.id; marker.__place = p;
+        markers.push(marker);
+        return;
+      }
+
+      // 확대 레벨에 따라 반경 가변 (px)
+      const level = map.getLevel();
+      const R = Math.max(18, 28 - (level - 3) * 2); // 레벨이 커질수록 조금 줄임
+
+      group.forEach((p, i) => {
+        const theta = (2 * Math.PI * i) / n;
+        const dx = R * Math.cos(theta);
+        const dy = R * Math.sin(theta);
+        const basePoint = new kakao.maps.Point(centerPt.x + dx, centerPt.y + dy);
+        const latlng = proj.coordsFromContainerPoint
+          ? proj.coordsFromContainerPoint(basePoint)
+          : proj.coordsFromPoint(basePoint);
+
+        const marker = new kakao.maps.Marker({ position: latlng });
+        kakao.maps.event.addListener(marker, 'click', () => showOverlay(p, marker.getPosition()));
+        marker.__pid = p.id; marker.__place = p;
+        markers.push(marker);
+      });
     });
+
     markersRef.current = markers;
 
     if (!clustererRef.current) {
@@ -165,20 +234,20 @@ export default function MapContainer() {
     clustererRef.current.addMarkers(markers);
   }, [clearMarkers, showOverlay]);
 
-  // 화면영역(bounds) 기반 키워드 검색
+  // 화면영역(bounds) 기반 키워드 검색 (본검색)
   const doSearch = useCallback(() => {
     const { kakao } = window;
     const map = mapObjRef.current;
     const svc = placesSvcRef.current;
     if (!map || !svc || !compositeKeyword) return;
 
-    const seq = ++searchSeqRef.current;
+    const seq = ++searchSeqRef.current; // 최신 토큰
     searchingRef.current = true;
 
     svc.keywordSearch(
       compositeKeyword,
       (data, status) => {
-        if (seq !== searchSeqRef.current) return;
+        if (seq !== searchSeqRef.current) return; // 오래된 응답 무시
         searchingRef.current = false;
 
         if (status !== kakao.maps.services.Status.OK) {
@@ -193,10 +262,11 @@ export default function MapContainer() {
   }, [compositeKeyword, applyMarkers, clearMarkers]);
 
   /* ============================================
-     주소/좌표/장소명 → 지도 이동
+     주소/좌표 → 지도 이동
      - 좌표 문자열이면 즉시 이동
-     - 주소 지오코딩: EXACT → SIMILAR (무조건 시도)
-     - 실패 시 전국 단위 keywordSearch 1건으로 이동
+     - 주소 지오코딩: EXACT → SIMILAR
+     - 실패 시 느슨 폴백(도로명 중심 이동)
+     - (전국 키워드 보정은 "주소일 때만")
   ============================================ */
   const goToQuery = useCallback((query) => {
     return new Promise((resolve) => {
@@ -208,20 +278,17 @@ export default function MapContainer() {
       const q = normalizeQuery(query);
       console.log('[goToQuery] 입력:', q);
 
-      // 1) 좌표 문자열 파싱: "33.4996, 126.5312" / "(33.49 126.53)"
-      const m = q.match(/^\(?\s*([+-]?\d+(?:\.\d+)?)\s*[, ]\s*([+-]?\d+(?:\.\d+)?)\s*\)?$/);
-      if (m) {
-        const lat = parseFloat(m[1]);
-        const lng = parseFloat(m[2]);
+      // 1) 좌표 문자열
+      if (isCoordString(q)) {
+        const m = q.match(/^\(?\s*([+-]?\d+(?:\.\d+)?)\s*[, ]\s*([+-]?\d+(?:\.\d+)?)\s*\)?$/);
+        const lat = parseFloat(m[1]); const lng = parseFloat(m[2]);
         if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
-          const latlng = new window.kakao.maps.LatLng(lat, lng);
-          console.log('[goToQuery] 좌표 인식 → 이동');
-          moveMapTo(latlng, 3);
+          moveMapTo(new window.kakao.maps.LatLng(lat, lng), 3);
           return resolve(true);
         }
       }
 
-      // 2) 주소 지오코딩 (EXACT → SIMILAR 순서로 두 번 시도) — 주소 여부와 상관없이 시도
+      // 2) 주소 지오코딩
       const tryGeocode = (analyzeType) => {
         if (!geocoder) return Promise.resolve(false);
         return new Promise((ok) => {
@@ -236,12 +303,9 @@ export default function MapContainer() {
               console.log(`[goToQuery] addressSearch ${analyzeType} →`, status, result?.[0]);
               if (status === window.kakao.maps.services.Status.OK && result?.length) {
                 const { y, x } = result[0];
-                const latlng = new window.kakao.maps.LatLng(parseFloat(y), parseFloat(x));
-                moveMapTo(latlng, 3);
+                moveMapTo(new window.kakao.maps.LatLng(parseFloat(y), parseFloat(x)), 3);
                 ok(true);
-              } else {
-                ok(false);
-              }
+              } else ok(false);
             },
             { analyze_type: type }
           );
@@ -249,24 +313,70 @@ export default function MapContainer() {
       };
 
       const run = async () => {
-        if (await tryGeocode('EXACT')) return resolve(true);
-        if (await tryGeocode('SIMILAR')) return resolve(true);
+        let moved = false;
 
-        // 3) 전국 단위 키워드 검색으로 보정
-        if (svc) {
+        if (await tryGeocode('EXACT')) moved = true;
+        else if (await tryGeocode('SIMILAR')) moved = true;
+
+        if (!moved) {
+          // 느슨 폴백: 도로명만으로 재시도
+          const { region, rest } = splitRegionAndRest(q);
+          const roadOnly = extractRoad(rest || q);
+          if (roadOnly) {
+            const ANALYZE = window.kakao?.maps?.services?.AnalyzeType;
+            const type = ANALYZE ? ANALYZE.SIMILAR : 'similar';
+
+            // 지역 + 도로명
+            moved = await new Promise((ok) => {
+              geocoder.addressSearch(
+                normalizeQuery([region, roadOnly].filter(Boolean).join(' ')),
+                (r, st) => {
+                  console.log('[goToQuery] loose road cand1 →', st, r?.[0]);
+                  if (st === window.kakao.maps.services.Status.OK && r?.length) {
+                    const { y, x } = r[0];
+                    moveMapTo(new window.kakao.maps.LatLng(parseFloat(y), parseFloat(x)), 5);
+                    ok(true);
+                  } else ok(false);
+                },
+                { analyze_type: type }
+              );
+            });
+
+            // 도로명 단독
+            if (!moved) {
+              moved = await new Promise((ok) => {
+                geocoder.addressSearch(
+                  roadOnly,
+                  (r, st) => {
+                    console.log('[goToQuery] loose road cand2 →', st, r?.[0]);
+                    if (st === window.kakao.maps.services.Status.OK && r?.length) {
+                      const { y, x } = r[0];
+                      moveMapTo(new window.kakao.maps.LatLng(parseFloat(y), parseFloat(x)), 6);
+                      ok(true);
+                    } else ok(false);
+                  },
+                  { analyze_type: type }
+                );
+              });
+            }
+          }
+        }
+
+        // 3) 전국 보정은 "주소로 보일 때만"
+        if (!moved && svc && isProbablyAddress(q)) {
           svc.keywordSearch(q, (data, st) => {
             console.log('[goToQuery] keywordSearch 보정 →', st, data?.[0]);
             if (st === window.kakao.maps.services.Status.OK && data?.length) {
               const first = data[0];
-              const latlng = new window.kakao.maps.LatLng(parseFloat(first.y), parseFloat(first.x));
-              moveMapTo(latlng, 3);
+              moveMapTo(new window.kakao.maps.LatLng(parseFloat(first.y), parseFloat(first.x)), 3);
               return resolve(true);
             }
             resolve(false);
-          }, { size: 5, page: 1 }); // bounds/location 없이 전국
-        } else {
-          resolve(false);
+          }, { size: 5, page: 1 });
+          return;
         }
+
+        resolve(!!moved);
       };
       run();
     });
@@ -296,9 +406,11 @@ export default function MapContainer() {
     // 최초 위치: ?address= 우선 → 현재위치 → 기본
     const runInitial = async () => {
       if (address) {
-        const ok = await goToQuery(address);
+        const ok = await (isCoordString(address) || isProbablyAddress(address)
+          ? goToQuery(address)
+          : Promise.resolve(false));
         console.log('[init] address param 이동 결과:', ok);
-        doSearch(); // 이동 성공/실패와 관계없이 현 중심 기준 검색
+        doSearch();
         return;
       }
       if (navigator.geolocation) {
@@ -332,7 +444,7 @@ export default function MapContainer() {
     setRecent(prev => {
       const exists = prev.filter(v => v !== kw);
       const next = [kw, ...exists].slice(0, 8);
-      try { localStorage.setItem('recentKeywords', JSON.stringify(next)); } catch {}
+      try { localStorage.setItem('recentKeywords', JSON.stringify(next)); } catch { }
       return next;
     });
   }, []);
@@ -340,22 +452,22 @@ export default function MapContainer() {
   const removeRecent = useCallback((kw) => {
     setRecent(prev => {
       const next = prev.filter(v => v !== kw);
-      try { localStorage.setItem('recentKeywords', JSON.stringify(next)); } catch {}
+      try { localStorage.setItem('recentKeywords', JSON.stringify(next)); } catch { }
       return next;
     });
   }, []);
 
   const clearRecent = useCallback(() => {
-    try { localStorage.removeItem('recentKeywords'); } catch {}
+    try { localStorage.removeItem('recentKeywords'); } catch { }
     setRecent([]);
   }, []);
 
   // 입력 디바운스 프리뷰(가벼운 2km) — 결과 미리보기
-  const debounceTimer = useRef();
   const onChangeKeywordDebounced = useCallback((v) => {
     setKeyword(v);
-    try { localStorage.setItem('map.keyword', v); } catch {}
+    try { localStorage.setItem('map.keyword', v); } catch { }
     if (!placesSvcRef.current) return;
+
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
     if (!v) { setPlaces([]); return; }
 
@@ -363,11 +475,11 @@ export default function MapContainer() {
       const map = mapObjRef.current;
       const center = map?.getCenter();
       const svc = placesSvcRef.current;
-      const seq = ++searchSeqRef.current;
+      const seq = ++searchSeqRef.current; // 최신 토큰
       svc.keywordSearch(
         v,
         (data, status) => {
-          if (seq !== searchSeqRef.current) return;
+          if (seq !== searchSeqRef.current) return; // 오래된 프리뷰 무시
           if (status !== window.kakao.maps.services.Status.OK) return;
           setPlaces(data);
         },
@@ -376,26 +488,33 @@ export default function MapContainer() {
     }, 250);
   }, []);
 
-  // 검색 버튼: 주소/좌표/장소명 모두 커버
+  // 검색 버튼: 주소/좌표일 때만 지도 이동, 그 외는 현재 화면(bounds)만
   const onSearchClick = useCallback(async () => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current); // 프리뷰 취소
+
     const kw = normalizeQuery(compositeKeyword ?? '');
-    try { localStorage.setItem('map.keyword', kw || ''); } catch {}
+    try { localStorage.setItem('map.keyword', kw || ''); } catch { }
     pushRecent(kw);
 
-    const ok = await goToQuery(kw); // 주소/좌표/장소명 중 무엇이든 이동 시도
-    console.log('[search] goToQuery 결과:', ok);
-    doSearch();                      // 이동여부와 관계없이 현 중심 기준으로 주변 검색
+    if (isCoordString(kw) || isProbablyAddress(kw)) {
+      const ok = await goToQuery(kw);
+      console.log('[search] goToQuery 결과:', ok);
+    }
+
+    doSearch(); // 이동 여부와 관계없이 "현 지도 화면" 기준 검색
   }, [doSearch, pushRecent, compositeKeyword, goToQuery]);
 
   const onPlaceClick = useCallback((place) => {
-    const { kakao } = window;
-    const map = mapObjRef.current;
-    if (!map) return;
-    const coords = new kakao.maps.LatLng(parseFloat(place.y), parseFloat(place.x));
+    const coords = new window.kakao.maps.LatLng(parseFloat(place.y), parseFloat(place.x));
     moveMapTo(coords, 3);
     const marker = markersRef.current.find(m => m.__pid === place.id);
-    if (marker) { marker.setZIndex(999); setTimeout(() => marker.setZIndex(undefined), 1200); }
-    showOverlay(place);
+    if (marker) {
+      marker.setZIndex(999);
+      setTimeout(() => marker.setZIndex(undefined), 1200);
+      showOverlay(place, marker.getPosition()); // ✅ 분산 마커 좌표로 오버레이
+    } else {
+      showOverlay(place);
+    }
   }, [moveMapTo, showOverlay]);
 
   const onMyLocation = useCallback(() => {
@@ -415,6 +534,32 @@ export default function MapContainer() {
       () => doSearch(),
     );
   }, [doSearch, moveMapTo]);
+
+
+    useEffect(() => {
+    if (!qParam) return;
+    // 지도/서비스 준비 여부 체크
+    if (mapObjRef.current && placesSvcRef.current) {
+      setKeyword(qParam);
+      try { localStorage.setItem('map.keyword', qParam); } catch {}
+      doSearch(); // 🔎 바로 검색
+    }
+  }, [qParam, doSearch]);
+
+  const runInitial = async () => {
+    if (address) {
+      const ok = await (isCoordString(address) || isProbablyAddress(address)
+        ? goToQuery(address)
+        : Promise.resolve(false));
+      console.log('[init] address param 이동 결과:', ok);
+
+      if (qParam) {
+        doSearch();   // 🔹 주소 이동 후 qParam(동물병원)으로 검색 실행
+      }
+      return;
+    }
+    // 기존 현재위치 로직 그대로
+  };
 
   return (
     <Map

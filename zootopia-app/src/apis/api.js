@@ -1,14 +1,9 @@
+// src/apis/api.js
 import axios from 'axios';
 
-// axios 객체 생성
 const api = axios.create({
-  baseURL: 'http://localhost:8080',
-  withCredentials: true,
-
-})
-
-
-// 기본 URL 설정
-api.defaults.baseURL = '/api'
+  baseURL: '/api',         // ✅ 절대 http://localhost:8080 이런 거 쓰지 말고 프록시 경로만
+  withCredentials: true,   // ✅ JWT/쿠키 인증용
+});
 
 export default api;

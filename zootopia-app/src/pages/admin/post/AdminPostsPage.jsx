@@ -1,126 +1,33 @@
-import { useEffect, useMemo, useState } from "react";
-import { deletePost, getPost, hidePost, listPosts } from "../../../apis/posts/PostReport";
-import { confirm, toastError, toastSuccess } from "../../../apis/posts/alert";
-import PostReportsModal from "../../../components/admin/post/PostReportsModal";
 import { Link } from "react-router-dom";
+import PostReportsModal from "../../../components/admin/post/PostReportsModal";
 
 const PAGE_SIZE = 20;
 const CATEGORY_OPTIONS = ["자유글", "질문글", "자랑글"];
 
-export default function AdminPostsPage() {
-  // 목록/페이지
-  const [rows, setRows] = useState([]);
-  const [pageInfo, setPageInfo] = useState({ number: 0, size: PAGE_SIZE, totalElements: 0, totalPages: 0 });
-  const [loading, setLoading] = useState(false);
+export default function AdminPostsPage(props) {
+  const {
+    // 데이터
+    rows, pageInfo, loading,
 
-  // 검색/필터
-  const [qInput, setQInput] = useState("");
-  const [q, setQ] = useState("");
-  const [category, setCategory] = useState("");
-  const [hidden, setHidden] = useState(""); // "", "true", "false"
-  const [reportedOnly, setReportedOnly] = useState(false);
+    // 검색/필터
+    qInput, setQInput, q, setQ,
+    category, setCategory,
+    hidden, setHidden,
+    reportedOnly, setReportedOnly,
 
-  // 정렬/페이지
-  const [sort, setSort] = useState("createdAt"); // 백엔드 허용 필드 기준
-  const [dir, setDir] = useState("desc");
-  const [page, setPage] = useState(0);
+    // 정렬/페이지
+    sort, setSort, dir, setDir, page, setPage,
 
-  // 상세/신고 모달
-  const [selected, setSelected] = useState(null);
-  const [reportsPost, setReportsPost] = useState(null);   // { postId, title, reportCount }
+    // 상세/신고
+    selected, openDetail, closeDetail,
+    reportsPost, setReportsPost,
 
-  // 액션 진행 표시
-  const [actingId, setActingId] = useState(null);
+    // 액션
+    actingId, askToggleHide, askDelete,
 
-  const params = useMemo(
-    () => ({ q, category, hidden, page, size: PAGE_SIZE, sort, dir }),
-    [q, category, hidden, page, sort, dir]
-  );
-
-  const fetchList = async () => {
-    setLoading(true);
-    try {
-      const { data } = await listPosts(params);
-      setRows(data?.data || []);
-      setPageInfo(data?.page || pageInfo);
-    } catch (e) {
-      console.error(e);
-      toastError("목록 조회에 실패했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchList();
-    // eslint-disable-next-line
-  }, [params]);
-
-  const handleSearch = () => {
-    setQ(qInput);
-    setPage(0);
-  };
-
-  const openDetail = async (postId) => {
-    if (postId == null) return;
-    try {
-      const { data } = await getPost(postId);
-      setSelected(data?.data || null);
-    } catch (e) {
-      console.error(e);
-      toastError("게시글 상세 조회에 실패했습니다.");
-    }
-  };
-  const closeDetail = () => setSelected(null);
-
-  const askToggleHide = async (row) => {
-    const id = row?.postId;
-    if (!id) return;
-    const nextHidden = !row.hidden;
-    const title = nextHidden ? "게시글 숨김" : "게시글 표시";
-    const text = nextHidden
-      ? `"${row.title}" 게시글을 숨기시겠어요?`
-      : `"${row.title}" 게시글을 다시 표시하시겠어요?`;
-    const res = await confirm(title, text, "warning");
-    if (res?.isConfirmed) await runToggleHide(id, nextHidden);
-  };
-
-  const runToggleHide = async (postId, nextHidden) => {
-    try {
-      setActingId(postId);
-      await hidePost(postId, nextHidden);
-      await fetchList();
-      if (selected?.postId === postId) await openDetail(postId);
-      toastSuccess(nextHidden ? "숨김 처리되었습니다." : "표시 처리되었습니다.");
-    } catch (e) {
-      console.error(e);
-      toastError("처리 실패");
-    } finally {
-      setActingId(null);
-    }
-  };
-
-  const askDelete = async (row) => {
-    const id = row?.postId;
-    if (!id) return;
-    const res = await confirm("게시글 삭제", `"${row.title}" 게시글을 삭제하시겠어요? 되돌릴 수 없습니다.`, "warning");
-    if (res?.isConfirmed) await runDelete(id);
-  };
-
-  const runDelete = async (postId) => {
-    try {
-      setActingId(postId);
-      await deletePost(postId);
-      await fetchList();
-      if (selected?.postId === postId) closeDetail();
-      toastSuccess("삭제되었습니다.");
-    } catch (e) {
-      console.error(e);
-      toastError("삭제 실패");
-    } finally {
-      setActingId(null);
-    }
-  };
+    // 핸들러
+    handleSearch,
+  } = props;
 
   return (
     <div className="tw:px-4 tw:md:px-6 tw:py-6 tw:space-y-6 tw:max-w-[1400px] tw:mx-auto">
@@ -226,7 +133,22 @@ export default function AdminPostsPage() {
               <th className="tw:text-left tw:p-3 tw:px-5">상태</th>
               <th className="tw:text-left tw:p-3 tw:px-5">작성일</th>
               <th className="tw:text-left tw:p-3 tw:px-5">액션</th>
-              <th className="tw:text-left tw:p-3 tw:px-5">신고</th>
+              <th className="tw:text-left tw:p-3 tw:px-5">
+                <label className="tw:inline-flex tw:items-center tw:gap-2 tw:text-sm">
+                  <input
+                    type="checkbox"
+                    className="tw:checkbox tw:checkbox-sm"
+                    checked={reportedOnly}
+                    onChange={(e) => {
+                      setReportedOnly(e.target.checked);
+                      setPage(0);
+                    }}
+                    aria-label="신고된 게시글만 보기"
+                    title="신고된 게시글만 보기"
+                  />
+                  신고
+                </label>
+              </th>
             </tr>
           </thead>
 
@@ -251,8 +173,7 @@ export default function AdminPostsPage() {
                     <td className="tw:p-3 tw:px-5">{p.userEmail || "-"}</td>
                     <td className="tw:p-3 tw:px-5">
                       <span
-                        className={`tw:badge tw:badge-sm ${p.hidden ? "tw:badge-warning" : "tw:badge-success"
-                          }`}
+                        className={`tw:badge tw:badge-sm ${p.hidden ? "tw:badge-warning" : "tw:badge-success"}`}
                       >
                         {p.hidden ? "숨김" : "표시"}
                       </span>
@@ -272,14 +193,14 @@ export default function AdminPostsPage() {
                           ? "tw:bg-green-500 hover:tw:bg-green-700"
                           : "tw:bg-yellow-500 hover:tw:bg-yellow-700"
                           } tw:text-white tw:py-1 tw:px-2 tw:rounded`}
-                        onClick={() => askToggleHide(p)}
+                        onClick={() => props.askToggleHide(p)}
                         disabled={actingId === p.postId || loading}
                       >
                         {actingId === p.postId ? "처리 중..." : p.hidden ? "표시" : "숨김"}
                       </button>
                       <button
                         className="tw:text-sm tw:bg-red-500 hover:tw:bg-red-700 tw:text-white tw:py-1 tw:px-2 tw:rounded"
-                        onClick={() => askDelete(p)}
+                        onClick={() => props.askDelete(p)}
                         disabled={actingId === p.postId || loading}
                       >
                         삭제
@@ -289,13 +210,7 @@ export default function AdminPostsPage() {
                       {(p.reportCount || 0) > 0 ? (
                         <button
                           className="tw:text-sm tw:bg-red-500 hover:tw:bg-red-700 tw:text-white tw:py-1 tw:px-2 tw:rounded"
-                          onClick={() =>
-                            setReportsPost({
-                              postId: p.postId,
-                              title: p.title,
-                              reportCount: p.reportCount,
-                            })
-                          }
+                          onClick={() => setReportsPost({ postId: p.postId, title: p.title, reportCount: p.reportCount })}
                         >
                           {p.reportCount}건
                         </button>
@@ -303,7 +218,6 @@ export default function AdminPostsPage() {
                         <span className="tw:text-gray-400">-</span>
                       )}
                     </td>
-
                   </tr>
                 ))}
           </tbody>
@@ -311,57 +225,50 @@ export default function AdminPostsPage() {
       </div>
 
       {/* ===== 페이지네이션 ===== */}
-      <div className="tw:flex tw:justify-center tw:mt-4">
-        <div className="tw:join">
-          <button className="tw:join-item tw:btn btn-sm" disabled={page === 0} onClick={() => setPage(0)}>« 처음</button>
-          <button className="tw:join-item tw:btn btn-sm" disabled={page === 0} onClick={() => setPage((p) => Math.max(p - 1, 0))}>‹ 이전</button>
-          <button className="tw:join-item tw:btn btn-sm tw:btn-disabled">{page + 1} / {pageInfo?.totalPages || 1}</button>
-          <button className="tw:join-item tw:btn btn-sm" disabled={page + 1 >= (pageInfo?.totalPages || 1)} onClick={() => setPage((p) => Math.min(p + 1, (pageInfo?.totalPages || 1) - 1))}>다음 ›</button>
-          <button className="tw:join-item tw:btn btn-sm" disabled={page + 1 >= (pageInfo?.totalPages || 1)} onClick={() => setPage((pageInfo?.totalPages || 1) - 1)}>마지막 »</button>
+      {!reportedOnly ? (
+        <div className="tw:flex tw:justify-center tw:mt-4">
+          <div className="tw:join">
+            <button className="tw:join-item tw:btn btn-sm" disabled={page === 0} onClick={() => setPage(0)}>« 처음</button>
+            <button className="tw:join-item tw:btn btn-sm" disabled={page === 0} onClick={() => setPage((p) => Math.max(p - 1, 0))}>‹ 이전</button>
+            <button className="tw:join-item tw:btn btn-sm tw:btn-disabled">{page + 1} / {pageInfo?.totalPages || 1}</button>
+            <button className="tw:join-item tw:btn btn-sm" disabled={page + 1 >= (pageInfo?.totalPages || 1)} onClick={() => setPage((p) => Math.min(p + 1, (pageInfo?.totalPages || 1) - 1))}>다음 ›</button>
+            <button className="tw:join-item tw:btn btn-sm" disabled={page + 1 >= (pageInfo?.totalPages || 1)} onClick={() => setPage((pageInfo?.totalPages || 1) - 1)}>마지막 »</button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="tw:flex tw:justify-center tw:mt-4 tw:text-sm tw:text-gray-500">
+          신고된 게시글 {pageInfo?.totalElements ?? rows.length}건
+        </div>
+      )}
 
       {/* ===== 상세/신고 모달 ===== */}
       {selected && (
         <PostDetailModal
           post={selected}
           onClose={closeDetail}
-          onToggleHide={runToggleHide}
-          onDelete={runDelete}
+          onToggleHide={(id, nxt) => props.runToggleHide?.(id, nxt)}
+          onDelete={(id) => props.runDelete?.(id)}
         />
       )}
-
       {reportsPost && (
-        <PostReportsModal
-          post={reportsPost}
-          onClose={() => setReportsPost(null)}
-        />
+        <PostReportsModal post={reportsPost} onClose={() => setReportsPost(null)} />
       )}
     </div>
   );
 }
 
-/** 간단 상세 모달 */
+/** 간단 상세 모달 (뷰 내부에 둠) */
 function PostDetailModal({ post, onClose, onToggleHide, onDelete }) {
   if (!post) return null;
   const { postId, title, category, userEmail, hidden, createdAt, reportCount } = post;
 
   return (
     <div className="tw:fixed tw:inset-0 tw:z-50 tw:flex tw:items-center tw:justify-center">
-      {/* 배경 (딤 처리) */}
-      <div
-        className="tw:absolute tw:inset-0 tw:bg-black/40"
-        onClick={onClose}
-      />
-
-      {/* 모달 박스 */}
-      <div className="tw:relative tw:bg-white tw:rounded-2xl tw:shadow-2xl 
-                      tw:p-6 tw:w-full tw:max-w-2xl tw:space-y-4">
+      <div className="tw:absolute tw:inset-0 tw:bg-black/40" onClick={onClose} />
+      <div className="tw:relative tw:bg-white tw:rounded-2xl tw:shadow-2xl tw:p-6 tw:w-full tw:max-w-2xl tw:space-y-4">
         <div className="tw:flex tw:items-center tw:justify-between">
           <h3 className="tw:text-lg tw:font-semibold">게시글 상세</h3>
-          <button className="tw:btn tw:btn-sm" onClick={onClose}>
-            닫기
-          </button>
+          <button className="tw:btn tw:btn-sm" onClick={onClose}>닫기</button>
         </div>
 
         <div className="tw:space-y-1">
@@ -381,10 +288,7 @@ function PostDetailModal({ post, onClose, onToggleHide, onDelete }) {
           >
             {hidden ? "표시" : "숨김"}
           </button>
-          <button
-            className="tw:btn tw:btn-sm tw:btn-error"
-            onClick={() => onDelete(postId)}
-          >
+          <button className="tw:btn tw:btn-sm tw:btn-error" onClick={() => onDelete(postId)}>
             삭제
           </button>
         </div>

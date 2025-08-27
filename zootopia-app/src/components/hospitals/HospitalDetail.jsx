@@ -238,7 +238,16 @@ const HospitalDetail = ({
                 </tr>
                 <tr>
                   <td className="info-label tw:bg-[#f8f9fa] tw:font-semibold tw:p-2">병원 주소</td>
-                  <td className="info-value tw:p-2 tw:cursor-pointer tw:no-underline tw:flex tw:gap-2 tw:bg-[#f8f9fad5]" onClick={() => navigate(`/map?address=${encodeURIComponent(hospital.address)}`)}>{hospital.address || "-"}<MousePointerClick className="tw:text-[#ff6b6b]" /></td>
+                  <td
+                    className="info-value tw:p-2 tw:cursor-pointer tw:no-underline tw:flex tw:gap-2 tw:bg-[#f8f9fad5]"
+                    onClick={() =>
+                      navigate(
+                        `/map?address=${encodeURIComponent(hospital.address)}&q=${encodeURIComponent('동물병원')}`
+                      )
+                    }
+                  >
+                    {hospital.address || "-"} <MousePointerClick className="tw:text-[#ff6b6b]" />
+                  </td>
                 </tr>
                 <tr>
                   <td className="info-label tw:bg-[#f8f9fa] tw:font-semibold tw:p-2">홈페이지</td>
@@ -269,11 +278,11 @@ const HospitalDetail = ({
             {isAdmin && (
               <div className="tw:mt-3 tw:text-right">
                 <button
-                onClick={() => navigate(`/service/hospitals/edit/${hospitalId}`)}
-                className="tw:bg-[#74b9ff] tw:text-white tw:px-4 tw:py-2 tw:rounded hover:tw:bg-[#0984e3]"
-              >
-                수정하기
-              </button>
+                  onClick={() => navigate(`/service/hospitals/edit/${hospitalId}`)}
+                  className="tw:bg-[#74b9ff] tw:text-white tw:px-4 tw:py-2 tw:rounded hover:tw:bg-[#0984e3]"
+                >
+                  수정하기
+                </button>
               </div>
             )}
           </div>
@@ -293,9 +302,8 @@ const HospitalDetail = ({
         {/* 리뷰 목록 */}
         <div className="review-list tw:mt-4 tw:space-y-3">
           {reviews.map((rev, idx) => (
-            <div key={rev.reviewId} className={`review-item tw:shadow-md tw:rounded-xl tw:p-3 ${
-                                                  idx % 2 === 0 ? "tw:bg-[#fcf2f1dc]" : "tw:bg-[#f0f0f0a4]"
-                                                }`}>
+            <div key={rev.reviewId} className={`review-item tw:shadow-md tw:rounded-xl tw:p-3 ${idx % 2 === 0 ? "tw:bg-[#fcf2f1dc]" : "tw:bg-[#f0f0f0a4]"
+              }`}>
               <div className="tw:flex tw:justify-between tw:items-center">
                 <div>
                   <strong>{rev.userNickname}</strong>
@@ -344,21 +352,21 @@ const HospitalDetail = ({
                   </span>
                 ))}
               </div>
-            <div className="tw:flex tw:gap-1.5 tw:w-">
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                rows="3"
-                placeholder="리뷰를 작성해주세요."
-                className="review-input tw:w-full tw:border-2 tw:border-[#d6d6d698] tw:focus:outline-none tw:focus:border-[#ff6b6b] tw:rounded tw:p-2"
-              />
-              <button
-                type="submit"
-                className="review-submit-btn tw:bg-[#ff6b6b] tw:w-20 tw:text-white tw:px-2 tw:py-2 tw:ml-3.5 tw:rounded hover:tw:bg-[#0984e3]"
-              >
-                {reviewId ? "수정" : "등록"}
-              </button>
-            </div>
+              <div className="tw:flex tw:gap-1.5 tw:w-">
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  rows="3"
+                  placeholder="리뷰를 작성해주세요."
+                  className="review-input tw:w-full tw:border-2 tw:border-[#d6d6d698] tw:focus:outline-none tw:focus:border-[#ff6b6b] tw:rounded tw:p-2"
+                />
+                <button
+                  type="submit"
+                  className="review-submit-btn tw:bg-[#ff6b6b] tw:w-20 tw:text-white tw:px-2 tw:py-2 tw:ml-3.5 tw:rounded hover:tw:bg-[#0984e3]"
+                >
+                  {reviewId ? "수정" : "등록"}
+                </button>
+              </div>
             </form>
           </div>
         )}

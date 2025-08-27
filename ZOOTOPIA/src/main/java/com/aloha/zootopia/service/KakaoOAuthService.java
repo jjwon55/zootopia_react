@@ -32,7 +32,7 @@ public class KakaoOAuthService {
     private String clientId;
     @Value("${kakao.oauth.client-secret:}")
     private String clientSecret;
-    @Value("${kakao.oauth.redirect-uri:http://localhost:8080/auth/kakao/callback}")
+    @Value("${kakao.oauth.redirect-uri:http://192.168.30.3:8080/auth/kakao/callback}")
     private String redirectUri;
 
     private final UserMapper userMapper;

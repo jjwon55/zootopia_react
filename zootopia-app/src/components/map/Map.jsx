@@ -18,7 +18,7 @@ export default function Map({
   // 액션
   onMyLocation,
 
-  // placeholder
+  // placeholder (주소 파라미터는 컨테이너에서 처리)
   address,
 }) {
   const headerH = '64px';

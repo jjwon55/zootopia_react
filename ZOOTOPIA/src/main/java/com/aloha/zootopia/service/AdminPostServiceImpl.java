@@ -16,15 +16,28 @@ public class AdminPostServiceImpl implements AdminPostService {
     private final AdminPostMapper mapper;
 
     @Override
-    public PageResult<AdminPost> list(String q, String category, Boolean hidden,
-                                      int page, int size, String sort, String dir) {
+    public PageResult<AdminPost> list(
+            String q,
+            String category,
+            Boolean hidden,
+            Boolean reportedOnly,
+            int page,
+            int size,
+            String sort,
+            String dir
+    ) {
+        // 파라미터 보정
+        int safeSize = Math.max(size, 1);
+        int safePage = Math.max(page, 0);
+        int offset = safePage * safeSize;
 
-        int total = mapper.countByFilter(q, category, hidden);
+        int total = mapper.countByFilter(q, category, hidden, reportedOnly);
+        List<AdminPost> rows = mapper.findByFilter(
+                q, category, hidden, reportedOnly,
+                offset, safeSize, sort, dir
+        );
 
-        int offset = Math.max(page, 0) * Math.max(size, 1);
-        List<AdminPost> rows = mapper.findByFilter(q, category, hidden, offset, size, sort, dir);
-
-        return new PageResult<>(rows, page, size, total);
+        return new PageResult<>(rows, safePage, safeSize, total);
     }
 
     @Override
