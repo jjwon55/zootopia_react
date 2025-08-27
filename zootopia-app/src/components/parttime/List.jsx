@@ -1,13 +1,12 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
-
-// 경로는 프로젝트 구조에 맞게 조정하세요.
+// 컴포넌트 임포트
 import JobCard from './JobCard'
 import Pagination from './Pagination'
 import CommentList from './CommentList'
 import CommentForm from './CommentForm'
-import JobFilter from './JobFilter' // ✅ 필터 컴포넌트 사용
+import JobFilter from './JobFilter'
 
 const List = ({
   jobs = [],
@@ -31,6 +30,7 @@ const List = ({
   totalComments = 0,
   commentPage = 1,
   totalCommentPages = 1,
+  jobId = null, // 현재 댓글이 연관된 jobId
 
   // 유저/핸들러
   user,
@@ -54,7 +54,7 @@ const List = ({
           </div>
         </div>
 
-        {/* ====== 필터 폼 (이전 내용 그대로) ====== */}
+        {/* 필터 폼 */}
         <JobFilter
           region={region}
           location={location}
@@ -72,10 +72,9 @@ const List = ({
           onReset={onReset}
         />
 
-      {/* ====== 카드 영역 ====== */}
+        {/* 카드 영역 */}
         <div className="tw:max-w-4xl tw:mx-auto tw:mt-8 tw:mb-6">
           {jobs.length > 0 ? (
-            // 💡 강제 2열
             <div className="tw:grid tw:grid-cols-2 tw:gap-6 tw:my-4">
               {jobs.map(job => (
                 <JobCard key={job.jobId} job={job} />
@@ -91,17 +90,19 @@ const List = ({
             <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
           </div>
 
-          <div className="tw:text-right tw:mb-2">
-            <Link
-              to="/parttime/insert"
-              className="tw:inline-flex tw:items-center tw:justify-center tw:h-10 tw:px-4 tw:border tw:border-[#F27A7A] tw:bg-[#F27A7A] tw:text-white tw:rounded-xl tw:text-sm hover:tw:bg-[#e86e6e]"
-            >
-              등록하기
-            </Link>
-          </div>
+          {user && (
+            <div className="tw:text-right tw:mb-2">
+              <Link
+                to="/parttime/insert"
+                className="tw:inline-flex tw:items-center tw:justify-center tw:h-10 tw:px-4 tw:border tw:border-[#F27A7A] tw:bg-[#F27A7A] tw:text-white tw:rounded-xl tw:text-sm hover:tw:bg-[#e86e6e]"
+              >
+                등록하기
+              </Link>
+            </div>
+          )}
         </div>
 
-        {/* ====== 댓글 ====== */}
+        {/* 댓글 영역 */}
         <div className="tw:flex tw:justify-center tw:my-8">
           <div className="tw:w-full tw:bg-white tw:border tw:border-rose-100 tw:rounded-3xl tw:p-5 tw:max-w-5xl tw:shadow-sm">
             <h5 className="tw:font-bold tw:mb-4 tw:text-center">✍️ 당신의 이야기를 들려주세요</h5>
@@ -122,7 +123,10 @@ const List = ({
             />
 
             {user ? (
-              <CommentForm user={user} onSubmit={onCommentSubmit} />
+              <CommentForm
+                user={user}
+                onSubmit={(data) => onCommentSubmit({ ...data, jobId })}
+              />
             ) : (
               <div className="tw:mt-3 tw:bg-yellow-50 tw:border tw:border-yellow-200 tw:text-yellow-700 tw:p-3 tw:rounded-xl">
                 댓글을 작성하려면 <Link to="/login" className="tw:underline tw:font-bold">로그인</Link>이 필요합니다.

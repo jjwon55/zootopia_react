@@ -23,6 +23,9 @@ export default function ProductDetail() {
 
   }, [productId]);
 
+  const readOverlay = () => {
+    try { return JSON.parse(localStorage.getItem('customProductsOverlay') || '[]'); } catch { return []; }
+  };
 
   const loadProductDetail = async () => {
     setLoading(true);
@@ -39,19 +42,29 @@ export default function ProductDetail() {
         const mockByNo = mockProductsDatabase.find(p => String(p.no) === String(productId));
         // 3) 이름으로도 매칭 (서버 no 불일치 대비)
         const mockByName = !mockByNo && apiProd?.name ? mockProductsDatabase.find(p => p.name === apiProd.name) : null;
-        const finalProd = mockByNo || mockByName || apiProd;
+        // 4) 오버레이에서 동일 no/이름 매칭 (신규 등록 제품)
+        const overlay = readOverlay();
+        const overlayByNo = overlay.find(p => String(p.no) === String(productId));
+        const overlayByName = !overlayByNo && apiProd?.name ? overlay.find(p => p.name === apiProd.name) : null;
+        const finalProd = overlayByNo || mockByNo || overlayByName || mockByName || apiProd;
         // 최종 상품 no를 URL 파라미터로 강제 (mock과 동기화 목적)
         const coerced = { ...finalProd, no: Number(productId) };
         console.log('Final coerced product detail:', coerced);
         setProduct(coerced);
       } else {
-        // API 실패: mock DB에서 직접 로드
-        const mockByNo = mockProductsDatabase.find(p => String(p.no) === String(productId));
-        if (mockByNo) {
-          setProduct({ ...mockByNo });
+        // API 실패: 오버레이 → mock 순으로 조회
+        const overlay = readOverlay();
+        const overlayByNo = overlay.find(p => String(p.no) === String(productId));
+        if (overlayByNo) {
+          setProduct({ ...overlayByNo });
         } else {
-          console.log('API response invalid and no mock match');
-          setProduct(null);
+          const mockByNo = mockProductsDatabase.find(p => String(p.no) === String(productId));
+          if (mockByNo) {
+            setProduct({ ...mockByNo });
+          } else {
+            console.log('API response invalid and no mock/overlay match');
+            setProduct(null);
+          }
         }
       }
     } catch (error) {
@@ -113,18 +126,27 @@ export default function ProductDetail() {
       console.warn('Add to cart during buy now failed (ignored):', e);
     }
 
+    // base64 이미지는 로컬스토리지 용량을 초과할 수 있으므로 제거
+    const sanitizedImage = product.imageUrl && String(product.imageUrl).startsWith('data:')
+      ? ''
+      : product.imageUrl;
     const orderData = {
       items: [{
         productId: product.no,
         productName: product.name,
         price: product.price,
         quantity: quantity,
-        imageUrl: product.imageUrl
+        imageUrl: sanitizedImage
       }],
       totalAmount: product.price * quantity,
       mode: 'buyNow'
     };
-    localStorage.setItem('tempOrder', JSON.stringify(orderData));
+    try {
+      localStorage.setItem('tempOrder', JSON.stringify(orderData));
+    } catch (e) {
+      // 용량 초과 등 저장 실패 시 임시주문은 건너뛰고 장바구니 기반으로 결제 페이지에서 로드
+      console.warn('Skipping tempOrder save:', e?.message);
+    }
     window.location.href = '/checkout';
   };
 

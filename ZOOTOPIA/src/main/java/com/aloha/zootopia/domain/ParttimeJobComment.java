@@ -12,5 +12,4 @@ public class ParttimeJobComment {
     private Long jobId;
     private String content;
     private LocalDateTime createdAt;
-
 }

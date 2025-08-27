@@ -31,10 +31,20 @@ export async function fetchProducts({ category = '', search = '', page = 1, size
       },
     });
     if (data?.products) {
-      data.products = data.products.map(p => ({
-        ...p,
-        imageUrl: mapImageUrl(p.imageUrl)
-      }));
+      const now = Date.now();
+      const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+      data.products = data.products.map(p => {
+        let isNew = false;
+        try {
+          const d = p.regDate ? new Date(p.regDate).getTime() : null;
+          if (d && now - d <= THIRTY_DAYS) isNew = true;
+        } catch {}
+        return {
+          ...p,
+          imageUrl: mapImageUrl(p.imageUrl),
+          isNew,
+        };
+      });
     }
     return data;
   } catch (error) {

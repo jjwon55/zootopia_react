@@ -1,4 +1,6 @@
 // Mock 데이터베이스 역할을 할 제품 데이터
+// 주의: SPA 등록 페이지에서 추가/수정한 항목은 localStorage('customProductsOverlay')에 저장되어
+// 여기 기본 목록에 병합되어 표시됩니다. (페이지 새로고침/오프라인에서도 유지)
 import {
   dogFood,
   catToy,

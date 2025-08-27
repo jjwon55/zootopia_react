@@ -2,6 +2,7 @@ package com.aloha.zootopia.domain;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.Data;
 
@@ -18,4 +19,5 @@ public class ParttimeJob {
     private String memo;
     private LocalDateTime createdAt;
     private String nickname;
+    private List<PetProfile> pets;
 }

@@ -1,33 +1,74 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="com.aloha.zootopia.mapper.ParttimeJobMapper">
 
+  <!-- ======================
+       ResultMap (공고 + pets)
+       ====================== -->
+  <resultMap id="JobWithPets" type="com.aloha.zootopia.domain.ParttimeJob">
+    <id property="jobId" column="job_id"/>
+    <result property="userId" column="user_id"/>
+    <result property="title" column="title"/>
+    <result property="location" column="location"/>
+    <result property="pay" column="pay"/>
+    <result property="startDate" column="start_date"/>
+    <result property="endDate" column="end_date"/>
+    <result property="memo" column="memo"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="nickname" column="nickname"/>
+    <collection property="pets" ofType="com.aloha.zootopia.domain.PetProfile"
+                select="com.aloha.zootopia.mapper.PetProfileMapper.selectPetsByJobId"
+                column="job_id"/>
+  </resultMap>
+
+  <!-- ======================
+       공고 등록
+       ====================== -->
   <insert id="insertJob" parameterType="com.aloha.zootopia.domain.ParttimeJob" useGeneratedKeys="true" keyProperty="jobId">
     INSERT INTO parttime_job
-    (title, location, pay, start_date, end_date, user_id, pet_info, memo, created_at)
+    (title, location, pay, start_date, end_date, user_id, memo, created_at)
     VALUES
-    (#{title}, #{location}, #{pay}, #{startDate}, #{endDate}, #{userId}, #{petInfo}, #{memo}, NOW())
+    (#{title}, #{location}, #{pay}, #{startDate}, #{endDate}, #{userId}, #{memo}, NOW())
   </insert>
 
-  <select id="listJobs" resultType="com.aloha.zootopia.domain.ParttimeJob">
+  <!-- ======================
+       단일 공고 조회
+       ====================== -->
+  <select id="selectJobById" parameterType="long" resultMap="JobWithPets">
     SELECT pj.job_id, pj.user_id, pj.title, pj.location, pj.pay,
-           pj.start_date, pj.end_date, pj.pet_info, pj.memo, pj.created_at,
-           u.nickname
-    FROM parttime_job pj
-    LEFT JOIN users u ON pj.user_id = u.user_id
-    ORDER BY pj.created_at DESC
-  </select>
-
-  <select id="selectJobById" parameterType="long" resultType="com.aloha.zootopia.domain.ParttimeJob">
-    SELECT pj.job_id, pj.user_id, pj.title, pj.location, pj.pay,
-           pj.start_date, pj.end_date, pj.pet_info, pj.memo, pj.created_at,
+           pj.start_date, pj.end_date, pj.memo, pj.created_at,
            u.nickname
     FROM parttime_job pj
     LEFT JOIN users u ON pj.user_id = u.user_id
     WHERE pj.job_id = #{jobId}
   </select>
 
+  <!-- ======================
+       전체 공고 조회 (페이징)
+       ====================== -->
+  <select id="selectPaged" parameterType="map" resultMap="JobWithPets">
+    SELECT pj.job_id, pj.user_id, pj.title, pj.location, pj.pay,
+           pj.start_date, pj.end_date, pj.memo, pj.created_at,
+           u.nickname
+    FROM parttime_job pj
+    LEFT JOIN users u ON pj.user_id = u.user_id
+    ORDER BY pj.created_at DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <!-- ======================
+       전체 공고 수
+       ====================== -->
+  <select id="countAllJobs" resultType="int">
+    SELECT COUNT(*) FROM parttime_job
+  </select>
+
+  <!-- ======================
+       공고 업데이트
+       ====================== -->
   <update id="updateJob" parameterType="com.aloha.zootopia.domain.ParttimeJob">
     UPDATE parttime_job
     SET title = #{title},
@@ -35,61 +76,61 @@
         pay = #{pay},
         start_date = #{startDate},
         end_date = #{endDate},
-        pet_info = #{petInfo},
         memo = #{memo}
     WHERE job_id = #{jobId}
   </update>
 
+  <!-- ======================
+       공고 삭제
+       ====================== -->
   <delete id="deleteJob" parameterType="long">
     DELETE FROM parttime_job WHERE job_id = #{jobId}
   </delete>
 
-  <!-- =========================
-       필터(세부 종 우선 / 대분류 REGEXP)
-       ========================= -->
-  <select id="selectFilteredJobs" parameterType="map" resultType="com.aloha.zootopia.domain.ParttimeJob">
-    SELECT pj.job_id, pj.user_id, pj.title, pj.location, pj.pay,
-           pj.start_date, pj.end_date, pj.pet_info, pj.memo, pj.created_at,
+  <!-- ======================
+       필터링 조회
+       ====================== -->
+  <select id="selectFilteredJobs" parameterType="map" resultMap="JobWithPets">
+    SELECT DISTINCT pj.job_id, pj.user_id, pj.title, pj.location, pj.pay,
+           pj.start_date, pj.end_date, pj.memo, pj.created_at,
            u.nickname
     FROM parttime_job pj
     LEFT JOIN users u ON pj.user_id = u.user_id
+    LEFT JOIN job_pet jp ON pj.job_id = jp.job_id
+    LEFT JOIN pet_profile p ON jp.pet_id = p.pet_id
     <where>
       <!-- 지역 -->
       <if test="location != null and location != ''">
         AND pj.location LIKE CONCAT('%', #{location}, '%')
       </if>
 
-      <!-- 동물: 세부 종 우선, 없으면 대분류 REGEXP -->
+      <!-- 동물: 세부 종 우선 -->
       <choose>
-        <!-- 1) animalType(세부 종) -->
         <when test="animalType != null and animalType != ''">
           AND (
-            REPLACE(pj.pet_info,' ','') LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
-            OR REPLACE(pj.title,' ','')    LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
-            OR REPLACE(pj.memo,' ','')     LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
+            REPLACE(p.name,' ','') LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
+            OR REPLACE(p.breed,' ','') LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
           )
         </when>
-
-        <!-- 2) animalGroup(대분류) -->
         <when test="animalGroup != null and animalGroup != ''">
           <choose>
             <when test="animalGroup == '포유류'">
-              AND pj.pet_info REGEXP '개|고양이|토끼|햄스터|기니피그|고슴도치|페렛'
+              AND p.species REGEXP '개|고양이|토끼|햄스터|기니피그|고슴도치|페렛'
             </when>
             <when test="animalGroup == '파충류'">
-              AND pj.pet_info REGEXP '거북이|도마뱀|이구아나|카멜레온|뱀'
+              AND p.species REGEXP '거북이|도마뱀|이구아나|카멜레온|뱀'
             </when>
             <when test="animalGroup == '절지류'">
-              AND pj.pet_info REGEXP '타란툴라|전갈|곤충'
+              AND p.species REGEXP '타란툴라|전갈|곤충'
             </when>
             <when test="animalGroup == '어류'">
-              AND pj.pet_info REGEXP '금붕어|구피|베타|시클리드|코이'
+              AND p.species REGEXP '금붕어|구피|베타|시클리드|코이'
             </when>
             <when test="animalGroup == '양서류'">
-              AND pj.pet_info REGEXP '개구리|도롱뇽|살라맨더|뉴트'
+              AND p.species REGEXP '개구리|도롱뇽|살라맨더|뉴트'
             </when>
             <when test="animalGroup == '조류'">
-              AND pj.pet_info REGEXP '앵무새|잉꼬|카나리아|왕관앵무|문조'
+              AND p.species REGEXP '앵무새|잉꼬|카나리아|왕관앵무|문조'
             </when>
           </choose>
         </when>
@@ -123,8 +164,9 @@
         AND (
           pj.title    LIKE CONCAT('%', #{keyword}, '%')
           OR pj.memo  LIKE CONCAT('%', #{keyword}, '%')
-          OR pj.pet_info LIKE CONCAT('%', #{keyword}, '%')
           OR pj.location LIKE CONCAT('%', #{keyword}, '%')
+          OR p.name LIKE CONCAT('%', #{keyword}, '%')
+          OR p.breed LIKE CONCAT('%', #{keyword}, '%')
         )
       </if>
     </where>
@@ -132,9 +174,14 @@
     LIMIT #{limit} OFFSET #{offset}
   </select>
 
+  <!-- ======================
+       필터링 공고 수
+       ====================== -->
   <select id="countFilteredJobs" parameterType="map" resultType="int">
-    SELECT COUNT(*)
+    SELECT COUNT(DISTINCT pj.job_id)
     FROM parttime_job pj
+    LEFT JOIN job_pet jp ON pj.job_id = jp.job_id
+    LEFT JOIN pet_profile p ON jp.pet_id = p.pet_id
     <where>
       <if test="location != null and location != ''">
         AND pj.location LIKE CONCAT('%', #{location}, '%')
@@ -143,30 +190,29 @@
       <choose>
         <when test="animalType != null and animalType != ''">
           AND (
-            REPLACE(pj.pet_info,' ','') LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
-            OR REPLACE(pj.title,' ','')    LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
-            OR REPLACE(pj.memo,' ','')     LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
+            REPLACE(p.name,' ','') LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
+            OR REPLACE(p.breed,' ','') LIKE CONCAT('%', REPLACE(#{animalType},' ',''), '%')
           )
         </when>
         <when test="animalGroup != null and animalGroup != ''">
           <choose>
             <when test="animalGroup == '포유류'">
-              AND pj.pet_info REGEXP '개|고양이|토끼|햄스터|기니피그|고슴도치|페렛'
+              AND p.species REGEXP '개|고양이|토끼|햄스터|기니피그|고슴도치|페렛'
             </when>
             <when test="animalGroup == '파충류'">
-              AND pj.pet_info REGEXP '거북이|도마뱀|이구아나|카멜레온|뱀'
+              AND p.species REGEXP '거북이|도마뱀|이구아나|카멜레온|뱀'
             </when>
             <when test="animalGroup == '절지류'">
-              AND pj.pet_info REGEXP '타란툴라|전갈|곤충'
+              AND p.species REGEXP '타란툴라|전갈|곤충'
             </when>
             <when test="animalGroup == '어류'">
-              AND pj.pet_info REGEXP '금붕어|구피|베타|시클리드|코이'
+              AND p.species REGEXP '금붕어|구피|베타|시클리드|코이'
             </when>
             <when test="animalGroup == '양서류'">
-              AND pj.pet_info REGEXP '개구리|도롱뇽|살라맨더|뉴트'
+              AND p.species REGEXP '개구리|도롱뇽|살라맨더|뉴트'
             </when>
             <when test="animalGroup == '조류'">
-              AND pj.pet_info REGEXP '앵무새|잉꼬|카나리아|왕관앵무|문조'
+              AND p.species REGEXP '앵무새|잉꼬|카나리아|왕관앵무|문조'
             </when>
           </choose>
         </when>
@@ -197,25 +243,12 @@
         AND (
           pj.title    LIKE CONCAT('%', #{keyword}, '%')
           OR pj.memo  LIKE CONCAT('%', #{keyword}, '%')
-          OR pj.pet_info LIKE CONCAT('%', #{keyword}, '%')
           OR pj.location LIKE CONCAT('%', #{keyword}, '%')
+          OR p.name LIKE CONCAT('%', #{keyword}, '%')
+          OR p.breed LIKE CONCAT('%', #{keyword}, '%')
         )
       </if>
     </where>
-  </select>
-
-  <select id="selectPaged" resultType="com.aloha.zootopia.domain.ParttimeJob">
-    SELECT pj.job_id, pj.user_id, pj.title, pj.location, pj.pay,
-           pj.start_date, pj.end_date, pj.pet_info, pj.memo, pj.created_at,
-           u.nickname
-    FROM parttime_job pj
-    LEFT JOIN users u ON pj.user_id = u.user_id
-    ORDER BY pj.created_at DESC
-    LIMIT #{limit} OFFSET #{offset}
-  </select>
-
-  <select id="countAllJobs" resultType="int">
-    SELECT COUNT(*) FROM parttime_job
   </select>
 
 </mapper>

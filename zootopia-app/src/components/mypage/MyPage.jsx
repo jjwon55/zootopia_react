@@ -212,6 +212,16 @@ export default function MyPage({
 function OrderSummarySection() {
   const [order, setOrder] = useState(null);
 
+  // 오버레이에서 이미지 보정
+  const readOverlay = () => {
+    try { return JSON.parse(localStorage.getItem('customProductsOverlay') || '[]'); } catch { return []; }
+  };
+  const getOverlayImage = (id) => {
+    const overlay = readOverlay();
+    const found = overlay.find(p => String(p.no) === String(id));
+    return found?.imageUrl || '';
+  };
+
   useEffect(() => {
     try {
       const qp = new URLSearchParams(window.location.search);
@@ -253,20 +263,23 @@ function OrderSummarySection() {
       <div className="tw:bg-white tw:rounded-xl tw:p-4 tw:shadow-sm tw:border tw:border-zinc-200 tw:mb-4">
         <h3 className="tw:font-semibold tw:mb-3">구매 상품</h3>
         <ul className="tw:space-y-3">
-          {(order.items || []).map((it) => (
-            <li key={it.id} className="tw:flex tw:items-center tw:gap-3">
-              <img
-                src={it.imageUrl || '/vite.svg'}
-                alt={it.name}
-                className="tw:w-14 tw:h-14 tw:object-cover tw:rounded-md tw:border"
-              />
-              <div className="tw:flex-1">
-                <div className="tw:font-medium">{it.name}</div>
-                <div className="tw:text-sm tw:text-zinc-600">수량 {it.quantity}개</div>
-              </div>
-              <div className="tw:font-semibold">{(it.price * it.quantity).toLocaleString()}원</div>
-            </li>
-          ))}
+          {(order.items || []).map((it) => {
+            const imgSrc = it.imageUrl || getOverlayImage(it.productId || it.id) || '/vite.svg';
+            return (
+              <li key={it.id} className="tw:flex tw:items-center tw:gap-3">
+                <img
+                  src={imgSrc}
+                  alt={it.name}
+                  className="tw:w-14 tw:h-14 tw:object-cover tw:rounded-md tw:border"
+                />
+                <div className="tw:flex-1">
+                  <div className="tw:font-medium">{it.name}</div>
+                  <div className="tw:text-sm tw:text-zinc-600">수량 {it.quantity}개</div>
+                </div>
+                <div className="tw:font-semibold">{(it.price * it.quantity).toLocaleString()}원</div>
+              </li>
+            );
+          })}
         </ul>
       </div>
 
