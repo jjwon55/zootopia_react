@@ -114,7 +114,7 @@ const Header = () => {
 
           {/* 로고 */}
           <Link to="/" className="tw:flex tw:items-center tw:no-underline">
-            <div className="tw:w-[200px] tw:h-[100px] tw:flex tw:items-center">
+            <div className="tw:w-[200px] tw:h-[100px] tw:flex tw:items-center tw:overflow-hidden">
               <img
                 src={logo}
                 alt="Zootopia Logo"
