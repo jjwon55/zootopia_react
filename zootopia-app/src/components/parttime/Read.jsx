@@ -54,6 +54,7 @@ const Read = ({
   const BTN_OUTLINE_PRIMARY = `${BTN_BASE} tw:border tw:border-[#F27A7A] tw:text-[#F27A7A] tw:bg-white hover:tw:bg-[#F27A7A]/10 active:tw:bg-[#F27A7A]/20`
   const CHIP = "tw:inline-flex tw:items-center tw:gap-1 tw:px-3 tw:py-1 tw:text-xs tw:rounded-full tw:bg-rose-50 tw:text-rose-600 tw:border tw:border-rose-100"
 
+
   return (
     <div className="tw:min-h-screen tw:bg-transparent">
       {/* 헤더 */}
@@ -83,7 +84,6 @@ const Read = ({
             <InfoRow label="날짜" value={`${job.startDate} ~ ${job.endDate}`} />
             <InfoRow label="보수" value={<span className="tw:font-bold tw:text-[#2563eb]">{job.pay}원</span>} />
             <InfoRow label="보호자" value={<span className="tw:font-bold tw:text-[#22c55e]">{job.nickname}</span>} />
-            <InfoRow label="동물" value={job.petInfo} full />
           </div>
 
           <div className="tw:p-5 tw:mt-10 tw:rounded-2xl tw:border tw:border-rose-100 tw:bg-[#FFF7F7]">
@@ -128,12 +128,18 @@ const Read = ({
         )}
 
         {/* 신청폼 */}
-        {user && !isOwner && !hasApplied && (
+        {user && !isOwner && !myApplication && (
           <div className={`${ZOO_CARD} tw:p-6 md:tw:p-8`}>
             <form onSubmit={onApply} className="tw:space-y-4">
               <div>
                 <label htmlFor="introduction" className="tw:font-semibold tw-mb-2 tw:block">자기소개</label>
-                <textarea id="introduction" name="introduction" className="tw:border tw:rounded-xl tw:w-full tw:p-3 tw:leading-7 focus:tw:ring-2 focus:tw:ring-rose-200" rows="4" required />
+                <textarea
+                  id="introduction"
+                  name="introduction"
+                  className="tw:border tw:rounded-xl tw:w-full tw:p-3 tw:leading-7 focus:tw:ring-2 focus:tw:ring-rose-200"
+                  rows="4"
+                  required
+                />
               </div>
               <div className="tw:flex tw:justify-between">
                 <Link to="/parttime/list" className={BTN_OUTLINE_PRIMARY}>취소</Link>
@@ -143,20 +149,18 @@ const Read = ({
           </div>
         )}
 
-        {/* 내 신청 */}
-        {user && (isAdmin || !isOwner) && hasApplied && myApplication && (
+        {user && (isAdmin || !isOwner) && myApplication && (
           <div className={`${ZOO_CARD} tw:p-6 md:tw:p-8`}>
             <h5 className="tw:font-bold tw-mb-4">📋 나의 신청</h5>
             <div className="tw:border tw:rounded-xl tw:bg-gray-50 tw:p-4 tw:leading-7">
               <div><strong>🧑‍💼 소개 :</strong> {myApplication.introduction}</div>
-              {!isSelfMyApplication && (
-                <div className="tw:mt-2">
-                  <strong>📧 이메일:</strong> {myApplication.email ?? myApplication.user_email ?? myApplication.userEmail}<br />
-                  <strong>📱 전화번호:</strong> {myApplication.phone ?? myApplication.user_phone ?? myApplication.userPhone}
-                </div>
-              )}
               <div className="tw:text-end tw:mt-3">
-                <button onClick={() => onCancel(myApplication.applicantId)} className={BTN_OUTLINE_PRIMARY}>신청 취소</button>
+                <button
+                  onClick={() => onCancel(myApplication.applicantId)}
+                  className={BTN_OUTLINE_PRIMARY}
+                >
+                  신청 취소
+                </button>
               </div>
             </div>
           </div>

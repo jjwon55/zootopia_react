@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import Insert from '../../components/parttime/Insert.jsx'
-import * as parttimeApi from '../../apis/parttime/parttime.js'
-import { useLoginContext } from '../../context/LoginContextProvider.jsx'
 import api from '../../apis/parttime/parttime.js' // Axios 인스턴스 사용
+import { useLoginContext } from '../../context/LoginContextProvider.jsx'
 
 const InsertContainer = () => {
-  const navigate = useNavigate()
   const { userInfo } = useLoginContext()
 
   const [form, setForm] = useState({
@@ -15,7 +12,6 @@ const InsertContainer = () => {
     pay: '',
     startDate: '',
     endDate: '',
-    petInfo: '',
     memo: ''
   })
 
@@ -39,24 +35,13 @@ const InsertContainer = () => {
     setForm(prev => ({ ...prev, [name]: value }))
   }
 
-  const onSubmit = async (submitData) => {
-    try {
-      const jobData = { ...submitData, userId: userInfo.userId }
-      await parttimeApi.insertJob(jobData)
-      navigate('/parttime/list')
-    } catch (error) {
-      console.error('등록 실패:', error)
-      alert('등록에 실패했습니다.')
-    }
-  }
-
   return (
     <Insert
       form={form}
       onChange={onChange}
-      onSubmit={onSubmit}
       petsList={petsList}
       setPetsList={setPetsList}
+      userInfo={userInfo} // 필요하면 Insert에서 userId 사용할 수 있게 전달
     />
   )
 }
