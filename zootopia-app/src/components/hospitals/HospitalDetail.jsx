@@ -10,6 +10,7 @@ import {
 import defaultHospitalImg from "../../assets/img/default-thumbnail.png";
 import defaultHospImg from "../../assets/img/default-hospital.png";
 import { MousePointerClick, Star, UserPen } from 'lucide-react';
+import ScrollToTopButton from "../funeral/ScrollToTopButton";
 
 const HospitalDetail = ({
   hospitalId,
@@ -371,6 +372,7 @@ const HospitalDetail = ({
           </div>
         )}
       </div>
+      <ScrollToTopButton />
     </div>
   );
 };

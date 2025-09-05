@@ -1,3 +1,4 @@
+-- Active: 1750388003714@@127.0.0.1@3306@thejoeun
 CREATE TABLE `users` (
   `user_id` int NOT NULL AUTO_INCREMENT,
   `email` varchar(100) NOT NULL,
@@ -345,3 +346,38 @@ CREATE TABLE `hospital_animal` (
   CONSTRAINT `hospital_animal_ibfk_1` FOREIGN KEY (`hospital_id`) REFERENCES `hospital_info` (`hospital_id`),
   CONSTRAINT `hospital_animal_ibfk_2` FOREIGN KEY (`animal_id`) REFERENCES `possible_animal` (`animal_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+CREATE TABLE `p2p_message` (
+  `message_no` bigint NOT NULL AUTO_INCREMENT,
+  `sender_id` int NOT NULL,
+  `receiver_id` int NOT NULL,
+  `content` text NOT NULL,
+  `send_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `is_read` tinyint NOT NULL DEFAULT '0',
+  `deleted_by_sender` tinyint NOT NULL DEFAULT '0',
+  `deleted_by_receiver` tinyint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`message_no`),
+  KEY `fk_message_sender` (`sender_id`),
+  KEY `fk_message_receiver` (`receiver_id`),
+  CONSTRAINT `fk_message_receiver` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `fk_message_sender` FOREIGN KEY (`sender_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=112 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+
+CREATE TABLE `p2p_message` (
+  `message_no` bigint NOT NULL AUTO_INCREMENT,
+  `sender_id` int NOT NULL,
+  `receiver_id` int NOT NULL,
+  `content` text NOT NULL,
+  `send_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `is_read` tinyint NOT NULL DEFAULT '0',
+  `deleted_by_sender` tinyint NOT NULL DEFAULT '0',
+  `deleted_by_receiver` tinyint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`message_no`),
+  KEY `fk_message_sender` (`sender_id`),
+  KEY `fk_message_receiver` (`receiver_id`),
+  CONSTRAINT `fk_message_receiver` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_message_sender` FOREIGN KEY (`sender_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=119 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci

@@ -2,6 +2,7 @@ import React from "react";
 import fbIcon from '../../assets/img/icon_bt_fb.png'
 import istaIcon from '../../assets/img/icon_bt_ista.png'
 import ytIcon from '../../assets/img/icon_bt_yt.png'
+import ScrollToTopButton from "../funeral/ScrollToTopButton";
 
 const Footer = () => {
   return (
@@ -72,6 +73,7 @@ const Footer = () => {
           </div>
         </div>
       </div>
+              <ScrollToTopButton />
     </footer>
   );
 };

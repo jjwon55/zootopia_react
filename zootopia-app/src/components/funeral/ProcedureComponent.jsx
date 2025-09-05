@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 // import styles from './css/ProcedureComponent.module.css'
 import funeralBackground from '../../assets/img/background/funeral_background1.jpg';
+import ScrollToTopButton from './ScrollToTopButton';
 
 const ProcedureComponent = () => {
   return (
@@ -89,6 +90,7 @@ const ProcedureComponent = () => {
             </span>
           </div>
         </div>
+      <ScrollToTopButton />
       </div>
     </>
   )

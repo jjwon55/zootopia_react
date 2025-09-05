@@ -1,4 +1,8 @@
 
+--asdlkfnq;lwkenc;lkansd;lf 이거 아님
+
+
+
 CREATE TABLE `users` (
     `user_id` INT AUTO_INCREMENT PRIMARY KEY,
     `email` VARCHAR(100) NOT NULL,

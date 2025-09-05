@@ -316,7 +316,7 @@ export default function Checkout() {
         };
         localStorage.setItem('zootopia:lastOrder', JSON.stringify(summary));
       } catch {}
-      const origin = window.location.origin; // 예: http://192.168.30.3:5173
+      const origin = window.location.origin; // 예: http://192.168.30.51:5173
       await requestTossPayment(tossInstanceRef.current, {
         orderId: newOrderId,
         orderName: orderItems[0]?.name || '주문상품',

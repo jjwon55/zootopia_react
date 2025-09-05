@@ -85,7 +85,7 @@ public class PostServiceImpl implements PostService {
                 .matcher(content);
             if (matcher.find()) {
                 String firstImgSrc = matcher.group(1);
-                String thumbnailPath = firstImgSrc.replace("http://192.168.30.3:5173", "");
+                String thumbnailPath = firstImgSrc.replace("http://192.168.30.51:5173", "");
                 post.setThumbnailUrl(thumbnailPath);
                 postMapper.updateThumbnail(post);
             }

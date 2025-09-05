@@ -56,7 +56,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         responseBody.put("user", user);
 
         // JWT 및 사용자 정보를 URL 쿼리 파라미터로 포함하여 프론트엔드로 리디렉션
-        String redirectUrl = "http://192.168.30.3:5173/oauth2/callback?token=" + jwt + "&user=" + URLEncoder.encode(objectMapper.writeValueAsString(user), "UTF-8");
+        String redirectUrl = "http://192.168.30.51:5173/oauth2/callback?token=" + jwt + "&user=" + URLEncoder.encode(objectMapper.writeValueAsString(user), "UTF-8");
         response.sendRedirect(redirectUrl);
 
         log.info("✅ OAuth2 JWT 및 사용자 정보 응답 완료");

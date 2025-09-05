@@ -16,6 +16,29 @@ ADD COLUMN deleted_by_sender TINYINT NOT NULL DEFAULT 0 AFTER is_read,
 ADD COLUMN deleted_by_receiver TINYINT NOT NULL DEFAULT 0 AFTER deleted_by_sender;
 
 
+-- 외래키 제약조건 수정 (ON DELETE CASCADE 추가)
+-- 1. 기존 외래키 제약조건 삭제
+-- 2. 새로운 외래키 제약조건 추가 (ON DELETE CASCADE 포함)
+-- 회원 탈퇴에 영향이 있어서 일단 메시지까지 전체 삭제하는 방향으로 변경
+ALTER TABLE p2p_message
+  DROP FOREIGN KEY fk_message_sender; -- 기존 FK 이름 확인해서 사용
+  
+ALTER TABLE p2p_message
+  DROP FOREIGN KEY fk_message_receiver; -- 기존 FK 이름 확인해서 사용
+
+ALTER TABLE p2p_message
+  ADD CONSTRAINT fk_message_sender
+  FOREIGN KEY (sender_id) REFERENCES users(user_id)
+  ON DELETE CASCADE;
+
+ALTER TABLE p2p_message
+  ADD CONSTRAINT fk_message_receiver
+  FOREIGN KEY (receiver_id) REFERENCES users(user_id)
+  ON DELETE CASCADE;
+
+
+
+
 
 -- 더미데이터 
 
@@ -63,3 +86,8 @@ VALUES
 (169, 12, '전화 기다리겠습니다.', NOW(), 0),
 (169, 12, '파일 잘 받았습니다.', NOW(), 0),
 (169, 12, '확인 완료했습니다.', NOW(), 0);
+
+
+
+
+
