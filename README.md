@@ -31,22 +31,29 @@ AI3_정규프로젝트 2조
 # 🐾 Zootopia React
 > 반려동물 커뮤니티 웹 애플리케이션
 
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-F2F4F9?style=for-the-badge&logo=spring-boot)
-![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+
 
 ## 📋 프로젝트 개요
 
 **프로젝트명**: zootopia_react  
 **개발 기간**: 2025.08.06 ~ 2025.08.27  
 **수행 방식**: 팀 프로젝트  
-**담당 범위**: 주요 동물병원 정보페이지 UI 및 기능 구현, 동물 장례 정보 페이지 UI, 사용자 간 1:1 쪽지, 소셜 로그인【프론트엔드/백엔드 연동】
 
 ### 기술 스택
-React, Spring Boot, JWT, Tailwind CSS 등
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-F2F4F9?style=for-the-badge&logo=spring-boot)
+![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
 ## 🎯 주요 기능
+ - 로그인 및 회원가입
+ - 커뮤니티 (자유게시판, 자랑게시판, 유실동물게시판)
+ - 카카오맵 Api 활용 지도 기반 검색
+ - 추천 병원 정보
+ - 펫 보험 정보
+ - 펫 알바
+ - 펫 스토어
+ - 쪽지함
 
 ### 🏥 동물병원 관리
 - 네이버 외애 카카오 구글 추가
@@ -57,28 +64,6 @@ React, Spring Boot, JWT, Tailwind CSS 등
 
 1차 정규 프로젝트의 백엔드를 REST 방식으로 변경, 프론트엔드를 React로 변경 후 추가 기능 구현
 
-## 🔧 설치 및 실행
-
-### Prerequisites
-```
-Node.js 16.x 이상
-Java 11 이상
-MySQL 8.0
-```
-
-### 프론트엔드 실행
-```
-git clone https://github.com/your-username/zootopia_react.git
-cd zootopia_react
-npm install
-npm start
-```
-
-### 백엔드 실행
-```
-cd backend
-./mvnw spring-boot:run
-```
 
 ## 📸 스크린샷
 
@@ -96,21 +81,20 @@ cd backend
 - **문제**: CORS 및 인증 토큰 관리
 - **해결**: JWT 기반 인증과 Axios 인터셉터 활용
 
-## 🏗️ 아키텍처
-
-```
-Frontend (React + Tailwind CSS)
-    ↕ HTTP/REST API
-Backend (Spring Boot + Spring Security)
-    ↕ JPA/Hibernate  
-Database (MySQL)
-```
-
 ## 👥 팀 구성
 
 | 이름 | 역할 | 담당 기능 |
 |------|------|----------|
-| 사용자명 | Full-Stack | 동물병원 관리, 소셜 로그인, 쪽지 시스템 |
+| 신유식 | Full-Stack | 추천 병원 및 반려동물 장례 페이지의 전체적인 UI 와 기능 수정 및 보완
+
+추천 병원 페이지의 주소 클릭 시 카카오맵 Api를 활용한 지도 페이지로 넘어가서 자동 검색 기능 추가
+
+헤더 메뉴 및 서브 메뉴 수정 및 기능 추가
+
+소셜로그인 - 카카오, 구글 로그인 추가
+
+사용자 간 1:1 쪽지 기능 추가 |
+
 
 ## 📝 라이선스
 
