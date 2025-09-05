@@ -40,7 +40,7 @@ AI3_정규프로젝트 2조
 
 
 
-<img width="600" height="400" alt="Image" src="https://github.com/user-attachments/assets/e1f7b825-e994-4321-89cd-f53d3e14e45f" /> 메인
+<img width="700" height="600" alt="Image" src="https://github.com/user-attachments/assets/e1f7b825-e994-4321-89cd-f53d3e14e45f" /> 메인
 
 <img width="1902" height="953" alt="Image" src="https://github.com/user-attachments/assets/8af52efa-8651-4dd7-b7e8-7e7a16c9231d" /> 로그인
 
