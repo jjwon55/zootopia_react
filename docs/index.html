@@ -1,0 +1,74 @@
+<!--
+Reveal.js 기반 GitHub Pages용 슬라이드 뷰어 샘플
+위치: docs/index.html
+요구사항: slides 이미지와 slides/list.json을 docs/slides/에 넣어두세요.
+list.json 형식 예: ["slide-001.png","slide-002.png",...]
+-->
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>발표 슬라이드</title>
+  <!-- Reveal.js CDN 스타일 -->
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/reveal.css">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/theme/white.css" id="theme">
+  <style>
+    /* 전체 화면 높이 확보 */
+    html,body { height:100%; }
+    .reveal { height: 100vh; }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides"></div>
+  </div>
+
+  <noscript>
+    <div style="padding:2rem">
+      <h2>자바스크립트 필요</h2>
+      <p>슬라이드를 불러오려면 브라우저에서 자바스크립트를 활성화하세요.</p>
+    </div>
+  </noscript>
+
+  <!-- Reveal.js 메인 스크립트 -->
+  <script src="https://unpkg.com/reveal.js/dist/reveal.js"></script>
+  <script>
+    async function buildSlides() {
+      const slidesContainer = document.querySelector('.slides');
+      try {
+        const res = await fetch('slides/list.json', {cache: 'no-cache'});
+        if (!res.ok) throw new Error('list.json 불러오기 실패');
+        const files = await res.json();
+        if (!Array.isArray(files) || files.length === 0) {
+          slidesContainer.innerHTML = '<section><h2>슬라이드 목록이 비어있습니다.</h2></section>';
+          return;
+        }
+        files.forEach(name => {
+          const section = document.createElement('section');
+          section.setAttribute('data-background-image', 'slides/' + name);
+          section.setAttribute('data-background-size', 'contain');
+          section.setAttribute('data-background-position', 'center center');
+          section.setAttribute('data-background-repeat', 'no-repeat');
+          slidesContainer.appendChild(section);
+        });
+      } catch (err) {
+        slidesContainer.innerHTML = '<section><h2>slides/list.json을 찾을 수 없습니다.</h2><p>docs/slides/list.json 파일이 있는지 확인하세요.</p></section>';
+        console.error(err);
+      }
+
+      // Reveal 초기화
+      Reveal.initialize({
+        hash: true,
+        slideNumber: true,
+        controls: true,
+        progress: true,
+        center: true,
+        backgroundTransition: 'fade'
+        // 필요하면 autoSlide: 5000 등 추가
+      });
+    }
+    buildSlides();
+  </script>
+</body>
+</html>

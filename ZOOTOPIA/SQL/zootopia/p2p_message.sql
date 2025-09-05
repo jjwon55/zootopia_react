@@ -22,10 +22,18 @@ ADD COLUMN deleted_by_receiver TINYINT NOT NULL DEFAULT 0 AFTER deleted_by_sende
 -- 회원 탈퇴에 영향이 있어서 일단 메시지까지 전체 삭제하는 방향으로 변경
 ALTER TABLE p2p_message
   DROP FOREIGN KEY fk_message_sender; -- 기존 FK 이름 확인해서 사용
+  
+ALTER TABLE p2p_message
+  DROP FOREIGN KEY fk_message_receiver; -- 기존 FK 이름 확인해서 사용
 
 ALTER TABLE p2p_message
   ADD CONSTRAINT fk_message_sender
   FOREIGN KEY (sender_id) REFERENCES users(user_id)
+  ON DELETE CASCADE;
+
+ALTER TABLE p2p_message
+  ADD CONSTRAINT fk_message_receiver
+  FOREIGN KEY (receiver_id) REFERENCES users(user_id)
   ON DELETE CASCADE;
 
 
