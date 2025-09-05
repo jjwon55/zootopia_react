@@ -1,7 +1,3 @@
-# zootopia_react
-AI3_정규프로젝트 2조
-
-
 # 🐾 반려 동물 커뮤니티 - Zootopia React
 > 반려동물 커뮤니티 웹 애플리케이션
 
