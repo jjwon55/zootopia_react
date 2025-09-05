@@ -83,7 +83,7 @@ AI3_정규프로젝트 2조
 | **어드민 - 게시글 관리** |
 |------------|
 | <img width="1910" height="940" alt="Image" src="https://github.com/user-attachments/assets/33c73335-f86f-4beb-9521-878435690d22" /> |
-<p align="center"><a href="[#-발표-자료-펼쳐보기](https://github.com/jjwon55/zootopia_react/blob/main/README.md#-%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7)">🔼 닫기 (맨 위로) - 위의 "📑 발표 자료 펼쳐보기" 버튼을 다시 누르면 닫힙니다 🔽</a></p>
+<p align="center"><a href="#-스크린샷">🔼 닫기 (맨 위로) - 위의 "📑 발표 자료 펼쳐보기" 버튼을 다시 누르면 닫힙니다 🔽</a></p>
 </details>
 
 
