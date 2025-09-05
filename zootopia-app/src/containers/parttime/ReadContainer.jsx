@@ -15,7 +15,6 @@ const ReadContainer = () => {
   const [job, setJob] = useState(null)
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
-  const [hasApplied, setHasApplied] = useState(false)
   const [myApplication, setMyApplication] = useState(null)
   const [applicants, setApplicants] = useState([])
   const [totalApplicantPages, setTotalApplicantPages] = useState(1)
@@ -25,6 +24,7 @@ const ReadContainer = () => {
   const fetchJobDetail = async (jid) => {
     try {
       const data = await parttimeApi.getJobDetail(jid, applicantPage)
+      console.log('📦 getJobDetail 응답:', data) 
 
       if (!data || !data.job) {
         setErrorMessage('채용 정보를 가져오지 못했습니다.')
@@ -34,8 +34,7 @@ const ReadContainer = () => {
 
       setJob(data.job)
       setApplicants(data.applicants || [])
-      setMyApplication(data.myApplication || null)
-      setHasApplied(!!data.hasApplied)
+      setMyApplication(data.myApplication || null) // ✅ myApplication만 사용
       setTotalApplicantPages(data.totalApplicantPages || 1)
       setLoading(false)
     } catch (error) {
@@ -125,8 +124,7 @@ const ReadContainer = () => {
       loginUserId={userInfo?.userId || null}
       successMessage={successMessage}
       errorMessage={errorMessage}
-      hasApplied={hasApplied}
-      myApplication={myApplication}
+      myApplication={myApplication} 
       applicants={applicants}
       totalApplicantPages={totalApplicantPages}
       applicantPage={applicantPage}
