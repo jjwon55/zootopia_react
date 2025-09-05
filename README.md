@@ -33,95 +33,56 @@ AI3_정규프로젝트 2조
 
 
 ## 📸 스크린샷
-
-| 메인 페이지 |
+<details>
+  <summary>📑 발표 자료 펼쳐보기</summary>
+| **메인 페이지** |
 |------------|
-| ![메인](이미지링크) <img width="700" height="600" alt="Image" src="https://github.com/user-attachments/assets/e1f7b825-e994-4321-89cd-f53d3e14e45f" /> |
-| 메인 페이지 |
+| <img width="700" height="600" alt="Image" src="https://github.com/user-attachments/assets/e1f7b825-e994-4321-89cd-f53d3e14e45f" /> |
+
+| **회원가입** |
 |------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
+| <img width="1508" height="923" alt="Image" src="https://github.com/user-attachments/assets/3cc238e0-a52e-4d87-804a-4f4269d0223f" /> |
+
+| **로그인** |
 |------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
+| <img width="1902" height="953" alt="Image" src="https://github.com/user-attachments/assets/8af52efa-8651-4dd7-b7e8-7e7a16c9231d" /> |
+
+| **스토어** |
 |------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
+| <img width="1904" height="950" alt="Image" src="https://github.com/user-attachments/assets/8de58222-6162-4a08-933c-d9e187c14488" /> |
+
+| **내 주변 찾기** |
 |------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
+| <img width="1898" height="941" alt="Image" src="https://github.com/user-attachments/assets/d7932803-367f-4627-9103-67091d1e7f1b" /> |
+
+| **펫 알바** |
 |------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
+| <img width="1893" height="945" alt="Image" src="https://github.com/user-attachments/assets/cafabe00-c8d2-4aa9-9500-e4f53a7caeac" /> |
+
+| **펫 보험** |
 |------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
+| <img width="1897" height="945" alt="Image" src="https://github.com/user-attachments/assets/9dbd2799-9fe7-4b94-a6a9-5f08656a5452" /> |
+
+| **추천 병원** |
 |------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
+| <img width="1893" height="937" alt="Image" src="https://github.com/user-attachments/assets/ac16b5f5-df02-437d-9216-d0768da1cf47" /> |
+
+| **반려동물 장례정보** |
 |------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
+| <img width="1900" height="931" alt="Image" src="https://github.com/user-attachments/assets/5fb97909-b42e-46c5-bf88-9648c2716d43" /> |
+
+| **게시판** |
 |------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
+| <img width="1900" height="949" alt="Image" src="https://github.com/user-attachments/assets/9877ba82-fb3c-4a0c-a3ab-14e8353f2407" /> |
+
+| **어드민 - 회원 관리** |
 |------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
+| <img width="1879" height="736" alt="Image" src="https://github.com/user-attachments/assets/63116dda-dbab-469e-bb6a-35f18cb9b6ea" /> |
+
+| **어드민 - 게시글 관리** |
 |------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
-|------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
-|------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
-|------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
-|------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
-|------------|
-| ![메인](이미지링크) |
-| 메인 페이지 |
-|------------|
-| ![메인](이미지링크) |
-
-
-
-
- 메인
-
-<img width="1902" height="953" alt="Image" src="https://github.com/user-attachments/assets/8af52efa-8651-4dd7-b7e8-7e7a16c9231d" /> 로그인
-
-<img width="1508" height="923" alt="Image" src="https://github.com/user-attachments/assets/3cc238e0-a52e-4d87-804a-4f4269d0223f" /> 회원가입
-
-<img width="1904" height="950" alt="Image" src="https://github.com/user-attachments/assets/8de58222-6162-4a08-933c-d9e187c14488" /> 스토어
-
-<img width="1898" height="941" alt="Image" src="https://github.com/user-attachments/assets/d7932803-367f-4627-9103-67091d1e7f1b" /> 내주변찾기
-
-<img width="1897" height="945" alt="Image" src="https://github.com/user-attachments/assets/9dbd2799-9fe7-4b94-a6a9-5f08656a5452" /> 펫보험
-
-<img width="1893" height="945" alt="Image" src="https://github.com/user-attachments/assets/cafabe00-c8d2-4aa9-9500-e4f53a7caeac" /> 펫알바
-
-<img width="1893" height="937" alt="Image" src="https://github.com/user-attachments/assets/ac16b5f5-df02-437d-9216-d0768da1cf47" /> 추천병원
-
-<img width="1900" height="931" alt="Image" src="https://github.com/user-attachments/assets/5fb97909-b42e-46c5-bf88-9648c2716d43" /> 동물장례정보
-
-<img width="1900" height="949" alt="Image" src="https://github.com/user-attachments/assets/9877ba82-fb3c-4a0c-a3ab-14e8353f2407" /> 게시판
-
-<img width="1910" height="940" alt="Image" src="https://github.com/user-attachments/assets/33c73335-f86f-4beb-9521-878435690d22" /> 어드민게시글
-
-<img width="1879" height="736" alt="Image" src="https://github.com/user-attachments/assets/63116dda-dbab-469e-bb6a-35f18cb9b6ea" /> 어드민 회원
-
-
-
-
-
-
-
+| <img width="1910" height="940" alt="Image" src="https://github.com/user-attachments/assets/33c73335-f86f-4beb-9521-878435690d22" /> |
+</details>
 
 
 ## 👥 팀 구성 및 역할
