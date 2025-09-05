@@ -34,10 +34,11 @@ AI3_정규프로젝트 2조
 
 ## 📸 스크린샷
 <details>
-  <summary>📑 발표 자료 펼쳐보기</summary>
+  <summary>⬇📑스크린샷 펼쳐보기⬇</summary>
+ 
 | **메인 페이지** |
 |------------|
-| <img width="700" height="600" alt="Image" src="https://github.com/user-attachments/assets/e1f7b825-e994-4321-89cd-f53d3e14e45f" /> |
+| <img width="1906" height="948" alt="Image" src="https://github.com/user-attachments/assets/e1f7b825-e994-4321-89cd-f53d3e14e45f" /> |
 
 | **회원가입** |
 |------------|
