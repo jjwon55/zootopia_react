@@ -36,7 +36,7 @@
 
     <!-- 공고-펫 매핑 삭제 -->
     <delete id="deleteJobPetMapping">
-        DELETE FROM job_pet WHERE job_id = #{jobId} AND pet_id = #{petId}
+        DELETE FROM job_pet WHERE job_id = #{jobId}
     </delete>
 
     <!-- 펫 삭제 -->

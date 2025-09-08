@@ -154,6 +154,11 @@ public class ParttimeJobRestController {
         job.setUserId(uid);
         jobService.registerJob(job);
 
+        // 펫 연동
+        if (job.getPetIds() != null && !job.getPetIds().isEmpty()) {
+            petProfileService.linkPetsToJob(job.getJobId(), job.getPetIds());
+        }
+
         return ResponseEntity.ok(Map.of("ok", true, "jobId", job.getJobId()));
     }
 
@@ -202,6 +207,12 @@ public class ParttimeJobRestController {
         job.setJobId(jobId);
         job.setUserId(ownerId);
         jobService.updateJob(job);
+
+        // 펫 연동
+        if (job.getPetIds() != null) {
+            petProfileService.linkPetsToJob(jobId, job.getPetIds());
+        }
+
         return ResponseEntity.ok(Map.of("ok", true));
     }
 

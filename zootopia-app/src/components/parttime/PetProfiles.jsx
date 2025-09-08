@@ -1,6 +1,8 @@
 import React from 'react'
 
 const PetProfiles = ({ pets, onLinkPet }) => {
+  console.log('Pets :', pets);
+  
   if (!pets || pets.length === 0) return <div>펫 정보가 없습니다.</div>
 
   const toAbsUrl = (url) => url.startsWith('http') ? url : `http://localhost:8080${url}`
@@ -20,7 +22,7 @@ const PetProfiles = ({ pets, onLinkPet }) => {
             <img src={toAbsUrl(pet.photoUrl)} alt={pet.name} className="tw-w-24 tw-h-24 tw-object-cover tw-rounded-lg" />
           )}
           <button
-            className="tw-ml-auto tw-bg-[#F27A7A] tw-text-white tw-px-3 tw-py-1 tw-rounded-md hover:tw-bg-[#e86e6e]"
+            className="tw:ml-auto tw:bg-[#F27A7A] tw:text-white tw:px-3 tw:py-1 tw:rounded-md tw:hover:bg-[#e86e6e]"
             onClick={() => onLinkPet(pet)}
           >
             프로필 보기
