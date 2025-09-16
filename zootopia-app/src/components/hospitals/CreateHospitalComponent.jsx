@@ -85,6 +85,22 @@ const HospitalForm = ({ hospitalData, isAdmin }) => {
     }
   };
 
+// const handleThumbnailChange = async (e) => {
+//     const file = e.target.files[0];
+//     const formData = new FormData();
+//     formData.append("file", file);
+
+//     try {
+//         const res = await axios.post("/hospital/upload-thumbnail", formData, {
+//             headers: { "Content-Type": "multipart/form-data" }
+//         });
+//         setForm({ ...form, thumbnailImageUrl: res.data.imagePath });
+//     } catch (err) {
+//         alert("이미지 업로드 실패: " + err.response?.data?.message || err.message);
+//     }
+// };
+
+
   const warnAlert = (msg) => {
     Swal.fire({
       icon: "warning",
@@ -197,7 +213,7 @@ const HospitalForm = ({ hospitalData, isAdmin }) => {
             onClick={() => fileInputRef.current.click()}
           >
             <img src={previewUrl} alt="Hospital" className="tw:w-full tw:h-full tw:object-cover tw:rounded" />
-            <input type="file" ref={fileInputRef} onChange={handleImageChange} className="tw:hidden" accept="image/*" />
+            <input type="file" ref={fileInputRef} onChange={handleThumbnailChange} className="tw:hidden" accept="image/*" />
           </div>
         </div>
 

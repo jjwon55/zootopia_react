@@ -1,17 +1,19 @@
 package com.aloha.zootopia.controller;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,6 +50,9 @@ public class HospitalController {
 
     @Autowired
     private HospReviewService hospReviewService;
+
+    // @Value("${file.upload.path}")
+    // private String uploadDir;
 
     // 병원 목록
     @GetMapping
@@ -113,7 +118,7 @@ public class HospitalController {
         return new ResponseEntity<>(hospital, HttpStatus.OK);
     }
 
-    // 병원 등록
+    // 병원 등록 (배포환경에서 이미지 안올라가던 원래 거)
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<String> createHospital(
@@ -133,6 +138,51 @@ public class HospitalController {
             return new ResponseEntity<>("Failed to create hospital: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+// ================== 이미지 업로드 ==================
+//     @PostMapping(value = "/upload-thumbnail", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//     @PreAuthorize("hasRole('ADMIN')")
+//     public ResponseEntity<Map<String, Object>> uploadThumbnail(@RequestParam("file") MultipartFile file) {
+//         try {
+//             if (file == null || file.isEmpty()) {
+//                 return ResponseEntity.badRequest()
+//                         .body(Map.of("message", "이미지 파일이 비어 있습니다."));
+//             }
+
+//             String savedPath = hospitalService.saveImage(file); // 기존 saveImage 재사용
+//             return ResponseEntity.ok(Map.of("imagePath", savedPath));
+//         } catch (Exception e) {
+//             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                     .body(Map.of("message", "업로드 실패: " + e.getMessage()));
+//         }
+//     }
+
+
+
+// // ================== 병원 등록 ==================
+//     @PostMapping
+//     @PreAuthorize("hasRole('ADMIN')")
+//     public ResponseEntity<Map<String, Object>> createHospital(@Valid @RequestBody HospitalForm form,
+//                                                               BindingResult bindingResult) {
+//         if (bindingResult.hasErrors()) {
+//             return ResponseEntity.badRequest()
+//                     .body(Map.of("message", bindingResult.getFieldError().getDefaultMessage()));
+//         }
+
+//         try {
+//             hospitalService.createHospital(form);
+//             return ResponseEntity.status(HttpStatus.CREATED)
+//                     .body(Map.of("ok", true, "hospitalName", form.getName()));
+//         } catch (Exception e) {
+//             e.printStackTrace();
+//             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                     .body(Map.of("message", e.getMessage()));
+//         }
+//     }
+
+
+
+
 
     // 병원 수정
     @PreAuthorize("hasRole('ROLE_ADMIN')")
