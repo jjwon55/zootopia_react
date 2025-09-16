@@ -32,6 +32,15 @@ public class PetProfileServiceImpl implements PetProfileService {
         return petProfileMapper.selectPetsByJobId(jobId);
     }
 
+    // @Override
+    // public void linkPetsToJob(Long jobId, List<Long> petIds) {
+    //     // 기존 매핑 삭제
+    //     petProfileMapper.deleteJobPetMapping(jobId);
+    //     // 새로 삽입
+    //     for (Long petId : petIds) {
+    //         petProfileMapper.insertJobPetMapping(jobId, petId);
+    //     }
+    // }
     @Override
     public void linkPetsToJob(Long jobId, List<Long> petIds) {
         // 기존 매핑 삭제

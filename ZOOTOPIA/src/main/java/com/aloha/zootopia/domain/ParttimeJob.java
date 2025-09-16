@@ -20,4 +20,5 @@ public class ParttimeJob {
     private LocalDateTime createdAt;
     private String nickname;
     private List<PetProfile> pets;
+    private List<Long> petIds;
 }
