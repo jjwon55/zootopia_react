@@ -10,7 +10,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.aloha.zootopia.domain.CustomUser;
 import com.aloha.zootopia.domain.ParttimeJob;
@@ -133,16 +141,28 @@ public class ParttimeJobRestController {
             body.put("applicants", applicants);
             body.put("applicantPage", applicantPage);
             body.put("totalApplicantPages", totalApplicantPages);
-        } else if (uid > 0) {
-            boolean hasApplied = applicantService.hasApplied(jobId, uid);
-            body.put("hasApplied", hasApplied);
-            if (hasApplied) body.put("myApplication", applicantService.getApplicantByJobIdAndUserId(jobId, uid));
-        } else {
-            body.put("hasApplied", false);
+            
+        boolean hasApplied = applicantService.hasApplied(jobId, uid);
+        body.put("hasApplied", hasApplied);
+        if (hasApplied) {
+            body.put("myApplication", applicantService.getApplicantByJobIdAndUserId(jobId, uid));
         }
+            }
+            // 일반 로그인 유저 → 본인 신청내역만 확인
+            else if (uid > 0) {
+                boolean hasApplied = applicantService.hasApplied(jobId, uid);
+                body.put("hasApplied", hasApplied);
+                if (hasApplied) {
+                    body.put("myApplication", applicantService.getApplicantByJobIdAndUserId(jobId, uid));
+                }
+            }
+            // 비로그인
+            else {
+                body.put("hasApplied", false);
+            }
 
-        return ResponseEntity.ok(body);
-    }
+            return ResponseEntity.ok(body);
+        }
 
     // -------------------- 알바 상품 등록 --------------------
     @PostMapping

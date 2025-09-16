@@ -1,15 +1,31 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../../apis/parttime/parttime.js'
 
-const Insert = ({ form, onChange, onSubmit, petsList, setPetsList }) => {
+const Insert = ({ form, onChange, petsList, setPetsList }) => {
+  const navigate = useNavigate()
   const [selectedPets, setSelectedPets] = useState([])
   const [newPet, setNewPet] = useState({ name: '', species: '', age: '', photo: null, preview: null })
   const [loadingPet, setLoadingPet] = useState(false)
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault()
-    onSubmit({ ...form, petIds: selectedPets })
+    try {
+      // 1. 아르바이트 먼저 등록
+      const res = await api.post('/parttime', { ...form })
+      const jobId = res.data.jobId
+
+      // 2. 선택된 펫 등록 (job_pet)
+      await Promise.all(selectedPets.map(petId => 
+        api.post('/job_pet', { jobId, petId })
+      ))
+
+      alert('등록 완료')
+      navigate('/parttime/list')
+    } catch (err) {
+      console.error(err)
+      alert('등록 실패')
+    }
   }
 
   const handleFileChange = e => {
@@ -122,7 +138,7 @@ const Insert = ({ form, onChange, onSubmit, petsList, setPetsList }) => {
           <div className="tw:flex tw:flex-wrap tw:gap-2 tw:items-center">
             <input placeholder="이름" value={newPet.name} onChange={e => setNewPet(prev => ({ ...prev, name: e.target.value }))} className="tw:border tw:border-gray-300 tw:rounded-lg tw:px-2 tw:py-1" />
             <input placeholder="종" value={newPet.species} onChange={e => setNewPet(prev => ({ ...prev, species: e.target.value }))} className="tw:border tw:border-gray-300 tw:rounded-lg tw:px-2 tw:py-1" />
-            <input placeholder="나이" type="number" value={newPet.age} onChange={e => setNewPet(prev => ({ ...prev, age: e.target.value }))} className="tw:border tw:border-gray-300 tw:rounded-lg tw:px-2 tw:py-1 tw:w-20" />
+            <input placeholder="나이" type="number" value={newPet.age} onChange={e => setNewPet(prev => ({ ...prev, age: e.target.value }))} className="tw:border tw:border-gray-300 tw:px-2 tw:py-1 tw:w-20" />
             <input type="file" accept="image/*" onChange={handleFileChange} className="tw:border tw:border-gray-300 tw:rounded-lg tw:px-2 tw:py-1" />
             <button type="button" onClick={handleAddPet} disabled={loadingPet} className="tw:bg-[#F27A7A] tw:text-white tw:rounded-lg tw:px-3 tw:py-1 hover:tw:bg-[#e86e6e] tw:transition tw:duration-200">
               {loadingPet ? '등록 중...' : '등록'}
