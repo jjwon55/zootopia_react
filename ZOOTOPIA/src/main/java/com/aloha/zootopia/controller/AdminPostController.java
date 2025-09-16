@@ -12,7 +12,7 @@ import com.aloha.zootopia.service.AdminPostService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@CrossOrigin("*")
+// @CrossOrigin("*")
 @RequestMapping("/admin/post") // ✅ 게시글 관리 전용 엔드포인트
 @RequiredArgsConstructor
 public class AdminPostController {

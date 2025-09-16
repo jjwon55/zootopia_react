@@ -22,7 +22,7 @@ import com.aloha.zootopia.service.AdminUserService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@CrossOrigin("*")
+// @CrossOrigin("*")
 @RequestMapping("/admin/users")
 @RequiredArgsConstructor
 public class AdminUserController {
