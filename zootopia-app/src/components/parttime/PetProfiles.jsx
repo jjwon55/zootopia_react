@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 const PetProfiles = ({ pets }) => {
   const [selectedPet, setSelectedPet] = useState(null)
 
-  const toAbsUrl = (url) => url.startsWith('http') ? url : `http://localhost:8080${url}`
+  const toAbsUrl = (url) => url.startsWith('http') ? url : `http://192.168.30.51:8080${url}`
 
   if (!pets || pets.length === 0) return <div className='tw:mt-4 tw:mb-4'>펫 정보가 없습니다.</div>
 

@@ -45,9 +45,10 @@ export const create = (hospitalForm, thumbnailImageFile) => {
   if (thumbnailImageFile) {
     formData.append('thumbnailImageFile', thumbnailImageFile);
   }
-  return api.post(BASE_URL, formData, {
+  const res = api.post(BASE_URL, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
+  return res.data;
 };
 
 /** 병원 수정 */

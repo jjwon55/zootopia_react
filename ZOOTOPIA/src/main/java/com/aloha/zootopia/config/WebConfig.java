@@ -49,7 +49,8 @@ public class WebConfig implements WebMvcConfigurer {
 
   @Override
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
-    registry.addResourceHandler("/upload/**")
+    registry
+        .addResourceHandler("/upload/**")
         // .addResourceLocations("file:///C:/upload/");
         .addResourceLocations("file:///C:/upload/");
         // .addResourceLocations("file:/home/{kdtzootopia12}/upload/");    // 배포서버 업로드경로?? 확인필요 아직안해봄.
@@ -61,7 +62,7 @@ public void addCorsMappings(CorsRegistry registry) {
       .allowedOrigins(
           "http://localhost:5173",
           "http://192.168.30.51:5173",
-          "https://kdtzootopia12.mycafe24.com"   // 👈 내부 IP도 추가
+          "https://kdtzootopia12.cafe24.com"   // 👈 내부 IP도 추가
       )
       // .allowedOriginPatterns("*")
       .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")

@@ -48,10 +48,30 @@ public class HospitalServiceImpl implements HospitalService {
         if (!uploadDir.exists()) {
             uploadDir.mkdirs();
         }
-        File targetFile = new File(uploadPath, savedFilename);
+        File targetFile = new File(uploadDir, savedFilename);
         file.transferTo(targetFile);
         return "/upload/" + savedFilename; // Return a relative path for web access
     }
+
+    // @Override
+    // public String saveImage(MultipartFile file) throws Exception {
+    //     if (file == null || file.isEmpty()) return null;
+
+    //     String originalFilename = file.getOriginalFilename();
+    //     String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+    //     String uuid = UUID.randomUUID().toString();
+    //     String savedFilename = uuid + extension;
+
+    //     File uploadDir = new File(uploadPath, "hospital");
+    //     if (!uploadDir.exists()) uploadDir.mkdirs();
+
+    //     File targetFile = new File(uploadDir, savedFilename);
+    //     file.transferTo(targetFile);
+
+    //     return "/upload/hospital/" + savedFilename; // 프론트용 URL
+    // }
+
+
 
     @Override
     public List<Hospital> getHospitals(List<Integer> animalIds) {
@@ -81,6 +101,29 @@ public class HospitalServiceImpl implements HospitalService {
             hospitalMapper.insertHospitalSpecialty(hospital.getHospitalId(), specialtyId);
         }
     }
+
+    // @Override
+    // public void createHospital(HospitalForm form) throws Exception {
+    //     Hospital hospital = new Hospital();
+    //     hospital.setName(form.getName());
+    //     hospital.setAddress(form.getAddress());
+    //     hospital.setHomepage(form.getHomepage());
+    //     hospital.setPhone(form.getPhone());
+    //     hospital.setEmail(form.getEmail());
+    //     hospital.setThumbnailImageUrl(form.getThumbnailImageUrl()); // 업로드된 URL
+    //     hospital.setHospIntroduce(form.getHospIntroduce());
+
+    //     hospitalMapper.insertHospital(hospital);
+
+    //     for (Integer animalId : form.getAnimalIds()) {
+    //         hospitalMapper.insertHospitalAnimal(hospital.getHospitalId(), animalId);
+    //     }
+    //     for (Integer specialtyId : form.getSpecialtyIds()) {
+    //         hospitalMapper.insertHospitalSpecialty(hospital.getHospitalId(), specialtyId);
+    //     }
+    // }
+
+
 
     @Override
     public List<Animal> getAllAnimals() { return animalMapper.findAll(); }

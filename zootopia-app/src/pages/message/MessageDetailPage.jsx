@@ -11,7 +11,7 @@ function MessageDetailPage() {
     navigate(-1); // 이전 페이지로 이동
   };
 
-  // 답장 기능 핸들러 (현재는 구현되지 않았으므로 기본 형태로 둡니다)
+  // 답장 기능 핸들러 (미구현)
   const handleReply = (recipient) => {
     // 답장 페이지로 이동하거나 모달을 띄우는 로직
     console.log('Reply to:', recipient);

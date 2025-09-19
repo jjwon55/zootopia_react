@@ -1,5 +1,7 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import PostReportsModal from "../../../components/admin/post/PostReportsModal";
+import { useContext } from "react";
+import { LoginContext } from "../../../context/LoginContextProvider";
 
 const PAGE_SIZE = 20;
 const CATEGORY_OPTIONS = ["자유글", "질문글", "자랑글"];
@@ -28,6 +30,13 @@ export default function AdminPostsPage(props) {
     // 핸들러
     handleSearch,
   } = props;
+  const {roles, isLogin} = useContext(LoginContext);
+  const navigate = useNavigate();
+
+  const toUser = () => {
+    navigate("/admin/users");
+  }
+
 
   return (
     <div className="tw:px-4 tw:md:px-6 tw:py-6 tw:space-y-6 tw:max-w-[1400px] tw:mx-auto">
@@ -40,6 +49,14 @@ export default function AdminPostsPage(props) {
             {reportedOnly && <> • 신고 게시글만 보기</>}
           </p>
         </div>
+        {roles.isAdmin && isLogin && (
+        <button
+            onClick={toUser}
+            className="tw:bg-[#74b9ff] tw:text-white tw:px-4 tw:py-2 tw:rounded hover:tw:bg-[#0984e3] tw:mb-3 md:tw:mb-0 tw:cursor-pointer tw:hover:bg-[#389bff]"
+          >
+            유저 관리
+          </button>
+        )}
       </div>
 
       {/* ===== 검색/필터 카드 ===== */}

@@ -109,7 +109,7 @@ const LostRead = ({
     <div className="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-3">
       {post.lostLocation && (
         <div className="tw:flex tw:items-start tw:gap-2">
-          <span className="tw-w-24 tw-shrink-0 tw-text-sm tw-font-semibold tw-text-zinc-500">목격 장소  : </span>
+          <span className="tw-w-24 tw-shrink-0 tw-text-sm tw-font-semibold tw-text-zinc-500">마지막 목격 장소  : </span>
           <span className="tw-text-[15px] tw-text-zinc-800">{post.lostLocation}</span>
         </div>
       )}
