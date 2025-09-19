@@ -118,7 +118,7 @@ public class HospitalController {
         return new ResponseEntity<>(hospital, HttpStatus.OK);
     }
 
-    // 병원 등록 (배포환경에서 이미지 안올라가던 원래 거)
+    // 병원 등록
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<String> createHospital(

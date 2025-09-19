@@ -60,8 +60,8 @@ public class WebConfig implements WebMvcConfigurer {
 public void addCorsMappings(CorsRegistry registry) {
   registry.addMapping("/**")
       .allowedOrigins(
-          // "http://localhost:5173",
-          // "http://192.168.30.51:5173"
+          "http://localhost:5173",
+          "http://192.168.30.51:5173",
           "https://kdtzootopia12.cafe24.com"   // 👈 내부 IP도 추가
       )
       // .allowedOriginPatterns("*")

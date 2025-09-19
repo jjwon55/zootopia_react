@@ -213,7 +213,7 @@ const HospitalForm = ({ hospitalData, isAdmin }) => {
             onClick={() => fileInputRef.current.click()}
           >
             <img src={previewUrl} alt="Hospital" className="tw:w-full tw:h-full tw:object-cover tw:rounded" />
-            <input type="file" ref={fileInputRef} onChange={handleThumbnailChange} className="tw:hidden" accept="image/*" />
+            <input type="file" ref={fileInputRef} onChange={handleImageChange} className="tw:hidden" accept="image/*" />
           </div>
         </div>
 

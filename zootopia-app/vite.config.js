@@ -10,6 +10,10 @@ export default defineConfig({
     tailwindcss()
   ],
   server: {
+    // vite 외부 접속 허용
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: true,
     // 프록시 설정
     proxy: {
       '/api' : {

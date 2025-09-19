@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { listUsers, getUser, banUser, updateUser, updateUserRoles } from "../../../apis/admin/users";
 
 import UserDetailDrawer from "../../../components/admin/users/UserDetailDrawer";
 import ReportsModal from "../../../components/admin/users/ReportsModal";
 import { toastSuccess, toastError, confirm } from "../../../apis/posts/alert";
+import { useNavigate } from "react-router-dom";
+import { LoginContext } from "../../../context/LoginContextProvider";
 
 // ✅ 허용 역할(프론트도 2개만)
 const ROLE_OPTIONS = ["ROLE_USER", "ROLE_ADMIN"];
@@ -37,6 +39,9 @@ export default function UsersPage() {
   const [selected, setSelected] = useState(null);
 
   const [actingId, setActingId] = useState(null);
+
+  const {roles, isLogin} = useContext(LoginContext);
+  const navigate = useNavigate();
 
   const params = useMemo(
     () => ({ q, status, role, page, size: PAGE_SIZE, sort, dir }),
@@ -141,6 +146,10 @@ export default function UsersPage() {
     setPage(0);
   };
 
+  const toPost = () => {
+    navigate("/admin/post");
+  }
+
   return (
     <div className="tw:px-4 tw:md:px-6 tw:py-6 tw:space-y-6 tw:max-w-[1400px] tw:mx-auto">
       {/* ===== 헤더 ===== */}
@@ -153,6 +162,14 @@ export default function UsersPage() {
             {" • "}페이지 {page + 1}/{pageInfo?.totalPages || 1}
           </p>
         </div>
+        {roles.isAdmin && isLogin && (
+        <button
+            onClick={toPost}
+            className="tw:bg-[#74b9ff] tw:text-white tw:px-4 tw:py-2 tw:rounded hover:tw:bg-[#0984e3] tw:mb-3 md:tw:mb-0 tw:cursor-pointer tw:hover:bg-[#389bff]"
+          >
+            게시글 관리
+          </button>
+        )}
       </div>
 
       {/* ===== 검색/필터 카드 ===== */}
